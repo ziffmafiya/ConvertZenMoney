@@ -6,21 +6,22 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: #f4f4f4;
+    background-color: #282c34; /* Dark background */
+    color: #abb2bf; /* Light text color */
 }
 
 /* Styling for the main container holding the converter elements */
 .container {
-    background-color: #fff;
+    background-color: #3a404a; /* Slightly lighter dark background for container */
     padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); /* More prominent shadow */
     text-align: center;
 }
 
 /* Styling for the main heading */
 h1 {
-    color: #333;
+    color: #61afef; /* Blueish color for heading */
     margin-bottom: 20px;
 }
 
@@ -28,25 +29,28 @@ h1 {
 input[type="file"] {
     margin-bottom: 20px;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #5c6370; /* Darker border */
     border-radius: 4px;
     width: calc(100% - 22px);
+    background-color: #4b525d; /* Darker input background */
+    color: #abb2bf; /* Light text color */
 }
 
 /* Styling for the convert button */
 button {
-    background-color: #007bff;
-    color: white;
+    background-color: #98c379; /* Greenish color for button */
+    color: #282c34; /* Dark text for button */
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
 }
 
 /* Hover effect for the convert button */
 button:hover {
-    background-color: #0056b3;
+    background-color: #7baf5a; /* Darker green on hover */
 }
 
 /* Styling for filter options (e.g., debt filter, month/year filter) */
@@ -61,7 +65,7 @@ button:hover {
 /* Styling for labels within filter options */
 .filter-option label {
     font-size: 16px;
-    color: #555;
+    color: #abb2bf; /* Light text color */
 }
 
 /* Styling for checkbox input within filter options */
@@ -69,13 +73,17 @@ button:hover {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    background-color: #4b525d; /* Darker checkbox background */
+    border: 1px solid #5c6370; /* Darker checkbox border */
 }
 
 /* Styling for select dropdowns and number inputs within filter options */
 .filter-option select,
 .filter-option input[type="number"] {
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #5c6370; /* Darker border */
     border-radius: 4px;
     font-size: 16px;
+    background-color: #4b525d; /* Darker input background */
+    color: #abb2bf; /* Light text color */
 }
