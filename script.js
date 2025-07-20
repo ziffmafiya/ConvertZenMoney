@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ensure the line has the correct number of values
                 if (values.length === headers.length) {
                     let row = {};
-                    // Map values to their respective headers
+                    // Map values to their respective headers, removing double quotes
                     headers.forEach((header, index) => {
-                        row[header] = values[index];
+                        row[header] = values[index].replace(/"/g, '');
                     });
                     data.push(row);
                 } else {
