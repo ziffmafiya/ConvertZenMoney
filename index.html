@@ -524,10 +524,10 @@
                 }
 
                 incomeListContainer.innerHTML = '';
-                const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
-                if (totalIncome > 0) {
+                const totalIncomeForList = incomeData.reduce((sum, item) => sum + item.amount, 0);
+                if (totalIncomeForList > 0) {
                     incomeData.forEach(item => {
-                        const percentage = (item.amount / totalIncome) * 100;
+                        const percentage = (item.amount / totalIncomeForList) * 100;
                         const incomeElement = document.createElement('div');
                         incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
                         incomeListContainer.appendChild(incomeElement);
