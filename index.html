@@ -241,6 +241,7 @@
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
+            let lastFinancialData = null; // Variable to store the last processed data
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
@@ -339,14 +340,15 @@
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome);
 
-                // After rendering, get AI recommendations
-                getAIRecommendations({
+                // Store and process AI recommendations
+                lastFinancialData = {
                     totalIncome,
                     totalExpenses,
                     netBalance,
                     expensesByCategory,
                     incomeSources
-                });
+                };
+                getAIRecommendations(lastFinancialData);
             }
 
             // --- File Handling and Filtering ---
@@ -505,17 +507,20 @@
 
                         const legendItem = document.createElement('div');
                         legendItem.className = 'legend-item';
+                        // Using a more robust grid layout to prevent misalignment
                         legendItem.innerHTML = `
-                            <div class="flex items-center w-full">
-                                <div class="legend-color-box" style="background-color: ${color}"></div>
-                                <div class="flex-grow">
-                                    <div class="flex justify-between items-baseline">
-                                        <span class="text-gray-300 truncate" title="${label}">${label}</span>
-                                        <span class="ml-auto font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <div class="flex items-start w-full">
+                                <div class="legend-color-box mt-1 flex-shrink-0" style="background-color: ${color}"></div>
+                                <div class="flex-grow grid grid-cols-2 gap-x-2 w-full">
+                                    <!-- Left Column: Category & Percentage -->
+                                    <div class="truncate">
+                                        <div class="text-gray-300 truncate" title="${label}">${label}</div>
+                                        <div class="font-bold text-blue-400 text-sm">${actualPercentage.toFixed(1)}%</div>
                                     </div>
-                                    <div class="flex justify-between items-baseline text-sm">
-                                        <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
-                                        ${comparisonHTML}
+                                    <!-- Right Column: Amount & Recommendation -->
+                                    <div class="text-right">
+                                        <div class="font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                        ${comparisonHTML.replace('ml-2', ' ')}
                                     </div>
                                 </div>
                             </div>`;
@@ -620,6 +625,13 @@
 
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
+            
+            apiKeyInput.addEventListener('change', () => {
+                if (lastFinancialData) {
+                    getAIRecommendations(lastFinancialData);
+                }
+            });
+
             analyzeAndRender([]); // Initial render with empty data
         });
     </script>
