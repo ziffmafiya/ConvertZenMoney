@@ -40,10 +40,20 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
         .legend-item {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1rem 1fr auto;
+            gap: 0.75rem;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             font-size: 0.875rem;
+        }
+        .legend-details {
+            grid-column: 2 / span 2;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            padding-left: 1.75rem; /* Align with label text */
         }
         .legend-color-box {
             width: 1rem;
@@ -232,6 +242,39 @@
                 '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
             ];
 
+            const budgetRecommendations = {
+                'Продукты': { min: 10, max: 15 },
+                'Транспорт': { min: 5, max: 10 },
+                'Кафе и рестораны': { min: 5, max: 10 }, // Part of wants
+                'Развлечения': { min: 5, max: 10 }, // Part of wants
+                'Коммунальные услуги, связь': { min: 5, max: 10 },
+                'Здоровье и красота': { min: 2, max: 5 },
+                'Одежда и обувь': { min: 3, max: 7 },
+                'Дом': { min: 3, max: 7 },
+                'Образование': { min: 2, max: 5 },
+                'Платеж по кредиту': { min: 5, max: 10 },
+                'Подарки': { min: 1, max: 3 },
+            };
+
+            // Map ZenMoney categories to a simplified recommendation key
+            const categoryMap = {
+                'Продукты': 'Продукты',
+                'Транспорт': 'Транспорт',
+                'Автомобиль': 'Транспорт',
+                'Кафе и рестораны': 'Кафе и рестораны',
+                'Развлечения': 'Развлечения',
+                'Кино': 'Развлечения',
+                'Коммунальные услуги, связь': 'Коммунальные услуги, связь',
+                'Медицина': 'Здоровье и красота',
+                'Аптека': 'Здоровье и красота',
+                'Красота': 'Здоровье и красота',
+                'Одежда и обувь': 'Одежда и обувь',
+                'Дом': 'Дом',
+                'Образование': 'Образование',
+                'Платеж по кредиту': 'Платеж по кредиту',
+                'Подарки': 'Подарки',
+            };
+
             const tooltipPlugin = {
                 callbacks: {
                     label: function(context) {
@@ -322,7 +365,7 @@
                     .sort((a, b) => b.amount - a.amount);
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
-                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList);
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome);
 
                 // After rendering, get AI recommendations
                 getAIRecommendations({
@@ -457,24 +500,53 @@
                 });
             }
 
-            function renderLegendsAndLists(expenseDataByCategory, incomeData) {
+            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome) {
                 expensesLegendContainer.innerHTML = '';
-                if (expenseDataByCategory.labels.length > 0) {
+                if (expenseDataByCategory.labels.length > 0 && totalIncome > 0) {
                     expenseDataByCategory.labels.forEach((label, i) => {
                         const color = expenseDataByCategory.datasets[0].backgroundColor[i];
                         const value = expenseDataByCategory.datasets[0].data[i];
+                        const actualPercentage = (value / totalIncome) * 100;
+
                         const legendItem = document.createElement('div');
                         legendItem.className = 'legend-item';
-                        legendItem.innerHTML = `<div class="legend-color-box" style="background-color: ${color}"></div><span class="text-gray-300">${label}</span><span class="ml-auto font-semibold text-gray-400">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+                        
+                        let recommendationText = '';
+                        let detailsColor = 'text-gray-500'; // Default for no recommendation
+
+                        const mappedCategory = categoryMap[label];
+                        const recommendation = budgetRecommendations[mappedCategory];
+
+                        if (recommendation) {
+                            const { min, max } = recommendation;
+                            recommendationText = `Рек: ${min}-${max}%`;
+                            if (actualPercentage > max * 1.2) { // More than 20% over
+                                detailsColor = 'text-red-400';
+                            } else if (actualPercentage > max) { // Slightly over
+                                detailsColor = 'text-yellow-400';
+                            } else { // Within range
+                                detailsColor = 'text-green-400';
+                            }
+                        }
+
+                        legendItem.innerHTML = `
+                            <div class="legend-color-box" style="background-color: ${color}; grid-row: 1 / span 2;"></div>
+                            <span class="text-gray-300 truncate">${label}</span>
+                            <span class="ml-auto font-semibold text-gray-400">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <div class="legend-details ${detailsColor}">
+                                <span>Факт: ${actualPercentage.toFixed(1)}%</span>
+                                <span>${recommendationText}</span>
+                            </div>
+                        `;
                         expensesLegendContainer.appendChild(legendItem);
                     });
                 }
 
                 incomeListContainer.innerHTML = '';
-                const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
-                if (totalIncome > 0) {
+                const totalIncomeFromSources = incomeData.reduce((sum, item) => sum + item.amount, 0);
+                if (totalIncomeFromSources > 0) {
                     incomeData.forEach(item => {
-                        const percentage = (item.amount / totalIncome) * 100;
+                        const percentage = (item.amount / totalIncomeFromSources) * 100;
                         const incomeElement = document.createElement('div');
                         incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
                         incomeListContainer.appendChild(incomeElement);
