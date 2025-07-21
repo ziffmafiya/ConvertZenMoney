@@ -38,4 +38,4 @@
 *   [Tailwind CSS](https://tailwindcss.com/)
 *   JavaScript (ES6+)
 *   [Chart.js](https://www.chartjs.org/)
-*   [Google Gemini API](https://ai.google.dev/)
+*   [Google Gemini API](https://ai.google.dev/) (используемая модель: `gemini-2.5-flash`)
