@@ -507,19 +507,17 @@
 
                         const legendItem = document.createElement('div');
                         legendItem.className = 'legend-item';
-                        // Using a more robust grid layout to prevent misalignment
+                        // A flexbox-based layout for better alignment and wrapping
                         legendItem.innerHTML = `
-                            <div class="flex items-start w-full">
+                            <div class="flex w-full items-start">
                                 <div class="legend-color-box mt-1 flex-shrink-0" style="background-color: ${color}"></div>
-                                <div class="flex-grow grid grid-cols-2 gap-x-2 w-full">
-                                    <!-- Left Column: Category & Percentage -->
-                                    <div class="truncate">
-                                        <div class="text-gray-300 truncate" title="${label}">${label}</div>
-                                        <div class="font-bold text-blue-400 text-sm">${actualPercentage.toFixed(1)}%</div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="text-gray-300 mr-2">${label}</span>
+                                        <span class="font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
-                                    <!-- Right Column: Amount & Recommendation -->
-                                    <div class="text-right">
-                                        <div class="font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="font-bold text-blue-400 text-sm">${actualPercentage.toFixed(1)}%</span>
                                         ${comparisonHTML.replace('ml-2', ' ')}
                                     </div>
                                 </div>
