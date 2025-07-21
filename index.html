@@ -40,20 +40,10 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
         .legend-item {
-            display: grid;
-            grid-template-columns: 1rem 1fr auto;
-            gap: 0.75rem;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            font-size: 0.875rem;
-        }
-        .legend-details {
-            grid-column: 2 / span 2;
             display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #9ca3af;
-            padding-left: 1.75rem; /* Align with label text */
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
         }
         .legend-color-box {
             width: 1rem;
@@ -233,6 +223,21 @@
             const apiKeyInput = document.getElementById('apiKeyInput');
             const aiRecommendationsDiv = document.getElementById('ai-recommendations');
 
+            // --- Recommended Budget Distribution ---
+            const recommendedDistribution = {
+                "Платежи, комиссии / Аренда": { min: 25, max: 30 },
+                "Продукты": { min: 10, max: 15 },
+                "Платежи, комиссии / Коммуналка": { min: 5, max: 10 },
+                "Проезд": { min: 5, max: 10 },
+                "Платежи, комиссии / Связь": { min: 1, max: 3 },
+                "Кафе и рестораны / Кофе": { min: 5, max: 10 },
+                "Покупки: одежда, техника": { min: 5, max: 10 },
+                "Отдых и развлечения": { min: 5, max: 8 },
+                "Здоровье и фитнес": { min: 3, max: 5 },
+                "Подарки": { min: 1, max: 3 },
+                "Платежи, комиссии / Почтовые услуги": { min: 1, max: 2 }
+            };
+
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
@@ -241,38 +246,6 @@
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
                 '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
             ];
-
-            const budgetRecommendations = {
-                'Аренда/ипотека': { min: 25, max: 35 },
-                'Коммунальные услуги': { min: 5, max: 10 },
-                'Транспорт': { min: 5, max: 10 },
-                'Продукты': { min: 10, max: 15 },
-                'Здоровье': { min: 2, max: 5 },
-                'Другое (нужды)': { min: 5, max: 10 },
-                'Развлечения': { min: 10, max: 15 },
-                'Путешествия': { min: 5, max: 10 },
-                'Хобби и увлечения': { min: 5, max: 10 },
-                'Образование': { min: 5, max: 10 },
-                'Сбережения': { min: 5, max: 10 },
-                'Погашение долгов': { min: 5, max: 10 },
-                'Инвестиции': { min: 5, max: 10 },
-            };
-
-            function getRecommendationCategory(zenMoneyCategory) {
-                const zmc = zenMoneyCategory.toLowerCase();
-                // 50% Needs
-                if (zmc.includes('аренда')) return 'Аренда/ипотека';
-                if (zmc.includes('коммуналка')) return 'Коммунальные услуги';
-                if (zmc.includes('проезд')) return 'Транспорт';
-                if (zmc === 'продукты') return 'Продукты';
-                if (zmc.includes('здоровье и фитнес')) return 'Здоровье';
-                if (zmc.includes('покупки: одежда и техника') || zmc.includes('связь') || zmc.includes('почтовые услуги') || zmc === 'платежи, комиссии') return 'Другое (нужды)';
-                
-                // 30% Wants
-                if (zmc.includes('кафе и рестораны') || zmc.includes('кофе') || zmc.includes('отдых и развлечения')) return 'Развлечения';
-
-                return null; // No specific recommendation category found
-            }
 
             const tooltipPlugin = {
                 callbacks: {
@@ -501,51 +474,60 @@
 
             function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome) {
                 expensesLegendContainer.innerHTML = '';
-                if (expenseDataByCategory.labels.length > 0 && totalIncome > 0) {
-                    expenseDataByCategory.labels.forEach((label, i) => {
-                        const color = expenseDataByCategory.datasets[0].backgroundColor[i];
-                        const value = expenseDataByCategory.datasets[0].data[i];
-                        const actualPercentage = (value / totalIncome) * 100;
+                if (expenseDataByCategory.labels.length > 0) {
+                    // Sort categories by value descending for the legend
+                    const sortedCategories = expenseDataByCategory.labels
+                        .map((label, i) => ({
+                            label,
+                            value: expenseDataByCategory.datasets[0].data[i],
+                            color: expenseDataByCategory.datasets[0].backgroundColor[i]
+                        }))
+                        .sort((a, b) => b.value - a.value);
+
+                    sortedCategories.forEach(category => {
+                        const { label, value, color } = category;
+                        const actualPercentage = totalIncome > 0 ? (value / totalIncome) * 100 : 0;
+                        const recommendation = recommendedDistribution[label];
+                        
+                        let comparisonHTML = '';
+                        if (recommendation) {
+                            let statusClass = 'text-gray-500'; // Default for no deviation
+                            let indicator = `(рек. ${recommendation.min}-${recommendation.max}%)`;
+                            if (actualPercentage > recommendation.max) {
+                                statusClass = 'text-red-400'; // Over budget
+                                indicator = `▲ (рек. ${recommendation.min}-${recommendation.max}%)`;
+                            } else if (actualPercentage < recommendation.min) {
+                                statusClass = 'text-green-400'; // Under budget
+                                indicator = `▼ (рек. ${recommendation.min}-${recommendation.max}%)`;
+                            }
+                             comparisonHTML = `<span class="text-xs ${statusClass} ml-2">${indicator}</span>`;
+                        }
 
                         const legendItem = document.createElement('div');
                         legendItem.className = 'legend-item';
-                        
-                        let recommendationText = '';
-                        let detailsColor = 'text-gray-500'; // Default for no recommendation
-
-                        const recommendationKey = getRecommendationCategory(label);
-                        const recommendation = budgetRecommendations[recommendationKey];
-
-                        if (recommendation) {
-                            const { min, max } = recommendation;
-                            recommendationText = `Рек: ${min}-${max}%`;
-                            if (actualPercentage > max * 1.2) { // More than 20% over
-                                detailsColor = 'text-red-400';
-                            } else if (actualPercentage > max) { // Slightly over
-                                detailsColor = 'text-yellow-400';
-                            } else { // Within range
-                                detailsColor = 'text-green-400';
-                            }
-                        }
-
                         legendItem.innerHTML = `
-                            <div class="legend-color-box" style="background-color: ${color}; grid-row: 1 / span 2;"></div>
-                            <span class="text-gray-300 truncate">${label}</span>
-                            <span class="ml-auto font-semibold text-gray-400">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            <div class="legend-details ${detailsColor}">
-                                <span>Факт: ${actualPercentage.toFixed(1)}%</span>
-                                <span>${recommendationText}</span>
-                            </div>
-                        `;
+                            <div class="flex items-center w-full">
+                                <div class="legend-color-box" style="background-color: ${color}"></div>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between items-baseline">
+                                        <span class="text-gray-300 truncate" title="${label}">${label}</span>
+                                        <span class="ml-auto font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div class="flex justify-between items-baseline text-sm">
+                                        <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
+                                        ${comparisonHTML}
+                                    </div>
+                                </div>
+                            </div>`;
                         expensesLegendContainer.appendChild(legendItem);
                     });
                 }
 
                 incomeListContainer.innerHTML = '';
-                const totalIncomeFromSources = incomeData.reduce((sum, item) => sum + item.amount, 0);
-                if (totalIncomeFromSources > 0) {
+                const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
+                if (totalIncome > 0) {
                     incomeData.forEach(item => {
-                        const percentage = (item.amount / totalIncomeFromSources) * 100;
+                        const percentage = (item.amount / totalIncome) * 100;
                         const incomeElement = document.createElement('div');
                         incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
                         incomeListContainer.appendChild(incomeElement);
@@ -577,9 +559,14 @@
 
                 const { totalIncome, totalExpenses, netBalance, expensesByCategory, incomeSources } = financialData;
 
+                // Generate recommended budget string from the object
+                const recommendedBudgetString = Object.entries(recommendedDistribution)
+                    .map(([category, range]) => `  - ${category}: ${range.min}-${range.max}%`)
+                    .join('\n');
+
                 // Construct a detailed prompt for the AI
                 const prompt = `
-                    Проанализируй следующие финансовые данные за период (валюта: Украинская гривна, UAH) и сравни их с эталонным распределением бюджета по правилу 50/30/20.
+                    Проанализируй следующие финансовые данные за период (валюта: Украинская гривна, UAH) и сравни их с персональными рекомендациями по распределению бюджета.
 
                     **Финансовые данные пользователя:**
                     - Общий доход: ${totalIncome.toFixed(2)} UAH
@@ -587,31 +574,19 @@
                     - Чистый баланс: ${netBalance.toFixed(2)} UAH
                     - Источники дохода:
                     ${Object.entries(incomeSources).map(([source, amount]) => `  - ${source}: ${amount.toFixed(2)} UAH`).join('\n') || '  Нет данных'}
-                    - Структура расходов по категориям:
-                    ${Object.entries(expensesByCategory).map(([category, amount]) => `  - ${category}: ${amount.toFixed(2)} UAH`).join('\n') || '  Нет данных'}
+                    - Структура расходов по категориям (процент от общего дохода):
+                    ${Object.entries(expensesByCategory).map(([category, amount]) => {
+                        const percentage = totalIncome > 0 ? (amount / totalIncome) * 100 : 0;
+                        return `  - ${category}: ${amount.toFixed(2)} UAH (${percentage.toFixed(1)}%)`;
+                    }).join('\n') || '  Нет данных'}
 
-                    **Эталонное распределение бюджета (правило 50/30/20):**
-                    1.  **50% на нужды:**
-                        - Аренда/ипотека: 25-35%
-                        - Коммунальные услуги: 5-10%
-                        - Транспорт: 5-10%
-                        - Продукты: 10-15%
-                        - Здоровье: 2-5%
-                        - Другое (одежда, бытовая химия): 5-10%
-                    2.  **30% на желания:**
-                        - Развлечения (кино, кафе): 10-15%
-                        - Путешествия: 5-10%
-                        - Хобби и увлечения: 5-10%
-                        - Образование и развитие: 5-10%
-                    3.  **20% на финансовые цели:**
-                        - Сбережения/резервный фонд: 5-10%
-                        - Погашение долгов: 5-10%
-                        - Инвестиции: 5-10%
+                    **Рекомендуемое распределение бюджета (в % от общего дохода):**
+                    ${recommendedBudgetString}
 
                     **Твоя задача:**
-                    Предоставь краткий анализ (2-3 предложения), сравнивая фактические траты пользователя с эталонной моделью. Затем дай 3-5 конкретных, действенных рекомендаций по улучшению финансового положения.
-                    - Укажи, какие категории расходов выходят за рамки рекомендованных процентов.
-                    - Предложи, как можно оптимизировать бюджет.
+                    Предоставь краткий анализ (2-3 предложения), сравнивая фактические траты пользователя (в процентах от дохода) с предоставленной выше рекомендованной моделью. Затем дай 3-5 конкретных, действенных рекомендаций по улучшению финансового положения.
+                    - Укажи, какие категории расходов значительно выходят за рамки рекомендованных процентов.
+                    - Предложи, как можно оптимизировать бюджет, основываясь на этом сравнении.
                     - Ответ должен быть на русском языке, в формате простого текста, без использования Markdown.
                 `;
 
