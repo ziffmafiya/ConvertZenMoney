@@ -243,37 +243,36 @@
             ];
 
             const budgetRecommendations = {
-                'Продукты': { min: 10, max: 15 },
+                'Аренда/ипотека': { min: 25, max: 35 },
+                'Коммунальные услуги': { min: 5, max: 10 },
                 'Транспорт': { min: 5, max: 10 },
-                'Кафе и рестораны': { min: 5, max: 10 }, // Part of wants
-                'Развлечения': { min: 5, max: 10 }, // Part of wants
-                'Коммунальные услуги, связь': { min: 5, max: 10 },
-                'Здоровье и красота': { min: 2, max: 5 },
-                'Одежда и обувь': { min: 3, max: 7 },
-                'Дом': { min: 3, max: 7 },
-                'Образование': { min: 2, max: 5 },
-                'Платеж по кредиту': { min: 5, max: 10 },
-                'Подарки': { min: 1, max: 3 },
+                'Продукты': { min: 10, max: 15 },
+                'Здоровье': { min: 2, max: 5 },
+                'Другое (нужды)': { min: 5, max: 10 },
+                'Развлечения': { min: 10, max: 15 },
+                'Путешествия': { min: 5, max: 10 },
+                'Хобби и увлечения': { min: 5, max: 10 },
+                'Образование': { min: 5, max: 10 },
+                'Сбережения': { min: 5, max: 10 },
+                'Погашение долгов': { min: 5, max: 10 },
+                'Инвестиции': { min: 5, max: 10 },
             };
 
-            // Map ZenMoney categories to a simplified recommendation key
-            const categoryMap = {
-                'Продукты': 'Продукты',
-                'Транспорт': 'Транспорт',
-                'Автомобиль': 'Транспорт',
-                'Кафе и рестораны': 'Кафе и рестораны',
-                'Развлечения': 'Развлечения',
-                'Кино': 'Развлечения',
-                'Коммунальные услуги, связь': 'Коммунальные услуги, связь',
-                'Медицина': 'Здоровье и красота',
-                'Аптека': 'Здоровье и красота',
-                'Красота': 'Здоровье и красота',
-                'Одежда и обувь': 'Одежда и обувь',
-                'Дом': 'Дом',
-                'Образование': 'Образование',
-                'Платеж по кредиту': 'Платеж по кредиту',
-                'Подарки': 'Подарки',
-            };
+            function getRecommendationCategory(zenMoneyCategory) {
+                const zmc = zenMoneyCategory.toLowerCase();
+                // 50% Needs
+                if (zmc.includes('аренда')) return 'Аренда/ипотека';
+                if (zmc.includes('коммуналка')) return 'Коммунальные услуги';
+                if (zmc.includes('проезд')) return 'Транспорт';
+                if (zmc === 'продукты') return 'Продукты';
+                if (zmc.includes('здоровье и фитнес')) return 'Здоровье';
+                if (zmc.includes('покупки: одежда и техника') || zmc.includes('связь') || zmc.includes('почтовые услуги') || zmc === 'платежи, комиссии') return 'Другое (нужды)';
+                
+                // 30% Wants
+                if (zmc.includes('кафе и рестораны') || zmc.includes('кофе') || zmc.includes('отдых и развлечения')) return 'Развлечения';
+
+                return null; // No specific recommendation category found
+            }
 
             const tooltipPlugin = {
                 callbacks: {
@@ -514,8 +513,8 @@
                         let recommendationText = '';
                         let detailsColor = 'text-gray-500'; // Default for no recommendation
 
-                        const mappedCategory = categoryMap[label];
-                        const recommendation = budgetRecommendations[mappedCategory];
+                        const recommendationKey = getRecommendationCategory(label);
+                        const recommendation = budgetRecommendations[recommendationKey];
 
                         if (recommendation) {
                             const { min, max } = recommendation;
