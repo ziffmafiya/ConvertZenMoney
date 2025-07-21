@@ -509,15 +509,15 @@
                         legendItem.className = 'legend-item';
                         // A flexbox-based layout for better alignment and wrapping
                         legendItem.innerHTML = `
-                            <div class="flex w-full items-start">
-                                <div class="legend-color-box mt-1 flex-shrink-0" style="background-color: ${color}"></div>
+                            <div class="flex w-full items-center">
+                                <div class="legend-color-box flex-shrink-0" style="background-color: ${color}"></div>
                                 <div class="flex-grow min-w-0">
-                                    <div class="flex justify-between items-baseline">
+                                    <div class="flex justify-between items-center">
                                         <span class="text-gray-300 mr-2">${label}</span>
-                                        <span class="font-semibold text-gray-400 whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
-                                    <div class="flex justify-between items-baseline">
-                                        <span class="font-bold text-blue-400 text-sm">${actualPercentage.toFixed(1)}%</span>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
                                         ${comparisonHTML.replace('ml-2', ' ')}
                                     </div>
                                 </div>
