@@ -594,30 +594,51 @@
                 `;
 
                 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const MAX_RETRIES = 3;
+                let attempt = 0;
 
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }]
-                        })
-                    });
+                while (attempt < MAX_RETRIES) {
+                    try {
+                        const response = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: prompt }] }]
+                            })
+                        });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`API Error: ${errorData.error.message}`);
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            const errorMessage = errorData.error.message;
+
+                            // Check for specific overload error to retry
+                            if (response.status === 503 || errorMessage.includes('overloaded')) {
+                                throw new Error('Model overloaded'); // Throw specific error to trigger retry
+                            }
+                            
+                            throw new Error(`API Error: ${errorMessage}`);
+                        }
+
+                        const data = await response.json();
+                        const recommendations = data.candidates[0].content.parts[0].text;
+                        aiRecommendationsDiv.textContent = recommendations;
+                        return; // Exit successfully
+
+                    } catch (error) {
+                        attempt++;
+                        console.error(`Attempt ${attempt} failed:`, error.message);
+
+                        if (error.message.includes('overloaded') && attempt < MAX_RETRIES) {
+                            const delay = Math.pow(2, attempt) * 1000; // Exponential backoff (2s, 4s, 8s)
+                            aiRecommendationsDiv.innerHTML = `<p class="text-yellow-400">Модель перегружена. Повторная попытка через ${delay / 1000} сек... (Попытка ${attempt}/${MAX_RETRIES})</p>`;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        } else {
+                            aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось получить рекомендации. Проверьте ваш API ключ и интернет-соединение. Ошибка: ${error.message}</p>`;
+                            return; // Exit after final attempt or for other errors
+                        }
                     }
-
-                    const data = await response.json();
-                    const recommendations = data.candidates[0].content.parts[0].text;
-                    aiRecommendationsDiv.textContent = recommendations;
-
-                } catch (error) {
-                    console.error('Error fetching AI recommendations:', error);
-                    aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось получить рекомендации. Проверьте ваш API ключ и интернет-соединение. Ошибка: ${error.message}</p>`;
                 }
             }
 
