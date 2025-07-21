@@ -1,52 +1,582 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV to Excel Converter</title>
-    <!-- Link to the stylesheet for basic styling -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Include the SheetJS library from a CDN for Excel file generation -->
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <title>Универсальный Финансовый Отчет</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #e5e7eb; /* Light text */
+        }
+        .chart-container {
+            position: relative;
+            height: 35vh; /* Adjusted height */
+            width: 100%;
+            max-width: 450px;
+            margin: auto;
+        }
+        .bar-chart-container {
+            position: relative;
+            height: 45vh; /* Taller for horizontal bar */
+            width: 100%;
+        }
+        .metric-card {
+            background-color: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #374151;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .legend-color-box {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.75rem;
+            border-radius: 0.25rem;
+        }
+        /* Tab styles */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-color: transparent;
+        }
+        .tab-button.active {
+            color: #3b82f6; /* blue-500 */
+            border-color: #3b82f6;
+        }
+        .tab-button:not(.active) {
+            color: #9ca3af; /* gray-400 */
+            border-color: #374151; /* gray-700 */
+        }
+        .tab-button:hover:not(.active) {
+             background-color: #374151;
+             border-color: #4b5563;
+        }
+        .tab-content.hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>CSV to Excel Converter</h1>
-        <!-- Input element to select a CSV file -->
-        <input type="file" id="csvFile" accept=".csv">
+<body class="antialiased">
 
-        <!-- Option to filter out "Долги" (Debts) -->
-        <div class="filter-option">
-            <label for="filterDebts">Filter "Долги" (Debts):</label>
-            <input type="checkbox" id="filterDebts">
-        </div>
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
 
-        <!-- Option to filter by month and year -->
-        <div class="filter-option">
-            <label for="filterMonth">Filter by Month:</label>
-            <select id="filterMonth">
-                <option value="">All Months</option>
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-            </select>
-            <label for="filterYear">Year:</label>
-            <input type="number" id="filterYear" placeholder="e.g., 2023" min="1900" max="2100">
-        </div>
+        <!-- Header -->
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-white">Финансовый отчет</h1>
+            <p class="text-lg md:text-xl text-gray-400 mt-2">Универсальный шаблон</p>
+        </header>
 
-        <!-- Button to trigger the conversion process -->
-        <button id="convertBtn">Convert to Excel</button>
+        <!-- Data Input Section -->
+        <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mb-8 md:mb-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Загрузить и обработать файл</h2>
+            
+            <!-- File Input -->
+            <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="flex items-center p-4 bg-gray-800 rounded-lg">
+                    <input id="filterDebts" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="filterDebts" class="ml-3 text-lg font-medium text-gray-300">Исключить "Долги"</label>
+                </div>
+                <div class="p-4 bg-gray-800 rounded-lg">
+                    <label for="filterMonth" class="block mb-2 text-lg font-medium text-gray-300">Фильтр по дате</label>
+                    <div class="flex items-center gap-2">
+                        <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="">Все месяцы</option>
+                            <option value="01">Январь</option>
+                            <option value="02">Февраль</option>
+                            <option value="03">Март</option>
+                            <option value="04">Апрель</option>
+                            <option value="05">Май</option>
+                            <option value="06">Июнь</option>
+                            <option value="07">Июль</option>
+                            <option value="08">Август</option>
+                            <option value="09">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
+                        </select>
+                        <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    </div>
+                </div>
+            </div>
+
+            <button id="processDataButton" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Анализировать</button>
+        </section>
+
+        <!-- Main Metrics -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Total Income -->
+            <div class="metric-card">
+                <div class="flex items-center justify-center text-green-400 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 6V5m0 14v-1m-7-7h-1m14 0h-1m-7-7a7 7 0 110 14 7 7 0 010-14z" /></svg>
+                    <h2 class="text-xl font-semibold text-gray-300">Общий доход</h2>
+                </div>
+                <p class="text-3xl font-bold text-green-400">26,013.81 грн</p>
+            </div>
+            <!-- Total Expenses -->
+            <div class="metric-card">
+                <div class="flex items-center justify-center text-red-400 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                    <h2 class="text-xl font-semibold text-gray-300">Общие расходы</h2>
+                </div>
+                <p class="text-3xl font-bold text-red-400">27,908.40 грн</p>
+            </div>
+            <!-- Net Balance -->
+            <div class="metric-card">
+                <div class="flex items-center justify-center text-blue-400 mb-3">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6d-3 6h18l-3-6 3-6H3z" /></svg>
+                    <h2 class="text-xl font-semibold text-gray-300">Чистый баланс</h2>
+                </div>
+                <p class="text-3xl font-bold text-blue-400">-1,894.59 грн</p>
+            </div>
+        </section>
+
+        <!-- Breakdown Section with Tabs -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+            
+            <!-- Expenses Breakdown Card -->
+            <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+                <div class="mb-4 border-b border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg active" id="category-tab" data-tab-target="#category-content" type="button" role="tab">По категориям</button>
+                        </li>
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg" id="store-tab" data-tab-target="#store-content" type="button" role="tab">По магазинам</button>
+                        </li>
+                    </ul>
+                </div>
+                <div id="expensesTabContent">
+                    <div class="tab-content" id="category-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
+                        <div class="chart-container">
+                            <canvas id="expensesChart"></canvas>
+                        </div>
+                        <div id="expensesLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
+                    </div>
+                    <div class="tab-content hidden" id="store-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
+                        <div class="bar-chart-container">
+                            <canvas id="storesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Income Sources Card -->
+            <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+                <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
+                <div class="space-y-4" id="incomeList">
+                    <!-- Income bars will be generated by JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- AI Recommendations Section -->
+        <section id="ai-section" class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Рекомендации от AI</h2>
+            <div class="mb-4">
+                <label for="apiKeyInput" class="block mb-2 text-sm font-medium text-gray-300">Ваш Google Gemini API Ключ</label>
+                <input type="password" id="apiKeyInput" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Введите ваш API ключ здесь...">
+            </div>
+            <div id="ai-recommendations" class="p-4 bg-gray-800 rounded-lg min-h-[100px] text-gray-300 whitespace-pre-wrap">
+                <p>Введите ваш API ключ и обработайте данные, чтобы получить рекомендации.</p>
+            </div>
+        </section>
+
     </div>
-    <!-- Link to the JavaScript file for conversion logic -->
-    <script src="script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Element References ---
+            const csvFile = document.getElementById('csvFile');
+            const processDataButton = document.getElementById('processDataButton');
+            const filterDebtsCheckbox = document.getElementById('filterDebts');
+            const filterMonthSelect = document.getElementById('filterMonth');
+            const filterYearInput = document.getElementById('filterYear');
+            
+            const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
+            const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
+            const netBalanceEl = document.querySelector('.metric-card:nth-child(3) p');
+            const expensesLegendContainer = document.getElementById('expensesLegend');
+            const incomeListContainer = document.getElementById('incomeList');
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const aiRecommendationsDiv = document.getElementById('ai-recommendations');
+
+            // --- Chart.js Variables ---
+            let expensesChart;
+            let storesChart;
+
+            const COLORS = [
+                '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
+                '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
+            ];
+
+            const tooltipPlugin = {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.x !== null || context.parsed !== null) {
+                            const value = context.parsed.x ?? context.parsed;
+                            label += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                        }
+                        return label;
+                    }
+                }
+            };
+
+            function normalize(str) {
+                return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+            }
+            
+            // --- Data Processing and Analysis ---
+            function analyzeAndRender(transactions) {
+                let totalIncome = 0;
+                let totalExpenses = 0;
+                const expensesByCategory = {};
+                const expensesByPayee = {};
+                const incomeSources = {};
+
+                transactions.forEach(t => {
+                    if (t.income > 0 && t.outcome === 0) {
+                        totalIncome += t.income;
+                        // Exclude refunds from income sources list, but keep in total income
+                        if (!normalize(t.categoryName).includes('возврат')) {
+                           incomeSources[t.categoryName] = (incomeSources[t.categoryName] || 0) + t.income;
+                        }
+                    } else if (t.outcome > 0 && t.income === 0) {
+                        totalExpenses += t.outcome;
+                        
+                        let category = t.categoryName;
+                        const creditKeywords = ["роутер", "очки", "бритва", "пылесос"];
+                        const description = normalize(t.payee + ' ' + t.comment + ' ' + t.incomeAccountName);
+
+                        if (creditKeywords.some(keyword => description.includes(keyword))) {
+                            category = "Платеж по кредиту";
+                        }
+                        
+                        expensesByCategory[category] = (expensesByCategory[category] || 0) + t.outcome;
+                        expensesByPayee[t.payee] = (expensesByPayee[t.payee] || 0) + t.outcome;
+                    }
+                });
+
+                const netBalance = totalIncome - totalExpenses;
+
+                // Update main metrics
+                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                totalExpensesEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                netBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                netBalanceEl.style.color = netBalance >= 0 ? '#84cc16' : '#ef4444';
+
+                // Prepare data for charts and lists
+                const expenseDataByCategoryChart = {
+                    labels: Object.keys(expensesByCategory),
+                    datasets: [{
+                        data: Object.values(expensesByCategory),
+                        backgroundColor: COLORS.slice(0, Object.keys(expensesByCategory).length),
+                        borderColor: '#1f2937',
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                };
+
+                const sortedExpensesByPayee = Object.entries(expensesByPayee)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 10); // Top 10
+                const expenseDataByStoreChart = {
+                    labels: sortedExpensesByPayee.map(([payee]) => payee),
+                    datasets: [{
+                        label: 'Расходы',
+                        data: sortedExpensesByPayee.map(([, amount]) => amount),
+                        backgroundColor: COLORS.slice(0, sortedExpensesByPayee.length),
+                        borderColor: '#1f2937',
+                        borderWidth: 2
+                    }]
+                };
+
+                const incomeDataList = Object.entries(incomeSources)
+                    .map(([source, amount]) => ({ source, amount }))
+                    .sort((a, b) => b.amount - a.amount);
+
+                renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList);
+
+                // After rendering, get AI recommendations
+                getAIRecommendations({
+                    totalIncome,
+                    totalExpenses,
+                    netBalance,
+                    expensesByCategory,
+                    incomeSources
+                });
+            }
+
+            // --- File Handling and Filtering ---
+            function handleFileProcessing() {
+                if (csvFile.files.length === 0) {
+                    alert('Пожалуйста, выберите CSV файл.');
+                    return;
+                }
+
+                const file = csvFile.files[0];
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const csvData = e.target.result;
+                    const lines = csvData.split('\n').filter(line => line.trim() !== '');
+
+                    const headers = [
+                        "date", "categoryName", "payee", "comment", "outcomeAccountName",
+                        "outcome", "outcomeCurrencyShortTitle", "incomeAccountName",
+                        "income", "incomeCurrencyShortTitle", "createdDate", "changedDate", "qrCode"
+                    ];
+
+                    const data = [];
+                    lines.forEach(line => {
+                        const values = line.split(';');
+                        if (values.length >= headers.length - 1) { // Allow for missing qrCode
+                            let row = {};
+                            headers.forEach((header, index) => {
+                                row[header] = (values[index] || '').replace(/"/g, '');
+                            });
+                            data.push(row);
+                        } else {
+                            console.warn(`Skipping malformed line: ${line}`);
+                        }
+                    });
+
+                    const transactionData = data.filter(row => {
+                        const income = parseFloat(row.income.replace(',', '.')) || 0;
+                        const outcome = parseFloat(row.outcome.replace(',', '.')) || 0;
+                        return (income > 0 && outcome === 0) || (outcome > 0 && income === 0);
+                    }).map(row => ({
+                        date: row.date,
+                        categoryName: row.categoryName,
+                        payee: row.payee,
+                        comment: row.comment,
+                        outcomeAccountName: row.outcomeAccountName,
+                        outcome: parseFloat(row.outcome.replace(',', '.')) || 0,
+                        incomeAccountName: row.incomeAccountName,
+                        income: parseFloat(row.income.replace(',', '.')) || 0,
+                    }));
+
+                    let filteredData = transactionData;
+
+                    if (filterDebtsCheckbox.checked) {
+                        filteredData = filteredData.filter(row => {
+                            const income = normalize(row.incomeAccountName);
+                            const outcome = normalize(row.outcomeAccountName);
+                            const hasDebt = income.includes('долги') || outcome.includes('долги');
+                            return !hasDebt;
+                        });
+                    }
+
+                    const selectedMonth = filterMonthSelect.value;
+                    const selectedYear = filterYearInput.value;
+
+                    if (selectedMonth || selectedYear) {
+                        filteredData = filteredData.filter(row => {
+                            if (!row.date) return false;
+                            const dateParts = row.date.split('-');
+                            const rowYear = dateParts[0];
+                            const rowMonth = dateParts[1];
+                            const matchMonth = !selectedMonth || rowMonth === selectedMonth;
+                            const matchYear = !selectedYear || rowYear === selectedYear;
+                            return matchMonth && matchYear;
+                        });
+                    }
+
+                    if (filteredData.length === 0) {
+                        alert('Нет данных для анализа после применения фильтров.');
+                    }
+                    
+                    analyzeAndRender(filteredData);
+                };
+
+                reader.onerror = () => {
+                    alert('Ошибка при чтении файла.');
+                };
+
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            // --- Rendering Functions ---
+            function renderCharts(expenseDataByCategory, expenseDataByStore) {
+                if (expensesChart) expensesChart.destroy();
+                if (storesChart) storesChart.destroy();
+
+                const ctxCategory = document.getElementById('expensesChart').getContext('2d');
+                expensesChart = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: expenseDataByCategory,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxStore = document.getElementById('storesChart').getContext('2d');
+                storesChart = new Chart(ctxStore, {
+                    type: 'bar',
+                    data: expenseDataByStore,
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                        },
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+            }
+
+            function renderLegendsAndLists(expenseDataByCategory, incomeData) {
+                expensesLegendContainer.innerHTML = '';
+                if (expenseDataByCategory.labels.length > 0) {
+                    expenseDataByCategory.labels.forEach((label, i) => {
+                        const color = expenseDataByCategory.datasets[0].backgroundColor[i];
+                        const value = expenseDataByCategory.datasets[0].data[i];
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'legend-item';
+                        legendItem.innerHTML = `<div class="legend-color-box" style="background-color: ${color}"></div><span class="text-gray-300">${label}</span><span class="ml-auto font-semibold text-gray-400">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+                        expensesLegendContainer.appendChild(legendItem);
+                    });
+                }
+
+                incomeListContainer.innerHTML = '';
+                const totalIncome = incomeData.reduce((sum, item) => sum + item.amount, 0);
+                if (totalIncome > 0) {
+                    incomeData.forEach(item => {
+                        const percentage = (item.amount / totalIncome) * 100;
+                        const incomeElement = document.createElement('div');
+                        incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
+                        incomeListContainer.appendChild(incomeElement);
+                    });
+                }
+            }
+            
+            // --- Tab Logic ---
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = document.querySelector(tab.dataset.tabTarget);
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+                    target.classList.remove('hidden');
+                });
+            });
+
+            // --- AI Integration ---
+            async function getAIRecommendations(financialData) {
+                const apiKey = apiKeyInput.value;
+                if (!apiKey) {
+                    aiRecommendationsDiv.innerHTML = '<p class="text-yellow-400">Пожалуйста, введите ваш Google Gemini API ключ, чтобы получить рекомендации.</p>';
+                    return;
+                }
+
+                aiRecommendationsDiv.innerHTML = '<p>Анализ данных и генерация рекомендаций...</p>';
+
+                const { totalIncome, totalExpenses, netBalance, expensesByCategory, incomeSources } = financialData;
+
+                // Construct a detailed prompt for the AI
+                const prompt = `
+                    Проанализируй следующие финансовые данные за период (валюта: Украинская гривна, UAH) и сравни их с эталонным распределением бюджета по правилу 50/30/20.
+
+                    **Финансовые данные пользователя:**
+                    - Общий доход: ${totalIncome.toFixed(2)} UAH
+                    - Общие расходы: ${totalExpenses.toFixed(2)} UAH
+                    - Чистый баланс: ${netBalance.toFixed(2)} UAH
+                    - Источники дохода:
+                    ${Object.entries(incomeSources).map(([source, amount]) => `  - ${source}: ${amount.toFixed(2)} UAH`).join('\n') || '  Нет данных'}
+                    - Структура расходов по категориям:
+                    ${Object.entries(expensesByCategory).map(([category, amount]) => `  - ${category}: ${amount.toFixed(2)} UAH`).join('\n') || '  Нет данных'}
+
+                    **Эталонное распределение бюджета (правило 50/30/20):**
+                    1.  **50% на нужды:**
+                        - Аренда/ипотека: 25-35%
+                        - Коммунальные услуги: 5-10%
+                        - Транспорт: 5-10%
+                        - Продукты: 10-15%
+                        - Здоровье: 2-5%
+                        - Другое (одежда, бытовая химия): 5-10%
+                    2.  **30% на желания:**
+                        - Развлечения (кино, кафе): 10-15%
+                        - Путешествия: 5-10%
+                        - Хобби и увлечения: 5-10%
+                        - Образование и развитие: 5-10%
+                    3.  **20% на финансовые цели:**
+                        - Сбережения/резервный фонд: 5-10%
+                        - Погашение долгов: 5-10%
+                        - Инвестиции: 5-10%
+
+                    **Твоя задача:**
+                    Предоставь краткий анализ (2-3 предложения), сравнивая фактические траты пользователя с эталонной моделью. Затем дай 3-5 конкретных, действенных рекомендаций по улучшению финансового положения.
+                    - Укажи, какие категории расходов выходят за рамки рекомендованных процентов.
+                    - Предложи, как можно оптимизировать бюджет.
+                    - Ответ должен быть на русском языке, в формате простого текста, без использования Markdown.
+                `;
+
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${errorData.error.message}`);
+                    }
+
+                    const data = await response.json();
+                    const recommendations = data.candidates[0].content.parts[0].text;
+                    aiRecommendationsDiv.textContent = recommendations;
+
+                } catch (error) {
+                    console.error('Error fetching AI recommendations:', error);
+                    aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось получить рекомендации. Проверьте ваш API ключ и интернет-соединение. Ошибка: ${error.message}</p>`;
+                }
+            }
+
+            // --- Event Listeners and Initial Call ---
+            processDataButton.addEventListener('click', handleFileProcessing);
+            analyzeAndRender([]); // Initial render with empty data
+        });
+    </script>
+
 </body>
 </html>

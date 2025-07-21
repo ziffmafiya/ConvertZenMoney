@@ -1,36 +1,41 @@
-# CSV to Excel Converter
+# Универсальный Финансовый Отчет
 
-This is a simple web-based tool that allows you to upload a CSV file containing expense data and convert it into an Excel spreadsheet (`.xlsx` format). The tool also provides filtering options for "Долги" (Debts) and by month/year.
+Это веб-приложение представляет собой интерактивную панель для анализа личных финансов. Оно позволяет загружать CSV-файл с данными о транзакциях, визуализировать структуру доходов и расходов, а также получать рекомендации по оптимизации бюджета с помощью искусственного интеллекта.
 
-## Features
+## Возможности
 
-*   **CSV Upload**: Easily upload your CSV expense file.
-*   **Semicolon Delimiter**: Automatically parses CSV data where values are separated by semicolons.
-*   **"Долги" (Debts) Filter**: An option to exclude rows where `outcomeAccountName` or `incomeAccountName` fields contain "Долги" (case-insensitive and trimmed).
-*   **Month and Year Filter**: Filter expenses by a specific month and/or year based on the `date` field (expected format: `YYYY-MM-DD`).
-*   **Excel Download**: Converts the filtered data into an Excel spreadsheet (`expenses.xlsx`) and triggers a download.
+*   **Загрузка CSV**: Простая загрузка и обработка вашего CSV-файла с финансовыми данными.
+*   **Фильтрация данных**:
+    *   **Исключение "Долгов"**: Возможность исключить транзакции, связанные с долговыми счетами.
+    *   **Фильтр по дате**: Фильтрация данных по конкретному месяцу и/или году.
+*   **Финансовая сводка**: Автоматический расчет и отображение общего дохода, общих расходов и чистого баланса.
+*   **Визуализация расходов**:
+    *   **По категориям**: Интерактивная кольцевая диаграмма, показывающая распределение расходов по категориям.
+    *   **По магазинам**: Горизонтальная столбчатая диаграмма с топ-10 тратами по магазинам и сервисам.
+*   **Анализ доходов**: Наглядное отображение источников дохода и их долей в общей сумме.
+*   **AI-рекомендации**: Интеграция с Google Gemini API для получения персонализированных советов по улучшению вашего финансового положения на основе анализа данных.
 
-## How to Use
+## Как использовать
 
-1.  **Open the Application**: Open the `index.html` file in your web browser.
-2.  **Select CSV File**: Click on the "Choose File" button and select your CSV expense file.
-    *   **CSV Format**: Ensure your CSV file has data separated by semicolons (`;`) and includes the following headers in order: `date;categoryName;payee;comment;outcomeAccountName;outcome;outcomeCurrencyShortTitle;incomeAccountName;income;incomeCurrencyShortTitle;createdDate;changedDate;qrCode`.
-3.  **Apply Filters (Optional)**:
-    *   **Filter "Долги"**: Check the "Filter 'Долги' (Debts)" checkbox to exclude debt-related entries.
-    *   **Filter by Month/Year**: Select a month from the dropdown and/or enter a year in the input field to filter expenses by date.
-4.  **Convert to Excel**: Click the "Convert to Excel" button.
-5.  **Download**: The converted Excel file (`expenses.xlsx`) will be downloaded to your computer.
+1.  **Откройте приложение**: Откройте файл `index.html` в вашем веб-браузере.
+2.  **Введите API-ключ (опционально)**: Если вы хотите получить рекомендации от AI, вставьте ваш API-ключ для Google Gemini в соответствующее поле.
+3.  **Выберите CSV-файл**: Нажмите на кнопку выбора файла и загрузите ваш CSV-файл с транзакциями.
+    *   **Формат CSV**: Убедитесь, что ваш файл использует точку с запятой (`;`) в качестве разделителя и содержит заголовки, соответствующие формату экспорта из приложения [ZenMoney](https://zenmoney.ru/). Пример необходимых заголовков: `date;categoryName;payee;comment;outcomeAccountName;outcome;outcomeCurrencyShortTitle;incomeAccountName;income;incomeCurrencyShortTitle;createdDate;changedDate;qrCode`.
+4.  **Примените фильтры (опционально)**:
+    *   Установите флажок "Исключить 'Долги'", чтобы убрать долговые операции.
+    *   Выберите месяц и/или введите год для анализа конкретного периода.
+5.  **Запустите анализ**: Нажмите кнопку "Анализировать".
+6.  **Изучите отчет**: Просмотрите сводку, диаграммы и рекомендации на панели.
 
-## Project Structure
+## Структура проекта
 
-*   `index.html`: The main HTML file that provides the user interface.
-*   `style.css`: Contains the CSS rules for styling the web page.
-*   `script.js`: Contains the JavaScript logic for reading the CSV, applying filters, and generating the Excel file using the SheetJS library.
-*   `README.md`: This file, providing information about the project.
+*   `index.html`: Основной файл, содержащий всю структуру, стили (Tailwind CSS) и логику (JavaScript).
+*   `README.md`: Этот файл.
 
-## Technologies Used
+## Используемые технологии
 
 *   HTML5
-*   CSS3
-*   JavaScript
-*   [SheetJS (xlsx)](https://sheetjs.com/): A powerful library for reading and writing spreadsheet files.
+*   [Tailwind CSS](https://tailwindcss.com/)
+*   JavaScript (ES6+)
+*   [Chart.js](https://www.chartjs.org/)
+*   [Google Gemini API](https://ai.google.dev/)
