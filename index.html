@@ -428,9 +428,11 @@
 
                     if (filteredData.length === 0) {
                         alert('Нет данных для анализа после применения фильтров.');
+                        return;
                     }
                     
-                    analyzeAndRender(filteredData);
+                    analyzeAndRender(filteredData); // Keep existing analysis for display
+                    uploadTransactionsToSupabase(filteredData); // Add new upload function
                 };
 
                 reader.onerror = () => {
@@ -652,6 +654,32 @@
             });
 
             analyzeAndRender([]); // Initial render with empty data
+
+            // --- Supabase Upload Function ---
+            async function uploadTransactionsToSupabase(transactions) {
+                try {
+                    const response = await fetch('/api/upload-transactions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ transactions }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log('Transactions uploaded successfully:', result);
+                        alert('Транзакции успешно загружены в Supabase!');
+                    } else {
+                        console.error('Error uploading transactions:', result.error);
+                        alert(`Ошибка при загрузке транзакций: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Network or server error during upload:', error);
+                    alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
+                }
+            }
         });
     </script>
 
