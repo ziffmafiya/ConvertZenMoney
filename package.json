@@ -1,0 +1,13 @@
+{
+  "name": "converter-vercel-app",
+  "version": "1.0.0",
+  "description": "A Vercel app for financial data conversion and Supabase upload.",
+  "main": "api/upload-transactions.js",
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.44.2"
+  }
+}
