@@ -204,8 +204,6 @@
             </div>
         </section>
 
-        </section>
-
     </div>
 
     <script>
@@ -435,7 +433,7 @@
                     
                     analyzeAndRender(filteredData); // Keep existing analysis for display
                     uploadTransactionsToSupabase(filteredData); // Add new upload function
-                    };
+                };
 
                 reader.onerror = () => {
                     alert('Ошибка при чтении файла.');

@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/upload-transactions", "destination": "/api/upload-transactions" }
-  ]
-}
