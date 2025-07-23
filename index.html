@@ -399,6 +399,7 @@
                         incomeAccountName: row.incomeAccountName,
                         income: parseFloat(row.income.replace(',', '.')) || 0,
                     }));
+                    console.log('Parsed transactionData (before filters):', transactionData);
 
                     let filteredData = transactionData;
 
@@ -425,6 +426,7 @@
                             return matchMonth && matchYear;
                         });
                     }
+                    console.log('FilteredData (after filters):', filteredData);
 
                     if (filteredData.length === 0) {
                         alert('Нет данных для анализа после применения фильтров.');
