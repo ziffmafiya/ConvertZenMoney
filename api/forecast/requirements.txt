@@ -2,5 +2,5 @@ pandas
 statsmodels
 scikit-learn
 python-dotenv
-supabase-py
+supabase
 pmdarima
