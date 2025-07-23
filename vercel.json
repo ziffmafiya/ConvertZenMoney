@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    { "source": "/api/forecast", "destination": "/api/forecast" },
+    { "source": "/api/upload-transactions", "destination": "/api/upload-transactions" }
+  ],
+  "builds": [
+    {
+      "src": "api/forecast/Dockerfile",
+      "use": "@vercel/docker"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/forecast",
+      "dest": "api/forecast"
+    }
+  ]
+}
