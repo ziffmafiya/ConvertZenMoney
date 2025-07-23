@@ -204,15 +204,6 @@
             </div>
         </section>
 
-        <!-- Forecasting Section -->
-        <section id="forecasting-section" class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
-            <h2 class="text-2xl font-bold text-white mb-4">Прогнозирование будущих расходов (Prophet)</h2>
-            <button id="generateForecastButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mb-4">Сгенерировать прогноз</button>
-            <div id="forecast-results" class="p-4 bg-gray-800 rounded-lg min-h-[100px] text-gray-300 text-center">
-                <p>Нажмите "Сгенерировать прогноз", чтобы увидеть будущие расходы.</p>
-                <img id="forecastImage" src="" alt="Прогноз расходов" class="mt-4 mx-auto hidden" />
-                <p id="forecastError" class="text-red-400 mt-2 hidden"></p>
-            </div>
         </section>
 
     </div>
@@ -220,10 +211,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // --- DOM Element References ---
-            const generateForecastButton = document.getElementById('generateForecastButton');
-            const forecastResultsDiv = document.getElementById('forecast-results');
-            const forecastImage = document.getElementById('forecastImage');
-            const forecastError = document.getElementById('forecastError');
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
             const filterDebtsCheckbox = document.getElementById('filterDebts');
@@ -448,8 +435,7 @@
                     
                     analyzeAndRender(filteredData); // Keep existing analysis for display
                     uploadTransactionsToSupabase(filteredData); // Add new upload function
-                    lastFilteredData = filteredData; // Store filtered data for forecasting
-                };
+                    };
 
                 reader.onerror = () => {
                     alert('Ошибка при чтении файла.');
@@ -660,72 +646,8 @@
                 }
             }
 
-            // --- Forecasting Function ---
-            let lastFilteredData = null; // To store data for forecasting
-
-            async function generateForecast() {
-                if (!lastFilteredData || lastFilteredData.length === 0) {
-                    forecastResultsDiv.innerHTML = '<p class="text-yellow-400">Пожалуйста, сначала загрузите и обработайте данные.</p>';
-                    forecastImage.classList.add('hidden');
-                    forecastError.classList.add('hidden');
-                    return;
-                }
-
-                forecastResultsDiv.innerHTML = '<p>Генерация прогноза...</p>';
-                forecastImage.classList.add('hidden');
-                forecastError.classList.add('hidden');
-
-                // Prepare data for Prophet: 'ds' (date) and 'y' (value)
-                // For expenses, we need to aggregate by date.
-                const dailyExpenses = {};
-                lastFilteredData.forEach(transaction => {
-                    if (transaction.outcome > 0) {
-                        const date = transaction.date; // Assuming date is in YYYY-MM-DD format
-                        dailyExpenses[date] = (dailyExpenses[date] || 0) + transaction.outcome;
-                    }
-                });
-
-                const prophetData = Object.entries(dailyExpenses).map(([date, amount]) => ({
-                    ds: date,
-                    y: amount
-                })).sort((a, b) => new Date(a.ds) - new Date(b.ds));
-
-                if (prophetData.length < 2) {
-                    forecastResultsDiv.innerHTML = '<p class="text-yellow-400">Недостаточно данных для прогнозирования. Требуется как минимум две точки данных.</p>';
-                    return;
-                }
-
-                try {
-                    const response = await fetch('/api/forecast', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ data: prophetData }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok && result.image) {
-                        forecastImage.src = `data:image/png;base64,${result.image}`;
-                        forecastImage.classList.remove('hidden');
-                        forecastResultsDiv.innerHTML = '<p>Прогноз успешно сгенерирован:</p>';
-                    } else {
-                        forecastError.textContent = `Ошибка прогнозирования: ${result.error || 'Неизвестная ошибка'}`;
-                        forecastError.classList.remove('hidden');
-                        forecastResultsDiv.innerHTML = '<p class="text-red-400">Не удалось сгенерировать прогноз.</p>';
-                    }
-                } catch (error) {
-                    forecastError.textContent = `Сетевая ошибка или ошибка сервера: ${error.message}`;
-                    forecastError.classList.remove('hidden');
-                    forecastResultsDiv.innerHTML = '<p class="text-red-400">Произошла ошибка при запросе прогноза.</p>';
-                    console.error('Error fetching forecast:', error);
-                }
-            }
-
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
-            generateForecastButton.addEventListener('click', generateForecast);
             
             apiKeyInput.addEventListener('change', () => {
                 if (lastFinancialData) {
