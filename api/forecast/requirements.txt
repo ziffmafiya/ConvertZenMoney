@@ -1,6 +1,4 @@
 pandas
 statsmodels
-scikit-learn
-python-dotenv
 supabase
 pmdarima
