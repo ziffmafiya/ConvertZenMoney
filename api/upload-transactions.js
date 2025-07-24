@@ -111,7 +111,10 @@ export default async function handler(req, res) {
 
             if (existingTransactions) {
                 console.log(`DEBUG: Supabase returned ${existingTransactions.length} existing transactions for this chunk (first 3: ${JSON.stringify(existingTransactions.slice(0, 3))})`);
-                existingTransactions.forEach(t => existingHashes.add(t.unique_hash));
+                existingTransactions.forEach(t => {
+                    existingHashes.add(String(t.hash)); // Явное приведение к строке
+                    console.log(`DEBUG: Added hash to set: ${String(t.hash)}. Current set size: ${existingHashes.size}`); // Дополнительный лог
+                });
             }
         }
 
