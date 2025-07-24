@@ -122,8 +122,9 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: error.message });
         }
 
-        console.log(`${data.length} transactions uploaded successfully.`);
-        res.status(200).json({ message: `${data.length} new transactions uploaded successfully.` });
+        const insertedCount = data ? data.length : 0;
+        console.log(`${insertedCount} transactions uploaded successfully.`);
+        res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         console.error('Unhandled server error during embedding or Supabase insert:', error);
         res.status(500).json({ error: error.message || 'Internal Server Error' });
