@@ -73,6 +73,9 @@ export default async function handler(req, res) {
             unique_hash: createUniqueHash(t)
         }));
         const incomingHashes = transactionsWithHashes.map(t => t.unique_hash);
+        
+        // --- DEBUGGING LOG ---
+        console.log("DEBUG: Incoming Hashes generated from file:", JSON.stringify(incomingHashes, null, 2));
 
         // 2. Check which hashes already exist in the database, processing in chunks to avoid timeouts
         const CHUNK_SIZE = 500;
@@ -94,6 +97,9 @@ export default async function handler(req, res) {
                 existingTransactions.forEach(t => existingHashes.add(t.unique_hash));
             }
         }
+
+        // --- DEBUGGING LOG ---
+        console.log("DEBUG: Hashes found in database:", JSON.stringify(Array.from(existingHashes), null, 2));
 
         // 3. Filter out transactions that already exist
         const newTransactions = transactionsWithHashes.filter(t => !existingHashes.has(t.unique_hash));
