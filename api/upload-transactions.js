@@ -28,7 +28,10 @@ async function getEmbedding(text) {
     }
     try {
         // Отправляем текст в модель AI для получения встраивания.
-        const result = await embeddingModel.embedContent(text);
+        const result = await embeddingModel.embedContent({
+            content: text,
+            taskType: "CLUSTERING"
+        });
         return result.embedding.values;
     } catch (error) {
         console.error('Error generating embedding for text:', text, error);
