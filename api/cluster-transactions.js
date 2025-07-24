@@ -36,8 +36,11 @@ export default async function handler(req, res) {
         // Объединяем outcome, income и description_embedding в один вектор.
         // Важно: необходимо нормализовать outcome и income, чтобы они не доминировали.
         const dataForClustering = transactions.map(t => {
-            const embedding = t.description_embedding || [];
+            const embedding = Array.isArray(t.description_embedding) ? t.description_embedding : [];
             
+            // Убедимся, что все элементы эмбеддинга являются числами
+            const numericEmbedding = embedding.map(val => typeof val === 'number' ? val : 0);
+
             // Нормализация outcome и income
             // Для простоты используем Min-Max Scaling.
             // В реальном приложении нужно рассчитать min/max по всему набору данных.
@@ -45,11 +48,18 @@ export default async function handler(req, res) {
             const maxOutcome = 10000; // Примерное максимальное значение для outcome
             const maxIncome = 10000;  // Примерное максимальное значение для income
 
-            const normalizedOutcome = t.outcome ? (t.outcome / maxOutcome) : 0;
-            const normalizedIncome = t.income ? (t.income / maxIncome) : 0;
+            let normalizedOutcome = 0;
+            if (typeof t.outcome === 'number' && !isNaN(t.outcome) && maxOutcome !== 0) {
+                normalizedOutcome = t.outcome / maxOutcome;
+            }
+
+            let normalizedIncome = 0;
+            if (typeof t.income === 'number' && !isNaN(t.income) && maxIncome !== 0) {
+                normalizedIncome = t.income / maxIncome;
+            }
 
             // Конкатенация эмбеддингов и нормализованных числовых значений
-            return [...embedding, normalizedOutcome, normalizedIncome];
+            return [...numericEmbedding, normalizedOutcome, normalizedIncome];
         });
 
         // 3. Уменьшение размерности с помощью PCA
