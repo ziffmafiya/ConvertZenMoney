@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import numpy as np
 import os
-from supabase import create_client, Client
+from supabase import create_client, Client # Changed from supabase-py to supabase
 import json
 
 # 1. API Key Configuration
