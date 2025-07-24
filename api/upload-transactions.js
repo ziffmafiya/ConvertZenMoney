@@ -26,24 +26,20 @@ if (process.env.GEMINI_API_KEY) {
  * @param {string} text - Текст для генерации встраивания.
  * @returns {Promise<number[]>} - Массив чисел, представляющий встраивание текста.
  */
-async function getEmbedding(text) {
-    // Проверяем, инициализирована ли модель встраивания.
-    if (!embeddingModel) {
-        console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
-        throw new Error('Embedding model not initialized.');
-    }
-    try {
-    // 🔹 Передаем taskType в embedContent
-    const response = await embeddingModel.embedContent({
-    // ✅ Правильно: instances (не instanse!)
-    instances: [
-      {
-        content: { parts: [{ text }] },
-        taskType: "CLUSTERING"  // точно так — camelCase
-      }
-    ]
-  });
-    return result.embeddings[0].values;
+async function getEmbedding(text, taskType = "CLUSTERING") {
+  if (!embeddingModel) {
+    console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
+    throw new Error('Embedding model not initialized.');
+  }
+  
+  try {
+    // Правильный формат с taskType
+    const result = await embeddingModel.embedContent({
+      content: { parts: [{ text }] },
+      taskType: taskType
+    });
+    
+    return result.embedding.values;
   } catch (error) {
     console.error('Error generating embedding for text:', text, error);
     throw new Error(`Failed to generate embedding: ${error.message}`);
