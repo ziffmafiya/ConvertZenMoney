@@ -40,18 +40,6 @@ async function getEmbedding(text) {
 }
 
 /**
- * Обрезает строку по байтам, чтобы избежать превышения лимитов API.
- * @param {string} str - Входная строка.
- * @param {number} maxBytes - Максимальное количество байт.
- * @returns {string} - Обрезанная строка.
- */
-function truncateByBytes(str, maxBytes = 9900) {
-    const buf = Buffer.from(str, 'utf-8');
-    if (buf.length <= maxBytes) return str;
-    return buf.slice(0, maxBytes).toString('utf-8');
-}
-
-/**
  * Основная функция-обработчик для API-маршрута '/api/upload-transactions'.
  * Она обрабатывает входящие запросы на загрузку транзакций в базу данных Supabase.
  * @param {object} req - Объект запроса (содержит данные, отправленные клиентом).
@@ -211,19 +199,8 @@ export default async function handler(req, res) {
         // 4. Генерируем встраивания (embeddings) только для новых транзакций.
         let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
             // Создаем описание для генерации встраивания, включая все релевантные поля.
-            const parts = [];
-            if (t.comment) parts.push(`Транзакция: ${t.comment}`);
-            if (t.categoryName) parts.push(`Категория: ${t.categoryName}`);
-            if (t.payee) parts.push(`Получатель: ${t.payee}`);
-            if (t.outcomeAccountName) parts.push(`Со счета: ${t.outcomeAccountName}`);
-            if (t.incomeAccountName) parts.push(`На счет: ${t.incomeAccountName}`);
-            
-            let description = parts.join('. ');
-            if (description.trim() === '') {
-                description = 'пустая транзакция'; // Значение по умолчанию для пустых описаний
-            }
-            const safeDescription = truncateByBytes(description); // Обрезаем описание по байтам
-            const embedding = await getEmbedding(safeDescription); // Получаем встраивание.
+            const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+            const embedding = await getEmbedding(description); // Получаем встраивание.
             
             // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
             // а также преобразуем имена полей в snake_case для соответствия колонкам Supabase.

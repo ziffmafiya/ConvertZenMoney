@@ -58,7 +58,7 @@
 *   [Tailwind CSS](https://tailwindcss.com/)
 *   JavaScript (ES6+)
 *   [Chart.js](https://www.chartjs.org/)
-*   [Google Gemini API](https://ai.google.dev/) (используемая модель: `embedding-001` для эмбеддингов, с `taskType: "CLUSTERING"` для оптимизации кластеризации)
+*   [Google Gemini API](https://ai.google.dev/) (используемая модель: `embedding-001` для эмбеддингов)
 *   [Supabase](https://supabase.com/) (как база данных и векторное хранилище)
 *   [Vercel](https://vercel.com/) (для развертывания Serverless Functions и фронтенда)
 *   [density-clustering](https://www.npmjs.com/package/density-clustering) (для кластеризации DBSCAN)
