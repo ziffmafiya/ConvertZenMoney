@@ -60,14 +60,24 @@ export default async function handler(req, res) {
     const createUniqueHash = (t) => {
         // Creates a consistent, unique string from the core fields of a transaction,
         // safely handling null/undefined values and ensuring consistent number formatting.
-        const date = t.date || '';
+        // Normalize date to YYYY-MM-DD format for consistent hashing
+        let normalizedDate = '';
+        if (t.date) {
+            const parts = t.date.split('.');
+            if (parts.length === 3) {
+                normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Assuming DD.MM.YYYY
+            } else {
+                normalizedDate = t.date; // Use as is if not DD.MM.YYYY
+            }
+        }
+        
         const category = (t.categoryName || '').trim();
         const payee = (t.payee || '').trim();
         const comment = (t.comment || '').trim();
         // Format numbers to 2 decimal places to avoid floating point inconsistencies.
         const outcome = (t.outcome || 0).toFixed(2);
         const income = (t.income || 0).toFixed(2);
-        return `${date}|${category}|${payee}|${comment}|${outcome}|${income}`;
+        return `${normalizedDate}|${category}|${payee}|${comment}|${outcome}|${income}`;
     };
 
     try {
@@ -79,7 +89,8 @@ export default async function handler(req, res) {
         const incomingHashes = transactionsWithHashes.map(t => t.unique_hash);
         
         // --- DEBUGGING LOG ---
-        console.log("DEBUG: Incoming Hashes generated from file:", JSON.stringify(incomingHashes, null, 2));
+        console.log("DEBUG: Incoming Hashes generated from file (first 5):", JSON.stringify(incomingHashes.slice(0, 5), null, 2));
+        console.log("DEBUG: Total incoming hashes:", incomingHashes.length);
 
         // 2. Check which hashes already exist in the database, processing in chunks to avoid timeouts
         const CHUNK_SIZE = 500;
@@ -87,6 +98,7 @@ export default async function handler(req, res) {
 
         for (let i = 0; i < incomingHashes.length; i += CHUNK_SIZE) {
             const chunk = incomingHashes.slice(i, i + CHUNK_SIZE);
+            console.log(`DEBUG: Checking chunk of hashes (size: ${chunk.length}, first 3: ${JSON.stringify(chunk.slice(0, 3))})`);
             
             const { data: existingTransactions, error: fetchError } = await supabase
                 .rpc('get_existing_hashes', { hashes: chunk });
@@ -94,19 +106,22 @@ export default async function handler(req, res) {
             if (fetchError) {
                 // The error message might be HTML, so we log a clear message first
                 console.error('Supabase fetch error during deduplication chunk processing:', fetchError);
-                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error.` });
+                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error: ${fetchError.message}` });
             }
 
             if (existingTransactions) {
+                console.log(`DEBUG: Supabase returned ${existingTransactions.length} existing transactions for this chunk (first 3: ${JSON.stringify(existingTransactions.slice(0, 3))})`);
                 existingTransactions.forEach(t => existingHashes.add(t.unique_hash));
             }
         }
 
         // --- DEBUGGING LOG ---
-        console.log("DEBUG: Hashes found in database:", JSON.stringify(Array.from(existingHashes), null, 2));
+        console.log("DEBUG: Hashes found in database (first 5):", JSON.stringify(Array.from(existingHashes).slice(0, 5), null, 2));
+        console.log("DEBUG: Total existing hashes found:", existingHashes.size);
 
         // 3. Filter out transactions that already exist
         const newTransactions = transactionsWithHashes.filter(t => !existingHashes.has(t.unique_hash));
+        console.log(`DEBUG: After initial deduplication (removing existing), ${newTransactions.length} transactions remain.`);
 
         if (newTransactions.length === 0) {
             console.log('No new transactions to upload.');
@@ -116,21 +131,22 @@ export default async function handler(req, res) {
         let transactionsToProcess = newTransactions;
 
         if (excludeDebts) {
+            const originalCountBeforeDebtFilter = transactionsToProcess.length;
             transactionsToProcess = transactionsToProcess.filter(row => {
                 const income = normalize(row.incomeAccountName);
                 const outcome = normalize(row.outcomeAccountName);
                 const hasDebt = income.includes('долги') || outcome.includes('долги');
                 return !hasDebt;
             });
-            console.log(`Filtered out debt-related transactions. Remaining: ${transactionsToProcess.length}`);
+            console.log(`DEBUG: Filtered out debt-related transactions. Removed ${originalCountBeforeDebtFilter - transactionsToProcess.length}. Remaining: ${transactionsToProcess.length}`);
         }
 
         if (transactionsToProcess.length === 0) {
-            console.log('No new transactions to upload after filtering.');
+            console.log('No new transactions to upload after all filters applied.');
             return res.status(200).json({ message: 'No new transactions to upload after filtering. All provided transactions already exist or were excluded.' });
         }
         
-        console.log(`Found ${transactionsToProcess.length} new transactions to process.`);
+        console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
         // 4. Generate embeddings only for the new transactions
         const transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
@@ -153,7 +169,19 @@ export default async function handler(req, res) {
             };
         }));
 
-        console.log('Attempting to insert new transactions with embeddings:', transactionsToInsert);
+        console.log('DEBUG: Transactions to insert before final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
+        console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
+
+        // Verify no duplicates before final insert (extra safeguard)
+        const finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
+        if (finalHashes.size !== transactionsToInsert.length) {
+            console.error("ERROR: Duplicates found in transactionsToInsert before final insert! This indicates an issue with hash generation or prior filtering.");
+            // As a safeguard, re-filter to ensure uniqueness before inserting
+            transactionsToInsert = Array.from(new Map(transactionsToInsert.map(item => [item.unique_hash, item])).values());
+            console.log(`DEBUG: Corrected to ${transactionsToInsert.length} unique transactions before insert.`);
+        }
+        console.log('DEBUG: Transactions to insert after final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
+        console.log('DEBUG: Final count of transactions to insert after all checks:', transactionsToInsert.length);
 
         // 5. Insert only the new, enriched transactions
         const { data, error } = await supabase
