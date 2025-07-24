@@ -1,4 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize the Google Generative AI client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+
+async function getEmbedding(text) {
+    try {
+        const result = await embeddingModel.embedContent(text);
+        return result.embedding.values;
+    } catch (error) {
+        console.error('Error generating embedding:', error);
+        // Depending on the desired behavior, you might want to return null,
+        // or a default vector, or re-throw the error.
+        // For now, we'll re-throw to let the caller handle it.
+        throw new Error('Failed to generate embedding.');
+    }
+}
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -25,21 +43,32 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     try {
-        const transactionsToInsert = transactions.map(t => ({
-            date: t.date,
-            category_name: t.categoryName,
-            payee: t.payee,
-            comment: t.comment,
-            outcome_account_name: t.outcomeAccountName,
-            outcome: t.outcome,
-            income_account_name: t.incomeAccountName,
-            income: t.income
+        // Generate embeddings for each transaction
+        const transactionsWithEmbeddings = await Promise.all(transactions.map(async (t) => {
+            // Create a descriptive string for embedding
+            const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
+            
+            // Generate the embedding
+            const embedding = await getEmbedding(description);
+
+            return {
+                date: t.date,
+                category_name: t.categoryName,
+                payee: t.payee,
+                comment: t.comment,
+                outcome_account_name: t.outcomeAccountName,
+                outcome: t.outcome,
+                income_account_name: t.incomeAccountName,
+                income: t.income,
+                description_embedding: embedding // Add the new embedding field
+            };
         }));
-        console.log('Attempting to insert transactions:', transactionsToInsert);
+
+        console.log('Attempting to insert transactions with embeddings:', transactionsWithEmbeddings);
 
         const { data, error } = await supabase
             .from('transactions')
-            .insert(transactionsToInsert);
+            .insert(transactionsWithEmbeddings);
 
         if (error) {
             console.error('Supabase insert error:', error);
