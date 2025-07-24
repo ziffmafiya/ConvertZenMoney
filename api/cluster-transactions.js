@@ -37,8 +37,19 @@ export default async function handler(req, res) {
         // Для простоты, пока не будем нормализовать, но это важный шаг для улучшения качества кластеризации.
         const dataForClustering = transactions.map(t => {
             const embedding = t.description_embedding || [];
-            // Простая конкатенация. В реальном приложении нужна нормализация.
-            return [...embedding, t.outcome || 0, t.income || 0];
+            
+            // Нормализация outcome и income
+            // Для простоты используем Min-Max Scaling.
+            // В реальном приложении нужно рассчитать min/max по всему набору данных.
+            // Здесь используем примерные диапазоны или можно получить их динамически.
+            const maxOutcome = 10000; // Примерное максимальное значение для outcome
+            const maxIncome = 10000;  // Примерное максимальное значение для income
+
+            const normalizedOutcome = t.outcome ? (t.outcome / maxOutcome) : 0;
+            const normalizedIncome = t.income ? (t.income / maxIncome) : 0;
+
+            // Конкатенация эмбеддингов и нормализованных числовых значений
+            return [...embedding, normalizedOutcome, normalizedIncome];
         });
 
         // 3. Применение HDBSCAN
