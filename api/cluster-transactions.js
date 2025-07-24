@@ -36,10 +36,19 @@ export default async function handler(req, res) {
         // Объединяем outcome, income и description_embedding в один вектор.
         // Важно: необходимо нормализовать outcome и income, чтобы они не доминировали.
         const dataForClustering = transactions.map(t => {
-            const embedding = Array.isArray(t.description_embedding) ? t.description_embedding : [];
+            let embedding = Array.isArray(t.description_embedding) ? t.description_embedding : [];
             
-            // Убедимся, что все элементы эмбеддинга являются числами
-            const numericEmbedding = embedding.map(val => typeof val === 'number' ? val : 0);
+            // Убедимся, что все элементы эмбеддинга являются числами и заполним нулями, если эмбеддинг отсутствует
+            const embeddingLength = 768; // Размер эмбеддинга для embedding-001
+            let numericEmbedding = new Array(embeddingLength).fill(0);
+
+            if (embedding.length > 0) {
+                for (let i = 0; i < embeddingLength; i++) {
+                    if (typeof embedding[i] === 'number' && !isNaN(embedding[i])) {
+                        numericEmbedding[i] = embedding[i];
+                    }
+                }
+            }
 
             // Нормализация outcome и income
             // Для простоты используем Min-Max Scaling.
@@ -62,11 +71,14 @@ export default async function handler(req, res) {
             return [...numericEmbedding, normalizedOutcome, normalizedIncome];
         });
 
+        // Проверка на пустые или некорректные данные перед PCA
+        if (!dataForClustering || dataForClustering.length === 0 || !Array.isArray(dataForClustering[0])) {
+            return res.status(200).json({ message: 'No valid numeric data for clustering after preparation.' });
+        }
+
         // 3. Уменьшение размерности с помощью PCA
         // Уменьшаем до 3 компонент. Это число может быть настроено.
         const pca = new PCA(dataForClustering);
-        // Метод для получения преобразованных данных обычно называется predict или transform.
-        // Попробуем predict. Если не сработает, возможно, transform.
         const reducedData = pca.predict(dataForClustering); // Получаем преобразованные данные
         // Если нужно ограничить количество компонент, это делается после predict,
         // или при инициализации PCA, если библиотека это поддерживает.
