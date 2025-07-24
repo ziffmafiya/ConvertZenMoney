@@ -44,8 +44,11 @@ async function getEmbedding(text) {
                 throw new Error('Invalid response format from Jina AI Embeddings API');
             }
         } catch (error) {
-            if (error.response && error.response.status === 429 && retries < maxRetries - 1) {
-                console.warn(`Rate limit exceeded (429). Retrying in ${delay / 1000} seconds...`);
+            // Проверяем, является ли ошибка временной (429 или 5xx) и можно ли повторить попытку
+            const isRetryableError = error.response && (error.response.status === 429 || (error.response.status >= 500 && error.response.status < 600));
+            
+            if (isRetryableError && retries < maxRetries - 1) {
+                console.warn(`Transient error (${error.response.status}). Retrying in ${delay / 1000} seconds...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 delay *= 2; // Увеличиваем задержку экспоненциально
                 retries++;
@@ -55,7 +58,7 @@ async function getEmbedding(text) {
             }
         }
     }
-    throw new Error(`Failed to generate embedding with Jina AI after ${maxRetries} retries due to rate limiting.`);
+    throw new Error(`Failed to generate embedding with Jina AI after ${maxRetries} retries.`);
 }
 
 /**
