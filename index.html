@@ -182,6 +182,23 @@
         </section>
 
 
+    <!-- Deep Analysis Section -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
+        <p class="text-gray-400 mb-4">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+        <button id="deepAnalysisButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ за месяц</button>
+        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
+            <label for="analysisCategory" class="block mb-2 text-lg font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
+            <input type="text" id="analysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+        </div>
+        <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
+            <!-- Analysis results will be displayed here -->
+        </div>
+        <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Анализ выполняется, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
     <!-- Data Input Section (Moved to the bottom) -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
@@ -204,6 +221,10 @@
             const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
+            const deepAnalysisButton = document.getElementById('deepAnalysisButton');
+            const analysisCategoryInput = document.getElementById('analysisCategory'); // New reference
+            const analysisResultDiv = document.getElementById('analysisResult');
+            const analysisLoadingDiv = document.getElementById('analysisLoading');
             
             const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
             const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
@@ -270,6 +291,40 @@
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
                     alert(`Не удалось загрузить транзакции: ${error.message}`);
+                }
+            }
+
+            async function performDeepAnalysis() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+                const analysisCategory = analysisCategoryInput.value.trim(); // Get category value
+
+                if (!selectedMonth || !selectedYear) {
+                    alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
+                    return;
+                }
+
+                analysisResultDiv.textContent = '';
+                analysisLoadingDiv.classList.remove('hidden');
+
+                const params = new URLSearchParams({ month: selectedMonth, year: selectedYear });
+                if (analysisCategory) {
+                    params.append('category', analysisCategory); // Add category to params
+                }
+
+                try {
+                    const response = await fetch(`/api/deep-analysis?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to perform deep analysis');
+                    }
+                    const { analysis } = await response.json();
+                    analysisResultDiv.textContent = analysis;
+                } catch (error) {
+                    console.error('Error performing deep analysis:', error);
+                    analysisResultDiv.textContent = `Ошибка при выполнении глубокого анализа: ${error.message}`;
+                } finally {
+                    analysisLoadingDiv.classList.add('hidden');
                 }
             }
 
@@ -510,6 +565,7 @@
             processDataButton.addEventListener('click', handleFileProcessing);
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
+            deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts) {
