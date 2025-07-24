@@ -40,7 +40,7 @@ async function getEmbedding(text) {
         }
     } catch (error) {
         console.error('Error generating embedding for text with Jina AI:', text, error.response ? error.response.data : error.message);
-        throw new Error(`Failed to generate embedding with Jina AI: ${error.response ? error.response.data.error.message : error.message}`);
+        throw new Error(`Failed to generate embedding with Jina AI: ${error.response?.data?.error?.message || error.message}`);
     }
 }
 
