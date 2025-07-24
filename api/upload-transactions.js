@@ -149,7 +149,7 @@ export default async function handler(req, res) {
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
         // 4. Generate embeddings only for the new transactions
-        const transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
+        let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
             const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
             const embedding = await getEmbedding(description);
             
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
         console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
 
         // Verify no duplicates before final insert (extra safeguard)
-        const finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
+        let finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
         if (finalHashes.size !== transactionsToInsert.length) {
             console.error("ERROR: Duplicates found in transactionsToInsert before final insert! This indicates an issue with hash generation or prior filtering.");
             // As a safeguard, re-filter to ensure uniqueness before inserting
