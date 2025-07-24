@@ -2,19 +2,25 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+let genAI;
+let embeddingModel;
+
+if (process.env.GEMINI_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+}
 
 async function getEmbedding(text) {
+    if (!embeddingModel) {
+        console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
+        throw new Error('Embedding model not initialized.');
+    }
     try {
         const result = await embeddingModel.embedContent(text);
         return result.embedding.values;
     } catch (error) {
-        console.error('Error generating embedding:', error);
-        // Depending on the desired behavior, you might want to return null,
-        // or a default vector, or re-throw the error.
-        // For now, we'll re-throw to let the caller handle it.
-        throw new Error('Failed to generate embedding.');
+        console.error('Error generating embedding for text:', text, error);
+        throw new Error(`Failed to generate embedding: ${error.message}`);
     }
 }
 
@@ -38,6 +44,10 @@ export default async function handler(req, res) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
+     if (!process.env.GEMINI_API_KEY) {
+        console.error('Configuration error: GEMINI_API_KEY not configured.');
+        return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+    }
     console.log('Supabase client initialized.');
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -45,12 +55,8 @@ export default async function handler(req, res) {
     try {
         // Generate embeddings for each transaction
         const transactionsWithEmbeddings = await Promise.all(transactions.map(async (t) => {
-            // Create a descriptive string for embedding
             const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
-            
-            // Generate the embedding
             const embedding = await getEmbedding(description);
-
             return {
                 date: t.date,
                 category_name: t.categoryName,
@@ -60,7 +66,7 @@ export default async function handler(req, res) {
                 outcome: t.outcome,
                 income_account_name: t.incomeAccountName,
                 income: t.income,
-                description_embedding: embedding // Add the new embedding field
+                description_embedding: embedding
             };
         }));
 
@@ -78,7 +84,7 @@ export default async function handler(req, res) {
         console.log('Transactions uploaded successfully. Data:', data);
         res.status(200).json({ message: 'Transactions uploaded successfully', data });
     } catch (error) {
-        console.error('Unhandled server error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Unhandled server error during embedding or Supabase insert:', error);
+        res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
 }
