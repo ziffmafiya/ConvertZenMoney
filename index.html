@@ -210,28 +210,10 @@
             const netBalanceEl = document.querySelector('.metric-card:nth-child(3) p');
             const expensesLegendContainer = document.getElementById('expensesLegend');
             const incomeListContainer = document.getElementById('incomeList');
-            const apiKeyInput = document.getElementById('apiKeyInput');
-            const aiRecommendationsDiv = document.getElementById('ai-recommendations');
-
-            // --- Recommended Budget Distribution ---
-            const recommendedDistribution = {
-                "Платежи, комиссии / Аренда": { min: 25, max: 30 },
-                "Продукты": { min: 10, max: 15 },
-                "Платежи, комиссии / Коммуналка": { min: 5, max: 10 },
-                "Проезд": { min: 5, max: 10 },
-                "Платежи, комиссии / Связь": { min: 1, max: 3 },
-                "Кафе и рестораны / Кофе": { min: 5, max: 10 },
-                "Покупки: одежда, техника": { min: 5, max: 10 },
-                "Отдых и развлечения": { min: 5, max: 8 },
-                "Здоровье и фитнес": { min: 3, max: 5 },
-                "Подарки": { min: 1, max: 3 },
-                "Платежи, комиссии / Почтовые услуги": { min: 1, max: 2 }
-            };
 
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
-            let lastFinancialData = null; // Variable to store the last processed data
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
@@ -276,7 +258,6 @@
                 }
 
                 try {
-                    aiRecommendationsDiv.innerHTML = '<p>Загрузка отфильтрованных данных...</p>';
                     const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
@@ -285,12 +266,10 @@
                     const { transactions } = await response.json();
                     
                     analyzeAndRender(transactions);
-                    aiRecommendationsDiv.innerHTML = '<p>Данные загружены. Введите ваш API ключ для получения рекомендаций.</p>';
 
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
                     alert(`Не удалось загрузить транзакции: ${error.message}`);
-                    aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось загрузить транзакции: ${error.message}</p>`;
                 }
             }
 
@@ -365,16 +344,6 @@
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome);
-
-                // Store and process AI recommendations
-                lastFinancialData = {
-                    totalIncome,
-                    totalExpenses,
-                    netBalance,
-                    expensesByCategory,
-                    incomeSources
-                };
-                getAIRecommendations(lastFinancialData);
             }
 
             // --- File Handling and Filtering ---
@@ -491,22 +460,8 @@
                     sortedCategories.forEach(category => {
                         const { label, value, color } = category;
                         const actualPercentage = totalIncome > 0 ? (value / totalIncome) * 100 : 0;
-                        const recommendation = recommendedDistribution[label];
+                        // Removed AI recommendation comparison
                         
-                        let comparisonHTML = '';
-                        if (recommendation) {
-                            let statusClass = 'text-gray-500'; // Default for no deviation
-                            let indicator = `(рек. ${recommendation.min}-${recommendation.max}%)`;
-                            if (actualPercentage > recommendation.max) {
-                                statusClass = 'text-red-400'; // Over budget
-                                indicator = `▲ (рек. ${recommendation.min}-${recommendation.max}%)`;
-                            } else if (actualPercentage < recommendation.min) {
-                                statusClass = 'text-green-400'; // Under budget
-                                indicator = `▼ (рек. ${recommendation.min}-${recommendation.max}%)`;
-                            }
-                             comparisonHTML = `<span class="text-xs ${statusClass} ml-2">${indicator}</span>`;
-                        }
-
                         const legendItem = document.createElement('div');
                         legendItem.className = 'legend-item';
                         // A flexbox-based layout for better alignment and wrapping
@@ -520,7 +475,6 @@
                                     </div>
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
-                                        ${comparisonHTML.replace('ml-2', ' ')}
                                     </div>
                                 </div>
                             </div>`;
@@ -552,109 +506,11 @@
                 });
             });
 
-            // --- AI Integration ---
-            async function getAIRecommendations(financialData) {
-                const apiKey = apiKeyInput.value;
-                if (!apiKey) {
-                    aiRecommendationsDiv.innerHTML = '<p class="text-yellow-400">Пожалуйста, введите ваш Google Gemini API ключ, чтобы получить рекомендации.</p>';
-                    return;
-                }
-
-                aiRecommendationsDiv.innerHTML = '<p>Анализ данных и генерация рекомендаций...</p>';
-
-                const { totalIncome, totalExpenses, netBalance, expensesByCategory, incomeSources } = financialData;
-
-                // Generate recommended budget string from the object
-                const recommendedBudgetString = Object.entries(recommendedDistribution)
-                    .map(([category, range]) => `  - ${category}: ${range.min}-${range.max}%`)
-                    .join('\n');
-
-                // Construct a detailed prompt for the AI
-                const prompt = `
-                    Проанализируй следующие финансовые данные за период (валюта: Украинская гривна, UAH) и сравни их с персональными рекомендациями по распределению бюджета.
-
-                    **Финансовые данные пользователя:**
-                    - Общий доход: ${totalIncome.toFixed(2)} UAH
-                    - Общие расходы: ${totalExpenses.toFixed(2)} UAH
-                    - Чистый баланс: ${netBalance.toFixed(2)} UAH
-                    - Источники дохода:
-                    ${Object.entries(incomeSources).map(([source, amount]) => `  - ${source}: ${amount.toFixed(2)} UAH`).join('\n') || '  Нет данных'}
-                    - Структура расходов по категориям (процент от общего дохода):
-                    ${Object.entries(expensesByCategory).map(([category, amount]) => {
-                        const percentage = totalIncome > 0 ? (amount / totalIncome) * 100 : 0;
-                        return `  - ${category}: ${amount.toFixed(2)} UAH (${percentage.toFixed(1)}%)`;
-                    }).join('\n') || '  Нет данных'}
-
-                    **Рекомендуемое распределение бюджета (в % от общего дохода):**
-                    ${recommendedBudgetString}
-
-                    **Твоя задача:**
-                    Предоставь краткий анализ (2-3 предложения), сравнивая фактические траты пользователя (в процентах от дохода) с предоставленной выше рекомендованной моделью. Затем дай 3-5 конкретных, действенных рекомендаций по улучшению финансового положения.
-                    - Укажи, какие категории расходов значительно выходят за рамки рекомендованных процентов.
-                    - Предложи, как можно оптимизировать бюджет, основываясь на этом сравнении.
-                    - Ответ должен быть на русском языке, в формате простого текста, без использования Markdown.
-                `;
-
-                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-                const MAX_RETRIES = 3;
-                let attempt = 0;
-
-                while (attempt < MAX_RETRIES) {
-                    try {
-                        const response = await fetch(API_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }]
-                            })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            const errorMessage = errorData.error.message;
-
-                            // Check for specific overload error to retry
-                            if (response.status === 503 || errorMessage.includes('overloaded')) {
-                                throw new Error('Model overloaded'); // Throw specific error to trigger retry
-                            }
-                            
-                            throw new Error(`API Error: ${errorMessage}`);
-                        }
-
-                        const data = await response.json();
-                        const recommendations = data.candidates[0].content.parts[0].text;
-                        aiRecommendationsDiv.textContent = recommendations;
-                        return; // Exit successfully
-
-                    } catch (error) {
-                        attempt++;
-                        console.error(`Attempt ${attempt} failed:`, error.message);
-
-                        if (error.message.includes('overloaded') && attempt < MAX_RETRIES) {
-                            const delay = Math.pow(2, attempt) * 1000; // Exponential backoff (2s, 4s, 8s)
-                            aiRecommendationsDiv.innerHTML = `<p class="text-yellow-400">Модель перегружена. Повторная попытка через ${delay / 1000} сек... (Попытка ${attempt}/${MAX_RETRIES})</p>`;
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                        } else {
-                            aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось получить рекомендации. Проверьте ваш API ключ и интернет-соединение. Ошибка: ${error.message}</p>`;
-                            return; // Exit after final attempt or for other errors
-                        }
-                    }
-                }
-            }
-
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             
-            apiKeyInput.addEventListener('change', () => {
-                if (lastFinancialData) {
-                    getAIRecommendations(lastFinancialData);
-                }
-            });
-
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts) {
                 try {
