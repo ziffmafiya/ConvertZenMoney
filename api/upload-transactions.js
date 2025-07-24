@@ -80,9 +80,6 @@ export default async function handler(req, res) {
         for (let i = 0; i < incomingHashes.length; i += CHUNK_SIZE) {
             const chunk = incomingHashes.slice(i, i + CHUNK_SIZE);
             
-            // --- EXTENSIVE DEBUGGING LOG ---
-            console.log(`DEBUG: Processing chunk ${Math.floor(i / CHUNK_SIZE) + 1}. Chunk data:`, JSON.stringify(chunk, null, 2));
-
             const { data: existingTransactions, error: fetchError } = await supabase
                 .from('transactions')
                 .select('unique_hash')
