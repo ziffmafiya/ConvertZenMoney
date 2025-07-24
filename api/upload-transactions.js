@@ -95,8 +95,17 @@ export default async function handler(req, res) {
             const embedding = await getEmbedding(description);
             
             // We already have unique_hash in the object, just add the embedding
+            // and map to the correct snake_case column names for Supabase.
             return {
-                ...t,
+                date: t.date,
+                category_name: t.categoryName,
+                payee: t.payee,
+                comment: t.comment,
+                outcome_account_name: t.outcomeAccountName,
+                outcome: t.outcome,
+                income_account_name: t.incomeAccountName,
+                income: t.income,
+                unique_hash: t.unique_hash, // Pass the hash along
                 description_embedding: embedding
             };
         }));
