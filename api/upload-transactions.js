@@ -12,7 +12,7 @@ let embeddingModel;
 if (process.env.GEMINI_API_KEY) {
   genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   embeddingModel = genAI.getGenerativeModel({
-    model: "gemini-embedding-004", // или "embedding-001"
+    model: "text-multilingual-embedding-002", // или "embedding-001"
     // 🔹 Дополняем параметром taskType
     options: {
       taskType: "CLUSTERING"
