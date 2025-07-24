@@ -66,18 +66,28 @@ export default async function handler(req, res) {
         }));
         const incomingHashes = transactionsWithHashes.map(t => t.unique_hash);
 
-        // 2. Check which hashes already exist in the database
-        const { data: existingTransactions, error: fetchError } = await supabase
-            .from('transactions')
-            .select('unique_hash')
-            .in('unique_hash', incomingHashes);
+        // 2. Check which hashes already exist in the database, processing in chunks to avoid timeouts
+        const CHUNK_SIZE = 500;
+        const existingHashes = new Set();
 
-        if (fetchError) {
-            console.error('Supabase fetch error for deduplication:', fetchError);
-            return res.status(500).json({ error: `Failed to check for existing transactions: ${fetchError.message}` });
+        for (let i = 0; i < incomingHashes.length; i += CHUNK_SIZE) {
+            const chunk = incomingHashes.slice(i, i + CHUNK_SIZE);
+            
+            const { data: existingTransactions, error: fetchError } = await supabase
+                .from('transactions')
+                .select('unique_hash')
+                .in('unique_hash', chunk);
+
+            if (fetchError) {
+                // The error message might be HTML, so we log a clear message first
+                console.error('Supabase fetch error during deduplication chunk processing:', fetchError);
+                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error.` });
+            }
+
+            if (existingTransactions) {
+                existingTransactions.forEach(t => existingHashes.add(t.unique_hash));
+            }
         }
-
-        const existingHashes = new Set(existingTransactions.map(t => t.unique_hash));
 
         // 3. Filter out transactions that already exist
         const newTransactions = transactionsWithHashes.filter(t => !existingHashes.has(t.unique_hash));
