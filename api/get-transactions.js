@@ -5,6 +5,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    const { month, year } = req.query;
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
@@ -16,9 +18,19 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        const { data, error } = await supabase
-            .from('transactions')
-            .select('*');
+        let query = supabase.from('transactions').select('*');
+
+        // Apply filters on the server-side if they are provided
+        if (year) {
+            const startDate = `${year}-${month || '01'}-01`;
+            const endDate = month 
+                ? `${year}-${month}-${new Date(year, month, 0).getDate()}`
+                : `${year}-12-31`;
+            
+            query = query.gte('date', startDate).lte('date', endDate);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Supabase select error:', error);

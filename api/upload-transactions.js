@@ -55,13 +55,14 @@ export default async function handler(req, res) {
     // --- Deduplication Logic ---
     const createUniqueHash = (t) => {
         // Creates a consistent, unique string from the core fields of a transaction,
-        // safely handling null or undefined values.
+        // safely handling null/undefined values and ensuring consistent number formatting.
         const date = t.date || '';
-        const category = t.categoryName || '';
-        const payee = t.payee || '';
-        const comment = t.comment || '';
-        const outcome = t.outcome || 0;
-        const income = t.income || 0;
+        const category = (t.categoryName || '').trim();
+        const payee = (t.payee || '').trim();
+        const comment = (t.comment || '').trim();
+        // Format numbers to 2 decimal places to avoid floating point inconsistencies.
+        const outcome = (t.outcome || 0).toFixed(2);
+        const income = (t.income || 0).toFixed(2);
         return `${date}|${category}|${payee}|${comment}|${outcome}|${income}`;
     };
 

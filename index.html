@@ -269,22 +269,42 @@
             }
             
             // --- Data Processing and Analysis ---
-            let allTransactions = []; // Global store for transactions from DB
-
-            // --- Data Fetching ---
+            // --- Data Fetching & Rendering ---
             async function fetchAndRenderTransactions() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                // A year must be selected to fetch data
+                if (!selectedYear) {
+                    analyzeAndRender([]); // Clear charts if no year is selected
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear });
+                if (selectedMonth) {
+                    params.append('month', selectedMonth);
+                }
+
                 try {
-                    aiRecommendationsDiv.innerHTML = '<p>Загрузка данных из базы данных...</p>';
-                    const response = await fetch('/api/get-transactions');
+                    aiRecommendationsDiv.innerHTML = '<p>Загрузка отфильтрованных данных...</p>';
+                    const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch transactions');
                     }
-                    const { transactions } = await response.json();
-                    allTransactions = transactions; // Store globally
+                    let { transactions } = await response.json();
+
+                    // Debt filtering is still done on the client-side
+                    if (filterDebtsCheckbox.checked) {
+                        transactions = transactions.filter(row => {
+                            const income = normalize(row.incomeAccountName);
+                            const outcome = normalize(row.outcomeAccountName);
+                            const hasDebt = income.includes('долги') || outcome.includes('долги');
+                            return !hasDebt;
+                        });
+                    }
                     
-                    // Initial render without filters
-                    applyFiltersAndRender(); 
+                    analyzeAndRender(transactions);
                     aiRecommendationsDiv.innerHTML = '<p>Данные загружены. Введите ваш API ключ для получения рекомендаций.</p>';
 
                 } catch (error) {
@@ -292,36 +312,6 @@
                     alert(`Не удалось загрузить транзакции: ${error.message}`);
                     aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось загрузить транзакции: ${error.message}</p>`;
                 }
-            }
-
-            function applyFiltersAndRender() {
-                let filteredData = allTransactions;
-
-                if (filterDebtsCheckbox.checked) {
-                    filteredData = filteredData.filter(row => {
-                        const income = normalize(row.incomeAccountName);
-                        const outcome = normalize(row.outcomeAccountName);
-                        const hasDebt = income.includes('долги') || outcome.includes('долги');
-                        return !hasDebt;
-                    });
-                }
-
-                const selectedMonth = filterMonthSelect.value;
-                const selectedYear = filterYearInput.value;
-
-                if (selectedMonth || selectedYear) {
-                    filteredData = filteredData.filter(row => {
-                        if (!row.date) return false;
-                        const dateParts = row.date.split('-');
-                        const rowYear = dateParts[0];
-                        const rowMonth = dateParts[1];
-                        const matchMonth = !selectedMonth || rowMonth === selectedMonth;
-                        const matchYear = !selectedYear || rowYear === selectedYear;
-                        return matchMonth && matchYear;
-                    });
-                }
-                
-                analyzeAndRender(filteredData);
             }
 
             function analyzeAndRender(transactions) {
@@ -702,9 +692,9 @@
 
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
-            filterDebtsCheckbox.addEventListener('change', applyFiltersAndRender);
-            filterMonthSelect.addEventListener('change', applyFiltersAndRender);
-            filterYearInput.addEventListener('change', applyFiltersAndRender);
+            filterDebtsCheckbox.addEventListener('change', fetchAndRenderTransactions);
+            filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
+            filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             
             apiKeyInput.addEventListener('change', () => {
                 if (lastFinancialData) {
@@ -740,6 +730,8 @@
             }
 
             // --- Initial Load ---
+            // Set current year and trigger initial fetch
+            filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
         });
     </script>
