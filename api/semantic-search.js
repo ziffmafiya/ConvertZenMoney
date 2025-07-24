@@ -28,7 +28,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { query, match_threshold: clientMatchThreshold } = req.body;
+    const { query } = req.body;
     if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: 'Query parameter is required and must be a string' });
     }
@@ -39,9 +39,6 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Supabase configuration missing' });
     }
 
-    // Используем предоставленный порог или значение по умолчанию (например, 0.8 для более строгих результатов)
-    const effectiveMatchThreshold = typeof clientMatchThreshold === 'number' ? clientMatchThreshold : 0.8;
-
     try {
         // Генерация эмбеддинга для запроса
         const queryEmbedding = await getEmbedding(query);
@@ -50,7 +47,7 @@ export default async function handler(req, res) {
         // Вызов векторного поиска в Supabase
         const { data: transactions, error } = await supabase.rpc('match_transactions', {
             query_embedding: queryEmbedding,
-            match_threshold: effectiveMatchThreshold,
+            match_threshold: 0.8,
             match_count: 10
         });
 
@@ -61,7 +58,7 @@ export default async function handler(req, res) {
                 error: `Supabase RPC error: ${error.message}`,
                 details: {
                     query_embedding_length: queryEmbedding.length,
-                    match_threshold: effectiveMatchThreshold,
+                    match_threshold: 0.75,
                     match_count: 10
                 }
             });
