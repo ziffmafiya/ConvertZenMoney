@@ -113,18 +113,18 @@ export default async function handler(req, res) {
                 console.log(`DEBUG: Supabase returned ${existingTransactions.length} existing transactions for this chunk (first 3: ${JSON.stringify(existingTransactions.slice(0, 3))})`);
                 existingTransactions.forEach(t => {
                     existingHashes.add(String(t.hash)); // Явное приведение к строке
-                    console.log(`DEBUG: Added hash to set: ${String(t.hash)}. Current set size: ${existingHashes.size}`); // Дополнительный лог
+                    // console.log(`DEBUG: Added hash to set: ${String(t.hash)}. Current set size: ${existingHashes.size}`); // Убрал этот лог, чтобы не засорять консоль
                 });
             }
         }
 
         // --- DEBUGGING LOG ---
         console.log("DEBUG: Hashes found in database (first 5):", JSON.stringify(Array.from(existingHashes).slice(0, 5), null, 2));
-        console.log("DEBUG: Total existing hashes found:", existingHashes.size);
+        console.log("DEBUG: Total existing hashes found (after all chunks):", existingHashes.size); // Изменил лог
 
         // 3. Filter out transactions that already exist
         const newTransactions = transactionsWithHashes.filter(t => !existingHashes.has(t.unique_hash));
-        console.log(`DEBUG: After initial deduplication (removing existing), ${newTransactions.length} transactions remain.`);
+        console.log(`DEBUG: After initial deduplication (removing existing from DB), ${newTransactions.length} transactions remain.`);
 
         if (newTransactions.length === 0) {
             console.log('No new transactions to upload.');
