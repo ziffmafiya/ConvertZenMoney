@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                 error: `Supabase RPC error: ${error.message}`,
                 details: {
                     query_embedding_length: queryEmbedding.length,
-                    match_threshold: 0.75,
+                    match_threshold: 0.8,
                     match_count: 10
                 }
             });
