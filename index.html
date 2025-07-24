@@ -269,7 +269,63 @@
             }
             
             // --- Data Processing and Analysis ---
+            let allTransactions = []; // Global store for transactions from DB
+
+            // --- Data Fetching ---
+            async function fetchAndRenderTransactions() {
+                try {
+                    aiRecommendationsDiv.innerHTML = '<p>Загрузка данных из базы данных...</p>';
+                    const response = await fetch('/api/get-transactions');
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch transactions');
+                    }
+                    const { transactions } = await response.json();
+                    allTransactions = transactions; // Store globally
+                    
+                    // Initial render without filters
+                    applyFiltersAndRender(); 
+                    aiRecommendationsDiv.innerHTML = '<p>Данные загружены. Введите ваш API ключ для получения рекомендаций.</p>';
+
+                } catch (error) {
+                    console.error('Error fetching transactions:', error);
+                    alert(`Не удалось загрузить транзакции: ${error.message}`);
+                    aiRecommendationsDiv.innerHTML = `<p class="text-red-400">Не удалось загрузить транзакции: ${error.message}</p>`;
+                }
+            }
+
+            function applyFiltersAndRender() {
+                let filteredData = allTransactions;
+
+                if (filterDebtsCheckbox.checked) {
+                    filteredData = filteredData.filter(row => {
+                        const income = normalize(row.incomeAccountName);
+                        const outcome = normalize(row.outcomeAccountName);
+                        const hasDebt = income.includes('долги') || outcome.includes('долги');
+                        return !hasDebt;
+                    });
+                }
+
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (selectedMonth || selectedYear) {
+                    filteredData = filteredData.filter(row => {
+                        if (!row.date) return false;
+                        const dateParts = row.date.split('-');
+                        const rowYear = dateParts[0];
+                        const rowMonth = dateParts[1];
+                        const matchMonth = !selectedMonth || rowMonth === selectedMonth;
+                        const matchYear = !selectedYear || rowYear === selectedYear;
+                        return matchMonth && matchYear;
+                    });
+                }
+                
+                analyzeAndRender(filteredData);
+            }
+
             function analyzeAndRender(transactions) {
+                if (!transactions) return;
                 let totalIncome = 0;
                 let totalExpenses = 0;
                 const expensesByCategory = {};
@@ -427,12 +483,12 @@
                     }
 
                     if (filteredData.length === 0) {
-                        alert('Нет данных для анализа после применения фильтров.');
+                        alert('Нет данных в файле для загрузки после применения фильтров.');
                         return;
                     }
                     
-                    analyzeAndRender(filteredData); // Keep existing analysis for display
-                    uploadTransactionsToSupabase(filteredData); // Add new upload function
+                    // No longer render from file, just upload
+                    uploadTransactionsToSupabase(filteredData);
                 };
 
                 reader.onerror = () => {
@@ -646,14 +702,15 @@
 
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
+            filterDebtsCheckbox.addEventListener('change', applyFiltersAndRender);
+            filterMonthSelect.addEventListener('change', applyFiltersAndRender);
+            filterYearInput.addEventListener('change', applyFiltersAndRender);
             
             apiKeyInput.addEventListener('change', () => {
                 if (lastFinancialData) {
                     getAIRecommendations(lastFinancialData);
                 }
             });
-
-            analyzeAndRender([]); // Initial render with empty data
 
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions) {
@@ -670,7 +727,8 @@
 
                     if (response.ok) {
                         console.log('Transactions uploaded successfully:', result);
-                        alert('Транзакции успешно загружены в Supabase!');
+                        alert(result.message || 'Транзакции успешно загружены в Supabase!');
+                        fetchAndRenderTransactions(); // Refresh data from DB
                     } else {
                         console.error('Error uploading transactions:', result.error);
                         alert(`Ошибка при загрузке транзакций: ${result.error}`);
@@ -680,6 +738,9 @@
                     alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
                 }
             }
+
+            // --- Initial Load ---
+            fetchAndRenderTransactions();
         });
     </script>
 
