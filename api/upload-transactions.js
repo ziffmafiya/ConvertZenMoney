@@ -35,7 +35,7 @@ async function getEmbedding(text) {
     try {
     // 🔹 Передаем taskType в embedContent
     const result = await embeddingModel.embedContent({
-      instanse: [{
+      instances: [{
         contents: text,
         taskType: "CLUSTERING"
       }
