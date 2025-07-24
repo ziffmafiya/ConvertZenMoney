@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         const pca = new PCA(dataForClustering);
         // Метод для получения преобразованных данных обычно называется predict или transform.
         // Попробуем predict. Если не сработает, возможно, transform.
-        const reducedData = pca.transform(dataForClustering, { nComponents: 3 }); // Получаем 3 главные компоненты
+        const reducedData = pca.getPrincipalComponents(3); // Получаем 3 главные компоненты
 
         // 4. Применение DBSCAN к уменьшенным данным
         // Параметры DBSCAN: eps (радиус окрестности) и minPts (минимальное количество точек в окрестности)
