@@ -81,9 +81,7 @@ export default async function handler(req, res) {
             const chunk = incomingHashes.slice(i, i + CHUNK_SIZE);
             
             const { data: existingTransactions, error: fetchError } = await supabase
-                .from('transactions')
-                .select('unique_hash')
-                .in('unique_hash', chunk);
+                .rpc('get_existing_hashes', { hashes: chunk });
 
             if (fetchError) {
                 // The error message might be HTML, so we log a clear message first
