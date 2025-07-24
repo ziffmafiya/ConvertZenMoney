@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "api/gemini-embeddings.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/gemini-embeddings",
+      "dest": "api/gemini-embeddings.py"
+    }
+  ]
+}
