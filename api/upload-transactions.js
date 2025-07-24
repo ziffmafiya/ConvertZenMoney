@@ -1,64 +1,39 @@
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios'; // Используем axios для HTTP-запросов
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Get your Jina AI API key for free: https://jina.ai/?sui=apikey
+// Инициализация клиента Google Generative AI
+// Этот клиент используется для создания "встраиваний" (embeddings) -
+// числовых представлений текста, которые помогают AI понимать смысл транзакций.
+let genAI;
+let embeddingModel;
+
+// Проверяем, установлен ли ключ API Gemini в переменных окружения.
+// Если ключ есть, инициализируем модели AI.
+if (process.env.GEMINI_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+}
 
 /**
- * Генерирует числовое "встраивание" (embedding) для заданного текста с использованием Jina AI Embeddings API.
+ * Генерирует числовое "встраивание" (embedding) для заданного текста.
+ * Это позволяет AI понимать и сравнивать текстовые описания транзакций.
  * @param {string} text - Текст для генерации встраивания.
  * @returns {Promise<number[]>} - Массив чисел, представляющий встраивание текста.
  */
 async function getEmbedding(text) {
-    const jinaApiKey = process.env.JINA_API_KEY;
-
-    if (!jinaApiKey) {
-        console.error('JINA_API_KEY not configured.');
-        throw new Error('JINA_API_KEY not configured.');
+    // Проверяем, инициализирована ли модель встраивания.
+    if (!embeddingModel) {
+        console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
+        throw new Error('Embedding model not initialized.');
     }
-
-    const maxRetries = 5;
-    let retries = 0;
-    let delay = 1000; // Начальная задержка 1 секунда
-
-    while (retries < maxRetries) {
-        try {
-            const response = await axios.post(
-                'https://api.jina.ai/v1/embeddings',
-                {
-                    model: 'jina-embeddings-v4', // Используем модель jina-embeddings-v4
-                    input: [text] // Входные данные должны быть массивом строк
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${jinaApiKey}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                }
-            );
-            // Jina AI API возвращает массив объектов данных, каждый из которых содержит поле embedding.
-            // Мы ожидаем один объект, так как отправляем один текст.
-            if (response.data && response.data.data && response.data.data.length > 0) {
-                return response.data.data[0].embedding;
-            } else {
-                throw new Error('Invalid response format from Jina AI Embeddings API');
-            }
-        } catch (error) {
-            // Проверяем, является ли ошибка временной (429 или 5xx) и можно ли повторить попытку
-            const isRetryableError = error.response && (error.response.status === 429 || (error.response.status >= 500 && error.response.status < 600));
-            
-            if (isRetryableError && retries < maxRetries - 1) {
-                console.warn(`Transient error (${error.response.status}). Retrying in ${delay / 1000} seconds...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Увеличиваем задержку экспоненциально
-                retries++;
-            } else {
-                console.error('Error generating embedding for text with Jina AI:', text, error.response ? error.response.data : error.message);
-                throw new Error(`Failed to generate embedding with Jina AI: ${error.response?.data?.error?.message || error.message}`);
-            }
-        }
+    try {
+        // Отправляем текст в модель AI для получения встраивания.
+        const result = await embeddingModel.embedContent(text);
+        return result.embedding.values;
+    } catch (error) {
+        console.error('Error generating embedding for text:', text, error);
+        throw new Error(`Failed to generate embedding: ${error.message}`);
     }
-    throw new Error(`Failed to generate embedding with Jina AI after ${maxRetries} retries.`);
 }
 
 /**
@@ -92,10 +67,10 @@ export default async function handler(req, res) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
-    // Проверяем, что ключ API Jina AI настроен.
-     if (!process.env.JINA_API_KEY) {
-        console.error('Configuration error: JINA_API_KEY not configured.');
-        return res.status(500).json({ error: 'JINA_API_KEY not configured' });
+    // Проверяем, что ключ API Gemini настроен.
+     if (!process.env.GEMINI_API_KEY) {
+        console.error('Configuration error: GEMINI_API_KEY not configured.');
+        return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
     console.log('Supabase client initialized.');
 
