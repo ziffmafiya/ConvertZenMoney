@@ -38,19 +38,24 @@ export default async function handler(req, res) {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    // Use the service key for debugging if available, otherwise fall back to the anon key.
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-        console.error('Configuration error: Supabase URL or Anon Key not configured.');
-        return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
+    if (!supabaseUrl || !supabaseKey) {
+        console.error('Configuration error: Supabase URL or Key not configured.');
+        return res.status(500).json({ error: 'Supabase URL or Key not configured' });
     }
      if (!process.env.GEMINI_API_KEY) {
         console.error('Configuration error: GEMINI_API_KEY not configured.');
         return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
     console.log('Supabase client initialized.');
+    // If service key is used, log a security warning.
+    if (process.env.SUPABASE_SERVICE_KEY) {
+        console.warn('SECURITY WARNING: Using Supabase service_role key. This should only be for temporary debugging.');
+    }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // --- Deduplication Logic ---
     const createUniqueHash = (t) => {
