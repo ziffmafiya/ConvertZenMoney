@@ -52,60 +52,13 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // --- Deduplication Logic ---
-    const createUniqueHash = (t) => {
-        // Creates a consistent, unique string from the core fields of a transaction.
-        return `${t.date}|${t.categoryName}|${t.payee}|${t.comment}|${t.outcome}|${t.income}`;
-    };
-
     try {
-        // 1. Generate hashes for all incoming transactions
-        const transactionsWithHashes = transactions.map(t => ({
-            ...t,
-            unique_hash: createUniqueHash(t)
-        }));
-        const incomingHashes = transactionsWithHashes.map(t => t.unique_hash);
-
-        // 2. Check which hashes already exist in the database, processing in chunks to avoid timeouts
-        const CHUNK_SIZE = 500;
-        const existingHashes = new Set();
-
-        for (let i = 0; i < incomingHashes.length; i += CHUNK_SIZE) {
-            const chunk = incomingHashes.slice(i, i + CHUNK_SIZE);
-            
-            const { data: existingTransactions, error: fetchError } = await supabase
-                .from('transactions')
-                .select('unique_hash')
-                .in('unique_hash', chunk);
-
-            if (fetchError) {
-                // The error message might be HTML, so we log a clear message first
-                console.error('Supabase fetch error during deduplication chunk processing:', fetchError);
-                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error.` });
-            }
-
-            if (existingTransactions) {
-                existingTransactions.forEach(t => existingHashes.add(t.unique_hash));
-            }
-        }
-
-        // 3. Filter out transactions that already exist
-        const newTransactions = transactionsWithHashes.filter(t => !existingHashes.has(t.unique_hash));
-
-        if (newTransactions.length === 0) {
-            console.log('No new transactions to upload.');
-            return res.status(200).json({ message: 'No new transactions to upload. All provided transactions already exist.' });
-        }
-        
-        console.log(`Found ${newTransactions.length} new transactions to process.`);
-
-        // 4. Generate embeddings only for the new transactions
-        const transactionsToInsert = await Promise.all(newTransactions.map(async (t) => {
+        // --- TEMPORARY SIMPLIFIED LOGIC FOR DEBUGGING ---
+        // Generate embeddings for each transaction and map to correct column names
+        const transactionsToInsert = await Promise.all(transactions.map(async (t) => {
             const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
             const embedding = await getEmbedding(description);
             
-            // We already have unique_hash in the object, just add the embedding
-            // and map to the correct snake_case column names for Supabase.
             return {
                 date: t.date,
                 category_name: t.categoryName,
@@ -115,14 +68,13 @@ export default async function handler(req, res) {
                 outcome: t.outcome,
                 income_account_name: t.incomeAccountName,
                 income: t.income,
-                unique_hash: t.unique_hash, // Pass the hash along
+                // unique_hash: createUniqueHash(t), // Temporarily disabled
                 description_embedding: embedding
             };
         }));
 
-        console.log('Attempting to insert new transactions with embeddings:', transactionsToInsert);
+        console.log('DEBUG: Attempting to insert transactions without deduplication check:', transactionsToInsert);
 
-        // 5. Insert only the new, enriched transactions
         const { data, error } = await supabase
             .from('transactions')
             .insert(transactionsToInsert);
