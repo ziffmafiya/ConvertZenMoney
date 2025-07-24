@@ -44,13 +44,14 @@ export default async function handler(req, res) {
         // 3. Применение HDBSCAN
         // Параметры HDBSCAN: min_cluster_size и min_samples
         // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        const hdbscan = new HDBSCAN(dataForClustering, {
+        // Применение HDBSCAN
+        // Параметры HDBSCAN: min_cluster_size и min_samples
+        // Эти значения могут потребовать настройки в зависимости от ваших данных.
+        const result = HDBSCAN(dataForClustering, {
             minClusterSize: 5, // Минимальный размер кластера
             minSamples: 3,     // Минимальное количество образцов для определения плотности
             // distanceFunction: 'euclidean' // По умолчанию используется евклидово расстояние
         });
-
-        const result = hdbscan.run();
         const labels = result.labels; // Метки кластеров (-1 для шума)
 
         // 4. Сохранение результатов обратно в Supabase
