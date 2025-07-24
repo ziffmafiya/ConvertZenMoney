@@ -40,6 +40,18 @@ async function getEmbedding(text) {
 }
 
 /**
+ * Обрезает строку по байтам, чтобы избежать превышения лимитов API.
+ * @param {string} str - Входная строка.
+ * @param {number} maxBytes - Максимальное количество байт.
+ * @returns {string} - Обрезанная строка.
+ */
+function truncateByBytes(str, maxBytes = 9900) {
+    const buf = Buffer.from(str, 'utf-8');
+    if (buf.length <= maxBytes) return str;
+    return buf.slice(0, maxBytes).toString('utf-8');
+}
+
+/**
  * Основная функция-обработчик для API-маршрута '/api/upload-transactions'.
  * Она обрабатывает входящие запросы на загрузку транзакций в базу данных Supabase.
  * @param {object} req - Объект запроса (содержит данные, отправленные клиентом).
@@ -210,7 +222,8 @@ export default async function handler(req, res) {
             if (description.trim() === '') {
                 description = 'пустая транзакция'; // Значение по умолчанию для пустых описаний
             }
-            const embedding = await getEmbedding(description); // Получаем встраивание.
+            const safeDescription = truncateByBytes(description); // Обрезаем описание по байтам
+            const embedding = await getEmbedding(safeDescription); // Получаем встраивание.
             
             // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
             // а также преобразуем имена полей в snake_case для соответствия колонкам Supabase.
