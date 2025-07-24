@@ -39,7 +39,7 @@ async function getEmbedding(text) {
     instances: [
       {
         content: { parts: [{ text }] },
-        task_type: "CLUSTERING"
+        taskType: "CLUSTERING"  // точно так — camelCase
       }
     ]
   });
