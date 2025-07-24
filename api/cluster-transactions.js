@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { HDBSCAN } from 'hdbscan-ts';
+import HDBSCAN from 'hdbscanjs';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -47,14 +47,14 @@ export default async function handler(req, res) {
         // 3. Применение HDBSCAN
         // Параметры HDBSCAN: min_cluster_size и min_samples
         // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        const hdbscan = new HDBSCAN(dataForClustering, {
+        const clusterer = new HDBSCAN({
             minClusterSize: 5, // Минимальный размер кластера
             minSamples: 3,     // Минимальное количество образцов для определения плотности
-            // distanceFunction: 'euclidean' // По умолчанию используется евклидово расстояние
+            // metric: 'euclidean' // По умолчанию используется евклидово расстояние
         });
 
-        const result = hdbscan.run();
-        const labels = result.labels; // Метки кластеров (-1 для шума)
+        clusterer.fit(dataForClustering);
+        const labels = clusterer.labels; // Метки кластеров (-1 для шума)
 
         // 4. Сохранение результатов обратно в Supabase
         // Создаем массив объектов для обновления
