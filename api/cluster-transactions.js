@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { DBSCAN } from 'density-clustering';
+import { PCA } from 'ml-pca';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -31,10 +32,9 @@ export default async function handler(req, res) {
             return res.status(200).json({ message: 'No transactions to cluster.' });
         }
 
-        // 2. Подготовка данных для HDBSCAN
+        // 2. Подготовка данных для DBSCAN
         // Объединяем outcome, income и description_embedding в один вектор.
         // Важно: необходимо нормализовать outcome и income, чтобы они не доминировали.
-        // Для простоты, пока не будем нормализовать, но это важный шаг для улучшения качества кластеризации.
         const dataForClustering = transactions.map(t => {
             const embedding = t.description_embedding || [];
             
@@ -52,25 +52,20 @@ export default async function handler(req, res) {
             return [...embedding, normalizedOutcome, normalizedIncome];
         });
 
-        // 3. Применение HDBSCAN
-        // Параметры HDBSCAN: min_cluster_size и min_samples
-        // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        // 3. Применение HDBSCAN
-        // Параметры HDBSCAN: min_cluster_size и min_samples
-        // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        // 3. Применение DBSCAN
-        // Параметры DBSCAN: eps (радиус окрестности) и minPts (минимальное количество точек в окрестности)
-        // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        // 3. Применение DBSCAN
-        // Параметры DBSCAN: eps (радиус окрестности) и minPts (минимальное количество точек в окрестности)
-        // Эти значения требуют настройки в зависимости от ваших данных.
-        // Если все транзакции помечены как шум (-1), попробуйте увеличить eps.
-        // Если все транзакции попадают в один большой кластер, попробуйте уменьшить eps.
-        const dbscan = new DBSCAN();
-        const eps = 10.0; // Увеличено значение. Если все еще шум, попробуйте 50.0, 100.0 и т.д.
-        const minPts = 2; // Уменьшено значение. Минимальное значение - 2.
+        // 3. Уменьшение размерности с помощью PCA
+        // Уменьшаем до 3 компонент. Это число может быть настроено.
+        const pca = new PCA(dataForClustering);
+        const reducedData = pca.getPrincipalComponents(3); // Получаем 3 главные компоненты
 
-        const clusters = dbscan.run(dataForClustering, eps, minPts);
+        // 4. Применение DBSCAN к уменьшенным данным
+        // Параметры DBSCAN: eps (радиус окрестности) и minPts (минимальное количество точек в окрестности)
+        // Эти значения требуют настройки в зависимости от ваших данных и уменьшенной размерности.
+        // После уменьшения размерности, eps, вероятно, потребуется уменьшить.
+        const dbscan = new DBSCAN();
+        const eps = 0.5; // Примерное значение для уменьшенных данных, требует настройки
+        const minPts = 5; // Примерное значение, требует настройки
+
+        const clusters = dbscan.run(reducedData, eps, minPts);
 
         // DBSCAN возвращает массив массивов, где каждый внутренний массив - это индексы точек в кластере.
         // Точки, не вошедшие ни в один кластер, не включены в clusters.
