@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { HDBSCAN } from 'hdbscan-ts';
+import { DBSCAN } from 'density-clustering';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -47,14 +47,24 @@ export default async function handler(req, res) {
         // 3. Применение HDBSCAN
         // Параметры HDBSCAN: min_cluster_size и min_samples
         // Эти значения могут потребовать настройки в зависимости от ваших данных.
-        const clusterer = new HDBSCAN({
-            minClusterSize: 5, // Минимальный размер кластера
-            minSamples: 3,     // Минимальное количество образцов для определения плотности
-            // metric: 'euclidean' // По умолчанию используется евклидово расстояние
-        });
+        // 3. Применение DBSCAN
+        // Параметры DBSCAN: eps (радиус окрестности) и minPts (минимальное количество точек в окрестности)
+        // Эти значения могут потребовать настройки в зависимости от ваших данных.
+        const dbscan = new DBSCAN();
+        const eps = 0.5; // Примерное значение, требует настройки
+        const minPts = 5; // Примерное значение, требует настройки
 
-        clusterer.fit(dataForClustering);
-        const labels = clusterer.labels; // Метки кластеров (-1 для шума)
+        const clusters = dbscan.run(dataForClustering, eps, minPts);
+
+        // DBSCAN возвращает массив массивов, где каждый внутренний массив - это индексы точек в кластере.
+        // Точки, не вошедшие ни в один кластер, не включены в clusters.
+        // Нам нужно создать массив меток, где -1 - это шум.
+        const labels = new Array(transactions.length).fill(-1); // Инициализируем все как шум
+        clusters.forEach((cluster, clusterId) => {
+            cluster.forEach(dataIndex => {
+                labels[dataIndex] = clusterId;
+            });
+        });
 
         // 4. Сохранение результатов обратно в Supabase
         // Создаем массив объектов для обновления

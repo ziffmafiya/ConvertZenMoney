@@ -10,7 +10,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
     "@supabase/supabase-js": "^2.44.2",
-    "hdbscan-ts": "^1.0.16",
-    "hdbscanjs": "^1.0.12"
+    "density-clustering": "^1.3.0"
   }
 }
