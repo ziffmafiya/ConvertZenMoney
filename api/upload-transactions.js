@@ -10,8 +10,14 @@ let embeddingModel;
 // Проверяем, установлен ли ключ API Gemini в переменных окружения.
 // Если ключ есть, инициализируем модели AI.
 if (process.env.GEMINI_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  embeddingModel = genAI.getGenerativeModel({
+    model: "gemini-embedding-001", // или "embedding-001"
+    // 🔹 Дополняем параметром taskType
+    options: {
+      taskType: "CLUSTERING"
+    }
+  });
 }
 
 /**
@@ -27,13 +33,18 @@ async function getEmbedding(text) {
         throw new Error('Embedding model not initialized.');
     }
     try {
-        // Отправляем текст в модель AI для получения встраивания.
-        const result = await embeddingModel.embedContent(text);
-        return result.embedding.values;
-    } catch (error) {
-        console.error('Error generating embedding for text:', text, error);
-        throw new Error(`Failed to generate embedding: ${error.message}`);
-    }
+    // 🔹 Передаем taskType в embedContent
+    const result = await embeddingModel.embedContent({
+      contents: text,
+      options: {
+        taskType: "CLUSTERING"
+      }
+    });
+    return result.embeddings[0].values;
+  } catch (error) {
+    console.error('Error generating embedding for text:', text, error);
+    throw new Error(`Failed to generate embedding: ${error.message}`);
+  }
 }
 
 /**
