@@ -34,13 +34,15 @@ async function getEmbedding(text) {
     }
     try {
     // 🔹 Передаем taskType в embedContent
-    const result = await embeddingModel.embedContent({
-      instances: [{
-        contents: text,
-        taskType: "CLUSTERING"
+    const response = await embeddingModel.embedContent({
+    // ✅ Правильно: instances (не instanse!)
+    instances: [
+      {
+        content: { parts: [{ text }] },
+        task_type: "CLUSTERING"
       }
     ]
-    });
+  });
     return result.embeddings[0].values;
   } catch (error) {
     console.error('Error generating embedding for text:', text, error);
