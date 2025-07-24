@@ -182,34 +182,6 @@
         </section>
 
 
-    <!-- Semantic Search Section -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Семантический поиск по транзакциям</h2>
-        <p class="text-gray-400 mb-4">Поиск транзакций по смыслу, а не точным совпадениям</p>
-        
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="semanticQuery" placeholder="Введите поисковый запрос" class="flex-grow p-3 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="searchButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition duration-300">Найти</button>
-        </div>
-        
-        <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <!-- Results will be displayed here -->
-        </div>
-    </section>
-
-    <!-- HDBSCAN Clustering Section -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций (HDBSCAN)</h2>
-        <p class="text-gray-400 mb-4">Запустите кластеризацию, чтобы сгруппировать похожие транзакции. Результаты будут сохранены в Supabase и отображены здесь.</p>
-        <button id="clusterButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mb-4">Запустить кластеризацию</button>
-        
-        <div class="chart-container">
-            <canvas id="clusterChart"></canvas>
-        </div>
-        <div id="clusterLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
-        <p id="clusterStatus" class="text-center text-gray-400 mt-4"></p>
-    </section>
-    
     <!-- Data Input Section (Moved to the bottom) -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
@@ -238,25 +210,15 @@
             const netBalanceEl = document.querySelector('.metric-card:nth-child(3) p');
             const expensesLegendContainer = document.getElementById('expensesLegend');
             const incomeListContainer = document.getElementById('incomeList');
-            const clusterButton = document.getElementById('clusterButton');
-            const clusterStatusEl = document.getElementById('clusterStatus');
-            const clusterLegendContainer = document.getElementById('clusterLegend');
 
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
-            let clusterChart; // New chart for clustering
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
                 '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
             ];
-            // Extend COLORS for more clusters if needed
-            const CLUSTER_COLORS = [
-                '#3b82f6', '#ef4444', '#22c55e', '#eab308', '#8b5cf6', '#14b8a6', '#f97316', '#06b6d4', '#d946ef', '#84cc16',
-                '#6366f1', '#f43f5e', '#ec4899', '#a855f7', '#0ea5e9', '#71717a', '#f59e0b', '#4ade80', '#fbbf24', '#c084fc'
-            ];
-
 
             const tooltipPlugin = {
                 callbacks: {
@@ -274,20 +236,6 @@
                 }
             };
             
-            // New tooltip plugin for cluster chart (counts)
-            const clusterTooltipPlugin = {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.label || '';
-                        if (label) {
-                            label += ': ';
-                        }
-                        label += context.parsed + ' транзакций';
-                        return label;
-                    }
-                }
-            };
-
             function normalize(str) {
                 return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
             }
@@ -523,7 +471,7 @@
                                 <div class="flex-grow min-w-0">
                                     <div class="flex justify-between items-center">
                                         <span class="text-gray-300 mr-2">${label}</span>
-                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
                                     </div>
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
@@ -563,76 +511,6 @@
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             
-            // Semantic search button listener
-            document.getElementById('searchButton').addEventListener('click', performSemanticSearch);
-            document.getElementById('semanticQuery').addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') performSemanticSearch();
-            });
-            
-            // Semantic search function
-            async function performSemanticSearch() {
-                const query = document.getElementById('semanticQuery').value.trim();
-                if (!query) {
-                    alert('Введите поисковый запрос');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/api/semantic-search', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query })
-                    });
-                    
-                    const { results } = await response.json();
-                    renderSearchResults(results);
-                } catch (error) {
-                    console.error('Search error:', error);
-                    alert('Ошибка при выполнении поиска');
-                }
-            }
-            
-            function renderSearchResults(results) {
-                const container = document.getElementById('searchResults');
-                container.innerHTML = '';
-                
-                if (!results || results.length === 0) {
-                    container.innerHTML = '<p class="text-gray-400 text-center">Ничего не найдено</p>';
-                    return;
-                }
-                
-                results.forEach(transaction => {
-                    const isIncome = transaction.income > 0;
-                    const amount = isIncome ? transaction.income : transaction.outcome;
-                    const similarityPercent = Math.round(transaction.similarity * 100);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="font-bold text-white">${transaction.date}</span>
-                            <span class="text-sm font-semibold ${isIncome ? 'text-green-400' : 'text-red-400'}">
-                                ${isIncome ? '+' : '-'}${amount.toFixed(2)} грн
-                            </span>
-                        </div>
-                        <div class="mb-2">
-                            <div class="text-gray-300">${transaction.categoryName}</div>
-                            <div class="font-medium text-white">${transaction.payee}</div>
-                        </div>
-                        ${transaction.comment ? `<div class="text-gray-400 text-sm mb-2">${transaction.comment}</div>` : ''}
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="text-xs text-gray-500">Сходство: ${similarityPercent}%</span>
-                            <span class="text-xs px-2 py-1 rounded bg-blue-900 text-blue-200">${isIncome ? 'Доход' : 'Расход'}</span>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-            
-            // Initialization of semantic search UI
-            document.getElementById('searchResults').innerHTML = '<p class="text-gray-400 text-center">Введите запрос для поиска</p>';
-
-            
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts) {
                 try {
@@ -660,103 +538,10 @@
                 }
             }
 
-            // --- HDBSCAN Clustering Function ---
-            async function performClustering() {
-                clusterStatusEl.textContent = 'Запуск кластеризации...';
-                clusterButton.disabled = true; // Disable button during clustering
-
-                try {
-                    const response = await fetch('/api/cluster-transactions', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({}) // No specific body needed for now
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        clusterStatusEl.textContent = result.message;
-                        renderClusterChart(result.clusterLabels);
-                        alert(result.message);
-                    } else {
-                        clusterStatusEl.textContent = `Ошибка: ${result.error}`;
-                        alert(`Ошибка при кластеризации: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error('Clustering error:', error);
-                    clusterStatusEl.textContent = 'Произошла ошибка при кластеризации.';
-                    alert('Произошла ошибка при кластеризации. Проверьте консоль для деталей.');
-                } finally {
-                    clusterButton.disabled = false; // Re-enable button
-                }
-            }
-
-            function renderClusterChart(labels) {
-                if (clusterChart) clusterChart.destroy();
-
-                const clusterCounts = {};
-                labels.forEach(label => {
-                    clusterCounts[label] = (clusterCounts[label] || 0) + 1;
-                });
-
-                const sortedLabels = Object.keys(clusterCounts).sort((a, b) => {
-                    // Sort -1 (noise) to the end
-                    if (a === '-1') return 1;
-                    if (b === '-1') return -1;
-                    return parseInt(a) - parseInt(b);
-                });
-
-                const data = {
-                    labels: sortedLabels.map(label => label === '-1' ? 'Шум (-1)' : `Кластер ${label}`),
-                    datasets: [{
-                        data: sortedLabels.map(label => clusterCounts[label]),
-                        backgroundColor: sortedLabels.map((label, i) => label === '-1' ? '#71717a' : CLUSTER_COLORS[i % CLUSTER_COLORS.length]),
-                        borderColor: '#1f2937',
-                        borderWidth: 3,
-                        hoverOffset: 15
-                    }]
-                };
-
-                const ctxCluster = document.getElementById('clusterChart').getContext('2d');
-                clusterChart = new Chart(ctxCluster, {
-                    type: 'doughnut',
-                    data: data,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
-                        plugins: { legend: { display: false }, tooltip: clusterTooltipPlugin }
-                    }
-                });
-
-                // Render cluster legend
-                clusterLegendContainer.innerHTML = '';
-                sortedLabels.forEach((label, i) => {
-                    const count = clusterCounts[label];
-                    const color = label === '-1' ? '#71717a' : CLUSTER_COLORS[i % CLUSTER_COLORS.length];
-                    const legendItem = document.createElement('div');
-                    legendItem.className = 'legend-item';
-                    legendItem.innerHTML = `
-                        <div class="flex w-full items-center">
-                            <div class="legend-color-box flex-shrink-0" style="background-color: ${color}"></div>
-                            <div class="flex-grow min-w-0">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-300 mr-2">${label === '-1' ? 'Шум (-1)' : `Кластер ${label}`}</span>
-                                    <span class="font-bold text-white whitespace-nowrap">${count} транзакций</span>
-                                </div>
-                            </div>
-                        </div>`;
-                    clusterLegendContainer.appendChild(legendItem);
-                });
-            }
-
             // --- Initial Load ---
             // Set current year and trigger initial fetch
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
-
-            // Event listener for clustering button
-            clusterButton.addEventListener('click', performClustering);
         });
     </script>
 
