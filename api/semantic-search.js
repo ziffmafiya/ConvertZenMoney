@@ -47,7 +47,7 @@ export default async function handler(req, res) {
         // Вызов векторного поиска в Supabase
         const { data: transactions, error } = await supabase.rpc('match_transactions', {
             query_embedding: queryEmbedding,
-            match_threshold: 0.8,
+            match_threshold: 0.7,
             match_count: 10
         });
 
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                 error: `Supabase RPC error: ${error.message}`,
                 details: {
                     query_embedding_length: queryEmbedding.length,
-                    match_threshold: 0.8,
+                    match_threshold: 0.7,
                     match_count: 10
                 }
             });
