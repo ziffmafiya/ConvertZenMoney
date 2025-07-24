@@ -447,16 +447,13 @@
                         income: parseFloat(row.income.replace(',', '.')) || 0,
                     }));
 
-                    let filteredData = transactionData;
-
-                    // The client-side filters are now only for display, not for upload logic.
-                    // We upload everything from the file.
-                    if (filteredData.length === 0) {
-                        alert('Нет данных в файле для загрузки.');
+                    if (transactionData.length === 0) {
+                        alert('В файле не найдено подходящих транзакций для загрузки.');
                         return;
                     }
                     
-                    uploadTransactionsToSupabase(transactionData); // Upload all data from file
+                    // Upload all parsed data from the file. The server will handle deduplication.
+                    uploadTransactionsToSupabase(transactionData);
                 };
 
                 reader.onerror = () => {
@@ -717,31 +714,27 @@
 </body>
 </html>
 
-</file_content>
+</final_file_content>
 
-Now that you have the latest state of the file, try the operation again with fewer, more precise SEARCH blocks. For large files especially, it may be prudent to try to limit yourself to <5 SEARCH/REPLACE blocks at a time, then wait for the user to respond with the result of the operation before following up with another replace_in_file call to make additional edits.
-(If you run into this error 3 times in a row, you may use the write_to_file tool as a fallback.)
-</error><environment_details>
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
+
+<environment_details>
 # VSCode Visible Files
 index.html
 
 # VSCode Open Tabs
 package.json
-api/upload-transactions.js
 api/get-transactions.js
+api/upload-transactions.js
 index.html
 package-lock.json
 README.md
 
-# Recently Modified Files
-These files have been modified since you last accessed them (file was just edited so you may need to re-read it before editing):
-index.html
-
 # Current Time
-7/24/2025, 1:54:08 PM (Europe/Kiev, UTC+3:00)
+7/24/2025, 2:17:40 PM (Europe/Kiev, UTC+3:00)
 
 # Context Window Usage
-180,483 / 1,048.576K tokens used (17%)
+219,237 / 1,048.576K tokens used (21%)
 
 # Current Mode
 ACT MODE
