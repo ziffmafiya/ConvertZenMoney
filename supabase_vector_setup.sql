@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Создаем функцию для векторного поиска
 CREATE OR REPLACE FUNCTION match_transactions(
-  query_embedding vector(768),
+  query_embedding vector(2048),
   match_threshold float,
   match_count int
 )
@@ -18,7 +18,7 @@ RETURNS TABLE (
   income_account_name text,
   income numeric,
   unique_hash text,
-  description_embedding vector(768),
+  description_embedding vector(2048),
   similarity float
 )
 LANGUAGE SQL STABLE
@@ -45,3 +45,6 @@ $$;
 
 -- Создаем индекс для ускорения поиска (опционально)
 CREATE INDEX ON transactions USING ivfflat (description_embedding vector_cosine_ops) WITH (lists = 100);
+-- При изменении размерности вектора, возможно, потребуется пересоздать таблицу transactions
+-- и переиндексировать данные, если они уже существуют.
+-- ALTER TABLE transactions ALTER COLUMN description_embedding TYPE vector(2048) USING description_embedding::vector(2048);
