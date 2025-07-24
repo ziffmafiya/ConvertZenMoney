@@ -83,24 +83,15 @@
             <p class="text-lg md:text-xl text-gray-400 mt-2">Универсальный шаблон</p>
         </header>
 
-        <!-- Data Input Section -->
+        <!-- Settings/Filters Section -->
         <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mb-8 md:mb-12">
-            <h2 class="text-2xl font-bold text-white mb-4">Загрузить и обработать файл</h2>
-            
-            <!-- File Input -->
-            <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-
-            <!-- Filters -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="flex items-center p-4 bg-gray-800 rounded-lg">
-                    <input id="filterDebts" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                    <label for="filterDebts" class="ml-3 text-lg font-medium text-gray-300">Исключить "Долги"</label>
-                </div>
+            <h2 class="text-2xl font-bold text-white mb-4">Настройки отображения</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="p-4 bg-gray-800 rounded-lg">
-                    <label for="filterMonth" class="block mb-2 text-lg font-medium text-gray-300">Фильтр по дате</label>
+                    <label for="filterMonth" class="block mb-2 text-lg font-medium text-gray-300">Период</label>
                     <div class="flex items-center gap-2">
                         <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                            <option value="">Все месяцы</option>
+                            <option value="">Весь год</option>
                             <option value="01">Январь</option>
                             <option value="02">Февраль</option>
                             <option value="03">Март</option>
@@ -117,9 +108,11 @@
                         <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                     </div>
                 </div>
+                <div class="flex items-center p-4 bg-gray-800 rounded-lg">
+                    <input id="filterDebts" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="filterDebts" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги"</label>
+                </div>
             </div>
-
-            <button id="processDataButton" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Анализировать</button>
         </section>
 
         <!-- Main Metrics -->
@@ -130,7 +123,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 6V5m0 14v-1m-7-7h-1m14 0h-1m-7-7a7 7 0 110 14 7 7 0 010-14z" /></svg>
                     <h2 class="text-xl font-semibold text-gray-300">Общий доход</h2>
                 </div>
-                <p class="text-3xl font-bold text-green-400">26,013.81 грн</p>
+                <p class="text-3xl font-bold text-green-400">0.00 грн</p>
             </div>
             <!-- Total Expenses -->
             <div class="metric-card">
@@ -138,7 +131,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                     <h2 class="text-xl font-semibold text-gray-300">Общие расходы</h2>
                 </div>
-                <p class="text-3xl font-bold text-red-400">27,908.40 грн</p>
+                <p class="text-3xl font-bold text-red-400">0.00 грн</p>
             </div>
             <!-- Net Balance -->
             <div class="metric-card">
@@ -146,7 +139,7 @@
                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6-3 6h18l-3-6 3-6H3z" /></svg>
                     <h2 class="text-xl font-semibold text-gray-300">Чистый баланс</h2>
                 </div>
-                <p class="text-3xl font-bold text-blue-400">-1,894.59 грн</p>
+                <p class="text-3xl font-bold text-blue-400">0.00 грн</p>
             </div>
         </section>
 
@@ -202,6 +195,14 @@
             <div id="ai-recommendations" class="p-4 bg-gray-800 rounded-lg min-h-[100px] text-gray-300 whitespace-pre-wrap">
                 <p>Введите ваш API ключ и обработайте данные, чтобы получить рекомендации.</p>
             </div>
+        </section>
+
+        <!-- Data Input Section (Moved to the bottom) -->
+        <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
+            <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
+            <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+            <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
         </section>
 
     </div>
@@ -448,37 +449,14 @@
 
                     let filteredData = transactionData;
 
-                    if (filterDebtsCheckbox.checked) {
-                        filteredData = filteredData.filter(row => {
-                            const income = normalize(row.incomeAccountName);
-                            const outcome = normalize(row.outcomeAccountName);
-                            const hasDebt = income.includes('долги') || outcome.includes('долги');
-                            return !hasDebt;
-                        });
-                    }
-
-                    const selectedMonth = filterMonthSelect.value;
-                    const selectedYear = filterYearInput.value;
-
-                    if (selectedMonth || selectedYear) {
-                        filteredData = filteredData.filter(row => {
-                            if (!row.date) return false;
-                            const dateParts = row.date.split('-');
-                            const rowYear = dateParts[0];
-                            const rowMonth = dateParts[1];
-                            const matchMonth = !selectedMonth || rowMonth === selectedMonth;
-                            const matchYear = !selectedYear || rowYear === selectedYear;
-                            return matchMonth && matchYear;
-                        });
-                    }
-
+                    // The client-side filters are now only for display, not for upload logic.
+                    // We upload everything from the file.
                     if (filteredData.length === 0) {
-                        alert('Нет данных в файле для загрузки после применения фильтров.');
+                        alert('Нет данных в файле для загрузки.');
                         return;
                     }
                     
-                    // No longer render from file, just upload
-                    uploadTransactionsToSupabase(filteredData);
+                    uploadTransactionsToSupabase(transactionData); // Upload all data from file
                 };
 
                 reader.onerror = () => {
@@ -738,3 +716,33 @@
 
 </body>
 </html>
+
+</file_content>
+
+Now that you have the latest state of the file, try the operation again with fewer, more precise SEARCH blocks. For large files especially, it may be prudent to try to limit yourself to <5 SEARCH/REPLACE blocks at a time, then wait for the user to respond with the result of the operation before following up with another replace_in_file call to make additional edits.
+(If you run into this error 3 times in a row, you may use the write_to_file tool as a fallback.)
+</error><environment_details>
+# VSCode Visible Files
+index.html
+
+# VSCode Open Tabs
+package.json
+api/upload-transactions.js
+api/get-transactions.js
+index.html
+package-lock.json
+README.md
+
+# Recently Modified Files
+These files have been modified since you last accessed them (file was just edited so you may need to re-read it before editing):
+index.html
+
+# Current Time
+7/24/2025, 1:54:08 PM (Europe/Kiev, UTC+3:00)
+
+# Context Window Usage
+180,483 / 1,048.576K tokens used (17%)
+
+# Current Mode
+ACT MODE
+</environment_details>
