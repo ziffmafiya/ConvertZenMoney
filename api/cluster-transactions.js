@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         // 1. Получение данных из Supabase
         const { data: transactions, error: fetchError } = await supabase
             .from('transactions')
-            .select('id, outcome, income, description_embedding');
+            .select('id, date, outcome, income, description_embedding');
 
         if (fetchError) {
             console.error('Supabase fetch error:', fetchError);
@@ -70,6 +70,7 @@ export default async function handler(req, res) {
         // Создаем массив объектов для обновления
         const updates = transactions.map((t, index) => ({
             id: t.id,
+            date: t.date, // Включаем дату, так как она может быть NOT NULL
             cluster_id: labels[index] // Добавляем метку кластера
         }));
 
