@@ -29,8 +29,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { transactions } = req.body;
-    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0);
+    const { transactions, excludeDebts } = req.body;
+    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts);
 
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
         console.error('Validation error: No transactions provided or invalid format.');
@@ -51,6 +51,10 @@ export default async function handler(req, res) {
     console.log('Supabase client initialized.');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    function normalize(str) {
+        return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+    }
 
     // --- Deduplication Logic ---
     const createUniqueHash = (t) => {
@@ -109,10 +113,27 @@ export default async function handler(req, res) {
             return res.status(200).json({ message: 'No new transactions to upload. All provided transactions already exist.' });
         }
         
-        console.log(`Found ${newTransactions.length} new transactions to process.`);
+        let transactionsToProcess = newTransactions;
+
+        if (excludeDebts) {
+            transactionsToProcess = transactionsToProcess.filter(row => {
+                const income = normalize(row.incomeAccountName);
+                const outcome = normalize(row.outcomeAccountName);
+                const hasDebt = income.includes('долги') || outcome.includes('долги');
+                return !hasDebt;
+            });
+            console.log(`Filtered out debt-related transactions. Remaining: ${transactionsToProcess.length}`);
+        }
+
+        if (transactionsToProcess.length === 0) {
+            console.log('No new transactions to upload after filtering.');
+            return res.status(200).json({ message: 'No new transactions to upload after filtering. All provided transactions already exist or were excluded.' });
+        }
+        
+        console.log(`Found ${transactionsToProcess.length} new transactions to process.`);
 
         // 4. Generate embeddings only for the new transactions
-        const transactionsToInsert = await Promise.all(newTransactions.map(async (t) => {
+        const transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
             const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
             const embedding = await getEmbedding(description);
             

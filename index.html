@@ -108,10 +108,6 @@
                         <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                     </div>
                 </div>
-                <div class="flex items-center p-4 bg-gray-800 rounded-lg">
-                    <input id="filterDebts" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                    <label for="filterDebts" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги"</label>
-                </div>
             </div>
         </section>
 
@@ -202,6 +198,10 @@
             <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
             <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
             <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+            <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+                <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
+            </div>
             <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
         </section>
 
@@ -212,7 +212,7 @@
             // --- DOM Element References ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
-            const filterDebtsCheckbox = document.getElementById('filterDebts');
+            const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
             
@@ -293,17 +293,7 @@
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch transactions');
                     }
-                    let { transactions } = await response.json();
-
-                    // Debt filtering is still done on the client-side
-                    if (filterDebtsCheckbox.checked) {
-                        transactions = transactions.filter(row => {
-                            const income = normalize(row.incomeAccountName);
-                            const outcome = normalize(row.outcomeAccountName);
-                            const hasDebt = income.includes('долги') || outcome.includes('долги');
-                            return !hasDebt;
-                        });
-                    }
+                    const { transactions } = await response.json();
                     
                     analyzeAndRender(transactions);
                     aiRecommendationsDiv.innerHTML = '<p>Данные загружены. Введите ваш API ключ для получения рекомендаций.</p>';
@@ -453,7 +443,7 @@
                     }
                     
                     // Upload all parsed data from the file. The server will handle deduplication.
-                    uploadTransactionsToSupabase(transactionData);
+                    uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked);
                 };
 
                 reader.onerror = () => {
@@ -667,7 +657,6 @@
 
             // --- Event Listeners and Initial Call ---
             processDataButton.addEventListener('click', handleFileProcessing);
-            filterDebtsCheckbox.addEventListener('change', fetchAndRenderTransactions);
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             
@@ -678,14 +667,14 @@
             });
 
             // --- Supabase Upload Function ---
-            async function uploadTransactionsToSupabase(transactions) {
+            async function uploadTransactionsToSupabase(transactions, excludeDebts) {
                 try {
                     const response = await fetch('/api/upload-transactions', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ transactions }),
+                        body: JSON.stringify({ transactions, excludeDebts }),
                     });
 
                     const result = await response.json();
