@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import HDBSCAN from 'hdbscanjs';
+import { HDBSCAN } from 'hdbscan-ts';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
