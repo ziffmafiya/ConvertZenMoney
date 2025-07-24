@@ -35,10 +35,11 @@ async function getEmbedding(text) {
     try {
     // 🔹 Передаем taskType в embedContent
     const result = await embeddingModel.embedContent({
-      contents: text,
-      options: {
+      instanse: [{
+        contents: text,
         taskType: "CLUSTERING"
       }
+    ]
     });
     return result.embeddings[0].values;
   } catch (error) {
