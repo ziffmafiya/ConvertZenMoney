@@ -38,22 +38,16 @@ export default async function handler(req, res) {
         const dataForClustering = transactions.map(t => {
             let embedding = Array.isArray(t.description_embedding) ? t.description_embedding : [];
             
-            // Убедимся, что все элементы эмбеддинга являются числами и заполним нулями, если эмбеддинг отсутствует
             const embeddingLength = 768; // Размер эмбеддинга для embedding-001
-            let numericEmbedding = new Array(embeddingLength).fill(0);
+            let currentVector = new Array(embeddingLength + 2).fill(0); // Инициализируем вектор нулями с правильной длиной
 
-            if (embedding.length > 0) {
-                for (let i = 0; i < embeddingLength; i++) {
-                    if (typeof embedding[i] === 'number' && !isNaN(embedding[i])) {
-                        numericEmbedding[i] = embedding[i];
-                    }
+            // Заполняем часть вектора, соответствующую эмбеддингу
+            for (let i = 0; i < embeddingLength; i++) {
+                if (i < embedding.length && typeof embedding[i] === 'number' && !isNaN(embedding[i])) {
+                    currentVector[i] = embedding[i];
                 }
             }
 
-            // Нормализация outcome и income
-            // Для простоты используем Min-Max Scaling.
-            // В реальном приложении нужно рассчитать min/max по всему набору данных.
-            // Здесь используем примерные диапазоны или можно получить их динамически.
             const maxOutcome = 10000; // Примерное максимальное значение для outcome
             const maxIncome = 10000;  // Примерное максимальное значение для income
 
@@ -67,13 +61,16 @@ export default async function handler(req, res) {
                 normalizedIncome = t.income / maxIncome;
             }
 
-            // Конкатенация эмбеддингов и нормализованных числовых значений
-            return [...numericEmbedding, normalizedOutcome, normalizedIncome];
+            // Добавляем нормализованные outcome и income в конец вектора
+            currentVector[embeddingLength] = normalizedOutcome;
+            currentVector[embeddingLength + 1] = normalizedIncome;
+
+            return currentVector; // Вектор гарантированно является Array<number> фиксированной длины
         });
 
         // Проверка на пустые или некорректные данные перед PCA
-        if (!dataForClustering || dataForClustering.length === 0 || !Array.isArray(dataForClustering[0])) {
-            return res.status(200).json({ message: 'No valid numeric data for clustering after preparation.' });
+        if (!dataForClustering || dataForClustering.length === 0 || !Array.isArray(dataForClustering[0]) || dataForClustering[0].length !== (768 + 2)) {
+            return res.status(200).json({ message: 'No valid numeric data for clustering after preparation or inconsistent data dimensions.' });
         }
 
         // 3. Уменьшение размерности с помощью PCA
