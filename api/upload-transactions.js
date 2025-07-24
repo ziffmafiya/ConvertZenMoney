@@ -38,29 +38,31 @@ export default async function handler(req, res) {
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    // Use the service key for debugging if available, otherwise fall back to the anon key.
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-        console.error('Configuration error: Supabase URL or Key not configured.');
-        return res.status(500).json({ error: 'Supabase URL or Key not configured' });
+        console.error('Configuration error: Supabase URL or Anon Key not configured.');
+        return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
      if (!process.env.GEMINI_API_KEY) {
         console.error('Configuration error: GEMINI_API_KEY not configured.');
         return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
     console.log('Supabase client initialized.');
-    // If service key is used, log a security warning.
-    if (process.env.SUPABASE_SERVICE_KEY) {
-        console.warn('SECURITY WARNING: Using Supabase service_role key. This should only be for temporary debugging.');
-    }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // --- Deduplication Logic ---
     const createUniqueHash = (t) => {
-        // Creates a consistent, unique string from the core fields of a transaction.
-        return `${t.date}|${t.categoryName}|${t.payee}|${t.comment}|${t.outcome}|${t.income}`;
+        // Creates a consistent, unique string from the core fields of a transaction,
+        // safely handling null or undefined values.
+        const date = t.date || '';
+        const category = t.categoryName || '';
+        const payee = t.payee || '';
+        const comment = t.comment || '';
+        const outcome = t.outcome || 0;
+        const income = t.income || 0;
+        return `${date}|${category}|${payee}|${comment}|${outcome}|${income}`;
     };
 
     try {
