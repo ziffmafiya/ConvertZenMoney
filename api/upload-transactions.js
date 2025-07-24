@@ -174,19 +174,20 @@ export default async function handler(req, res) {
 
         // Verify no duplicates before final insert (extra safeguard)
         let finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
-        if (finalHashes.size !== transactionsToInsert.length) {
+        let finalTransactionsToInsert = transactionsToInsert; // Use a new variable for the final array
+        if (finalHashes.size !== finalTransactionsToInsert.length) { // Changed transactionsToInsert to finalTransactionsToInsert
             console.error("ERROR: Duplicates found in transactionsToInsert before final insert! This indicates an issue with hash generation or prior filtering.");
             // As a safeguard, re-filter to ensure uniqueness before inserting
-            transactionsToInsert = Array.from(new Map(transactionsToInsert.map(item => [item.unique_hash, item])).values());
-            console.log(`DEBUG: Corrected to ${transactionsToInsert.length} unique transactions before insert.`);
+            finalTransactionsToInsert = Array.from(new Map(finalTransactionsToInsert.map(item => [item.unique_hash, item])).values()); // Changed transactionsToInsert to finalTransactionsToInsert
+            console.log(`DEBUG: Corrected to ${finalTransactionsToInsert.length} unique transactions before insert.`);
         }
-        console.log('DEBUG: Transactions to insert after final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
-        console.log('DEBUG: Final count of transactions to insert after all checks:', transactionsToInsert.length);
+        console.log('DEBUG: Transactions to insert after final check (first 5):', JSON.stringify(finalTransactionsToInsert.slice(0, 5), null, 2));
+        console.log('DEBUG: Final count of transactions to insert after all checks:', finalTransactionsToInsert.length);
 
         // 5. Insert only the new, enriched transactions
         const { data, error } = await supabase
             .from('transactions')
-            .insert(transactionsToInsert);
+            .insert(finalTransactionsToInsert);
 
         if (error) {
             console.error('Supabase insert error:', error);
