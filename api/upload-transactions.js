@@ -16,32 +16,46 @@ async function getEmbedding(text) {
         throw new Error('JINA_API_KEY not configured.');
     }
 
-    try {
-        const response = await axios.post(
-            'https://api.jina.ai/v1/embeddings',
-            {
-                model: 'jina-embeddings-v4', // Используем модель jina-embeddings-v4
-                input: [text] // Входные данные должны быть массивом строк
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${jinaApiKey}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+    const maxRetries = 5;
+    let retries = 0;
+    let delay = 1000; // Начальная задержка 1 секунда
+
+    while (retries < maxRetries) {
+        try {
+            const response = await axios.post(
+                'https://api.jina.ai/v1/embeddings',
+                {
+                    model: 'jina-embeddings-v4', // Используем модель jina-embeddings-v4
+                    input: [text] // Входные данные должны быть массивом строк
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${jinaApiKey}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
                 }
+            );
+            // Jina AI API возвращает массив объектов данных, каждый из которых содержит поле embedding.
+            // Мы ожидаем один объект, так как отправляем один текст.
+            if (response.data && response.data.data && response.data.data.length > 0) {
+                return response.data.data[0].embedding;
+            } else {
+                throw new Error('Invalid response format from Jina AI Embeddings API');
             }
-        );
-        // Jina AI API возвращает массив объектов данных, каждый из которых содержит поле embedding.
-        // Мы ожидаем один объект, так как отправляем один текст.
-        if (response.data && response.data.data && response.data.data.length > 0) {
-            return response.data.data[0].embedding;
-        } else {
-            throw new Error('Invalid response format from Jina AI Embeddings API');
+        } catch (error) {
+            if (error.response && error.response.status === 429 && retries < maxRetries - 1) {
+                console.warn(`Rate limit exceeded (429). Retrying in ${delay / 1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Увеличиваем задержку экспоненциально
+                retries++;
+            } else {
+                console.error('Error generating embedding for text with Jina AI:', text, error.response ? error.response.data : error.message);
+                throw new Error(`Failed to generate embedding with Jina AI: ${error.response?.data?.error?.message || error.message}`);
+            }
         }
-    } catch (error) {
-        console.error('Error generating embedding for text with Jina AI:', text, error.response ? error.response.data : error.message);
-        throw new Error(`Failed to generate embedding with Jina AI: ${error.response?.data?.error?.message || error.message}`);
     }
+    throw new Error(`Failed to generate embedding with Jina AI after ${maxRetries} retries due to rate limiting.`);
 }
 
 /**
