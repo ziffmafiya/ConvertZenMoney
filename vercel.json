@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/gemini-embeddings.py": {
+      "runtime": "python3.9"
+    }
+  }
+}
