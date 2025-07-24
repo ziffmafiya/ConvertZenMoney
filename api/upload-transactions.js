@@ -195,8 +195,8 @@ export default async function handler(req, res) {
 
         // 4. Генерируем встраивания (embeddings) только для новых транзакций.
         let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
-            // Создаем описание для генерации встраивания.
-            const description = `Payee: ${t.payee || 'N/A'}, Category: ${t.categoryName || 'N/A'}, Comment: ${t.comment || 'N/A'}`;
+            // Создаем описание для генерации встраивания, включая все релевантные поля.
+            const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
             const embedding = await getEmbedding(description); // Получаем встраивание.
             
             // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
