@@ -182,17 +182,32 @@
         </section>
 
 
-        <!-- Data Input Section (Moved to the bottom) -->
-        <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
-            <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
-            <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
-            <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-            <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
-                <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
-            </div>
-            <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
-        </section>
+    <!-- Semantic Search Section -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Семантический поиск по транзакциям</h2>
+        <p class="text-gray-400 mb-4">Поиск транзакций по смыслу, а не точным совпадениям</p>
+        
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="semanticQuery" placeholder="Введите поисковый запрос" class="flex-grow p-3 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="searchButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition duration-300">Найти</button>
+        </div>
+        
+        <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <!-- Results will be displayed here -->
+        </div>
+    </section>
+    
+    <!-- Data Input Section (Moved to the bottom) -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
+        <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
+        <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+        <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+            <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+            <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
+        </div>
+        <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
+    </section>
 
     </div>
 
@@ -510,6 +525,76 @@
             processDataButton.addEventListener('click', handleFileProcessing);
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
+            
+            // Semantic search button listener
+            document.getElementById('searchButton').addEventListener('click', performSemanticSearch);
+            document.getElementById('semanticQuery').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') performSemanticSearch();
+            });
+            
+            // Semantic search function
+            async function performSemanticSearch() {
+                const query = document.getElementById('semanticQuery').value.trim();
+                if (!query) {
+                    alert('Введите поисковый запрос');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/semantic-search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    
+                    const { results } = await response.json();
+                    renderSearchResults(results);
+                } catch (error) {
+                    console.error('Search error:', error);
+                    alert('Ошибка при выполнении поиска');
+                }
+            }
+            
+            function renderSearchResults(results) {
+                const container = document.getElementById('searchResults');
+                container.innerHTML = '';
+                
+                if (!results || results.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 text-center">Ничего не найдено</p>';
+                    return;
+                }
+                
+                results.forEach(transaction => {
+                    const isIncome = transaction.income > 0;
+                    const amount = isIncome ? transaction.income : transaction.outcome;
+                    const similarityPercent = Math.round(transaction.similarity * 100);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-white">${transaction.date}</span>
+                            <span class="text-sm font-semibold ${isIncome ? 'text-green-400' : 'text-red-400'}">
+                                ${isIncome ? '+' : '-'}${amount.toFixed(2)} грн
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="text-gray-300">${transaction.categoryName}</div>
+                            <div class="font-medium text-white">${transaction.payee}</div>
+                        </div>
+                        ${transaction.comment ? `<div class="text-gray-400 text-sm mb-2">${transaction.comment}</div>` : ''}
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-xs text-gray-500">Сходство: ${similarityPercent}%</span>
+                            <span class="text-xs px-2 py-1 rounded bg-blue-900 text-blue-200">${isIncome ? 'Доход' : 'Расход'}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+            
+            // Initialization of semantic search UI
+            document.getElementById('searchResults').innerHTML = '<p class="text-gray-400 text-center">Введите запрос для поиска</p>';
+
             
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts) {
