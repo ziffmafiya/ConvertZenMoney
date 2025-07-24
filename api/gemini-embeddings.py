@@ -95,7 +95,7 @@ class Handler:
 
             # Вставка обогащенных данных в Supabase
             # Замените 'your_transactions_table' на фактическое имя вашей таблицы
-            table_name = 'your_transactions_table'
+            table_name = 'transactions'
             response, count = supabase.table(table_name).insert(augmented_transactions).execute()
 
             if response:
