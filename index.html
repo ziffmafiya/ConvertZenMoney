@@ -210,6 +210,27 @@
         </div>
     </section>
 
+    <!-- Forecast Section -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Прогноз доходов и расходов</h2>
+        <p class="text-gray-400 mb-4">Получите прогноз на следующие несколько месяцев на основе ваших исторических данных.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="forecastMonths" class="block mb-2 text-lg font-medium text-gray-300">Количество месяцев для прогноза</label>
+                <input type="number" id="forecastMonths" value="6" min="1" max="24" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+            <div class="flex items-end">
+                <button id="forecastButton" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Сгенерировать прогноз</button>
+            </div>
+        </div>
+        <div id="forecastLoading" class="hidden mt-4 text-center text-teal-400">
+            <p>Построение прогноза, пожалуйста, подождите...</p>
+        </div>
+        <div class="mt-6 bar-chart-container">
+            <canvas id="forecastChart"></canvas>
+        </div>
+    </section>
+
     <!-- Data Input Section (Moved to the bottom) -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
@@ -243,6 +264,9 @@
             const analysisResultDiv = document.getElementById('analysisResult');
             const analysisLoadingDiv = document.getElementById('analysisLoading');
             const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
+            const forecastMonthsInput = document.getElementById('forecastMonths');
+            const forecastButton = document.getElementById('forecastButton');
+            const forecastLoadingDiv = document.getElementById('forecastLoading');
             
             const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
             const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
@@ -253,6 +277,7 @@
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
+            let forecastChart;
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
@@ -367,6 +392,33 @@
                 } finally {
                     analysisLoadingDiv.classList.add('hidden');
                     analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Reset text
+                }
+            }
+
+            async function performForecast() {
+                const months = forecastMonthsInput.value;
+                if (!months || months <= 0) {
+                    alert('Пожалуйста, введите корректное количество месяцев для прогноза.');
+                    return;
+                }
+
+                forecastLoadingDiv.classList.remove('hidden');
+                if(forecastChart) forecastChart.destroy();
+
+
+                try {
+                    const response = await fetch(`/api/forecast-transactions?months=${months}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to generate forecast');
+                    }
+                    const { historical, forecast } = await response.json();
+                    renderForecastChart(historical, forecast);
+                } catch (error) {
+                    console.error('Error performing forecast:', error);
+                    alert(`Ошибка при построении прогноза: ${error.message}`);
+                } finally {
+                    forecastLoadingDiv.classList.add('hidden');
                 }
             }
 
@@ -542,6 +594,79 @@
                 });
             }
 
+            function renderForecastChart(historical, forecast) {
+                if (forecastChart) forecastChart.destroy();
+
+                const allMonths = [...historical.map(h => h.month), ...forecast.map(f => f.month)];
+                
+                const historicalIncomeData = historical.map(h => h.income);
+                const historicalOutcomeData = historical.map(h => h.outcome);
+
+                const forecastIncomeData = forecast.map(f => f.income);
+                const forecastOutcomeData = forecast.map(f => f.outcome);
+
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                forecastChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: allMonths,
+                        datasets: [
+                            {
+                                label: 'Исторический доход',
+                                data: historicalIncomeData,
+                                borderColor: '#22c55e', // green-500
+                                backgroundColor: '#22c55e',
+                                tension: 0.1,
+                                pointRadius: 3,
+                            },
+                            {
+                                label: 'Прогноз дохода',
+                                data: [...new Array(historical.length).fill(null), ...forecastIncomeData],
+                                borderColor: '#22c55e',
+                                borderDash: [5, 5], // Dashed line for forecast
+                                backgroundColor: 'transparent',
+                                tension: 0.1,
+                                pointRadius: 3,
+                            },
+                            {
+                                label: 'Исторические расходы',
+                                data: historicalOutcomeData,
+                                borderColor: '#ef4444', // red-500
+                                backgroundColor: '#ef4444',
+                                tension: 0.1,
+                                pointRadius: 3,
+                            },
+                            {
+                                label: 'Прогноз расходов',
+                                data: [...new Array(historical.length).fill(null), ...forecastOutcomeData],
+                                borderColor: '#ef4444',
+                                borderDash: [5, 5], // Dashed line for forecast
+                                backgroundColor: 'transparent',
+                                tension: 0.1,
+                                pointRadius: 3,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                        },
+                        plugins: { 
+                            legend: { 
+                                position: 'top',
+                                labels: {
+                                    color: '#e5e7eb'
+                                }
+                            }, 
+                            tooltip: tooltipPlugin 
+                        }
+                    }
+                });
+            }
+
             function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
                 expensesLegendContainer.innerHTML = '';
                 if (expenseDataByCategory.labels.length > 0) {
@@ -633,6 +758,7 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            forecastButton.addEventListener('click', performForecast);
             
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
