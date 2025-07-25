@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         // 1. Получаем все транзакции, у которых есть сумма расхода
         const { data: transactions, error: fetchError } = await supabase
             .from('transactions')
-            .select('id, category_name, outcome')
+            .select('*') // Выбираем все поля, чтобы избежать ошибок с NOT NULL
             .not('outcome', 'is', null)
             .gt('outcome', 0);
 
@@ -62,11 +62,13 @@ export default async function handler(req, res) {
             // 4. Ищем аномалии в категории
             for (const t of categoryTransactions) {
                 if (t.outcome > anomalyThreshold) {
-                    anomalyUpdates.push({
-                        id: t.id,
+                    // Создаем полный объект для upsert, чтобы удовлетворить NOT NULL ограничения
+                    const updateRecord = {
+                        ...t, // Копируем все существующие поля
                         is_anomaly: true,
                         anomaly_reason: `Сумма ${t.outcome.toFixed(2)} значительно превышает среднюю (${avg.toFixed(2)}) для категории "${category}".`
-                    });
+                    };
+                    anomalyUpdates.push(updateRecord);
                 }
             }
         }
