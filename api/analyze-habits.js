@@ -1,11 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Helper function to get the previous month and year
+function getPreviousMonth(year, month) {
+    const date = new Date(year, month - 1, 1);
+    date.setMonth(date.getMonth() - 1);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1
+    };
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     const { month, year } = req.query;
+
+    if (!year || !month) {
+        return res.status(400).json({ error: 'Year and month are required' });
+    }
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -18,25 +32,38 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        let query = supabase.from('transactions').select('*');
+        // Fetch transactions for the current period
+        const startDate = `${year}-${month.padStart(2, '0')}-01`;
+        const endDate = `${year}-${month.padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+        
+        const { data: currentTransactions, error: currentError } = await supabase
+            .from('transactions')
+            .select('*')
+            .gte('date', startDate)
+            .lte('date', endDate);
 
-        if (year) {
-            const startDate = `${year}-${month || '01'}-01`;
-            const endDate = month
-                ? `${year}-${month}-${new Date(year, month, 0).getDate()}`
-                : `${year}-12-31`;
-            
-            query = query.gte('date', startDate).lte('date', endDate);
+        if (currentError) {
+            console.error('Supabase select error (current):', currentError);
+            return res.status(500).json({ error: currentError.message });
         }
 
-        const { data: transactions, error } = await query;
+        // Fetch transactions for the previous period for trend calculation
+        const { year: prevYear, month: prevMonth } = getPreviousMonth(parseInt(year), parseInt(month));
+        const prevStartDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
+        const prevEndDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${new Date(prevYear, prevMonth, 0).getDate()}`;
 
-        if (error) {
-            console.error('Supabase select error:', error);
-            return res.status(500).json({ error: error.message });
+        const { data: previousTransactions, error: previousError } = await supabase
+            .from('transactions')
+            .select('*')
+            .gte('date', prevStartDate)
+            .lte('date', prevEndDate);
+
+        if (previousError) {
+            console.error('Supabase select error (previous):', previousError);
+            return res.status(500).json({ error: previousError.message });
         }
 
-        const habits = analyzeHabits(transactions);
+        const habits = analyzeHabits(currentTransactions, previousTransactions);
 
         res.status(200).json({ habits });
     } catch (error) {
@@ -45,31 +72,57 @@ export default async function handler(req, res) {
     }
 }
 
-function analyzeHabits(transactions) {
+function analyzeHabits(currentTransactions, previousTransactions) {
     const habits = {};
-    const payeeFrequency = {};
+    
+    // Process current transactions
+    const currentPayeeData = processTransactions(currentTransactions);
+    
+    // Process previous transactions
+    const previousPayeeData = processTransactions(previousTransactions);
 
-    transactions.forEach(t => {
-        if (t.outcome > 0) {
-            const payee = t.payee.trim();
-            payeeFrequency[payee] = (payeeFrequency[payee] || 0) + 1;
-        }
-    });
+    // Identify habits and calculate trends
+    for (const payee in currentPayeeData) {
+        if (currentPayeeData[payee].count > 3) { // Habit threshold
+            const currentData = currentPayeeData[payee];
+            const previousData = previousPayeeData[payee] || { totalSpent: 0, count: 0 };
 
-    for (const payee in payeeFrequency) {
-        if (payeeFrequency[payee] > 3) { // Consider it a habit if it occurs more than 3 times
-            const habitTransactions = transactions.filter(t => t.payee.trim() === payee);
-            const totalSpent = habitTransactions.reduce((sum, t) => sum + t.outcome, 0);
-            const avgSpent = totalSpent / habitTransactions.length;
-            
+            // Calculate trend
+            let trend = 0;
+            if (previousData.totalSpent > 0) {
+                trend = ((currentData.totalSpent - previousData.totalSpent) / previousData.totalSpent) * 100;
+            } else if (currentData.totalSpent > 0) {
+                trend = 100; // New habit
+            }
+
             habits[payee] = {
-                count: habitTransactions.length,
-                totalSpent: totalSpent.toFixed(2),
-                avgSpent: avgSpent.toFixed(2),
-                category: habitTransactions[0].category_name 
+                ...currentData,
+                trend: trend.toFixed(0),
+                avgSpent: (currentData.totalSpent / currentData.count).toFixed(2),
             };
         }
     }
 
     return habits;
+}
+
+function processTransactions(transactions) {
+    const payeeData = {};
+    transactions.forEach(t => {
+        if (t.outcome > 0) {
+            const payee = t.payee.trim();
+            if (!payeeData[payee]) {
+                payeeData[payee] = {
+                    count: 0,
+                    totalSpent: 0,
+                    category: t.category_name,
+                    transactions: []
+                };
+            }
+            payeeData[payee].count++;
+            payeeData[payee].totalSpent += t.outcome;
+            payeeData[payee].transactions.push({ date: t.date, amount: t.outcome });
+        }
+    });
+    return payeeData;
 }
