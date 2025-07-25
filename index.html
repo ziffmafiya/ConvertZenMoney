@@ -440,7 +440,7 @@
                     .sort((a, b) => b.amount - a.amount);
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
-                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome);
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
             }
 
             // --- File Handling and Filtering ---
@@ -542,7 +542,7 @@
                 });
             }
 
-            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome) {
+            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
                 expensesLegendContainer.innerHTML = '';
                 if (expenseDataByCategory.labels.length > 0) {
                     // Sort categories by value descending for the legend
