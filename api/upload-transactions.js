@@ -14,9 +14,7 @@ if (process.env.GEMINI_API_KEY) {
   embeddingModel = genAI.getGenerativeModel({
     model: "gemini-embedding-001", // или "embedding-001"
     // 🔹 Дополняем параметром taskType
-    options: {
-      taskType: "CLUSTERING"
-    }
+    
   });
 }
 
@@ -29,7 +27,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * @param {string} text - Текст для генерации встраивания.
  * @returns {Promise<number[]>} - Массив чисел, представляющий встраивание текста.
  */
-async function getEmbedding(text, taskType = "CLUSTERING") {
+async function getEmbedding(text) {
   if (!embeddingModel) {
     console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
     throw new Error('Embedding model not initialized.');
@@ -43,7 +41,6 @@ async function getEmbedding(text, taskType = "CLUSTERING") {
       // Правильный формат с taskType
       const result = await embeddingModel.embedContent({
         content: { parts: [{ text }] },
-        taskType: taskType
       });
       return result.embedding.values;
     } catch (error) {
