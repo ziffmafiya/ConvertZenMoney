@@ -222,6 +222,15 @@
         </div>
     </section>
 
+    <!-- AI Advice Modal -->
+    <div id="aiAdviceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-lg w-full">
+            <h2 class="text-2xl font-bold text-white mb-4">Совет от ИИ</h2>
+            <div id="aiAdviceContent" class="text-gray-300 whitespace-pre-wrap"></div>
+            <button id="closeAiAdviceModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+        </div>
+    </div>
+
     <!-- Data Input Section (Moved to the bottom) -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
@@ -257,6 +266,9 @@
             const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
             const habitsResultDiv = document.getElementById('habitsResult');
             const habitsLoadingDiv = document.getElementById('habitsLoading');
+            const aiAdviceModal = document.getElementById('aiAdviceModal');
+            const aiAdviceContent = document.getElementById('aiAdviceContent');
+            const closeAiAdviceModal = document.getElementById('closeAiAdviceModal');
             
             const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
             const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
@@ -331,16 +343,13 @@
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
 
-                if (!selectedYear) {
-                    habitsResultDiv.innerHTML = '';
+                if (!selectedYear || !selectedMonth) {
+                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Пожалуйста, выберите год и месяц для анализа привычек.</p>';
                     return;
                 }
 
                 habitsLoadingDiv.classList.remove('hidden');
-                const params = new URLSearchParams({ year: selectedYear });
-                if (selectedMonth) {
-                    params.append('month', selectedMonth);
-                }
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
                 try {
                     const response = await fetch(`/api/analyze-habits?${params.toString()}`);
@@ -365,16 +374,37 @@
                     return;
                 }
 
+                const categoryIcons = {
+                    'Продукты': '🛒',
+                    'Кафе и рестораны': '☕',
+                    'Транспорт': '🚕',
+                    'Развлечения': '🎬',
+                    'Онлайн-сервисы': '💻',
+                    'default': '💰'
+                };
+
                 for (const payee in habits) {
                     const habit = habits[payee];
+                    const trendColor = habit.trend > 0 ? 'text-red-400' : 'text-green-400';
+                    const trendArrow = habit.trend > 0 ? '↑' : '↓';
+                    const icon = categoryIcons[habit.category] || categoryIcons['default'];
+
                     const habitCard = document.createElement('div');
-                    habitCard.className = 'metric-card';
+                    habitCard.className = 'metric-card p-4 flex flex-col';
                     habitCard.innerHTML = `
-                        <h3 class="text-lg font-semibold text-gray-300 mb-2">${payee}</h3>
-                        <p class="text-2xl font-bold text-blue-400">${habit.totalSpent} грн</p>
-                        <p class="text-sm text-gray-400">Всего: ${habit.count} раз</p>
-                        <p class="text-sm text-gray-400">В среднем: ${habit.avgSpent} грн</p>
-                        <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-300">${payee}</h3>
+                                <span class="text-2xl">${icon}</span>
+                            </div>
+                            <p class="text-2xl font-bold text-blue-400">${parseFloat(habit.totalSpent).toLocaleString('ru-RU')} грн</p>
+                            <div class="flex justify-between items-center text-sm text-gray-400 mt-1">
+                                <span>${habit.count} раз за месяц</span>
+                                <span class="${trendColor}">${trendArrow} ${Math.abs(habit.trend)}%</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
+                        </div>
+                        <button class="generate-advice-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${payee}">Получить совет</button>
                     `;
                     habitsResultDiv.appendChild(habitCard);
                 }
@@ -701,6 +731,37 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            closeAiAdviceModal.addEventListener('click', () => aiAdviceModal.classList.add('hidden'));
+
+            habitsResultDiv.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('generate-advice-btn')) {
+                    const payee = e.target.dataset.payee;
+                    const selectedMonth = filterMonthSelect.value;
+                    const selectedYear = filterYearInput.value;
+                    
+                    aiAdviceContent.textContent = 'Генерация совета...';
+                    aiAdviceModal.classList.remove('hidden');
+
+                    const params = new URLSearchParams({ 
+                        month: selectedMonth, 
+                        year: selectedYear, 
+                        category: payee, // Use payee as a proxy for category for deep analysis
+                        model: 'gemini-2.5-flash' // Use a faster model for advice
+                    });
+
+                    try {
+                        const response = await fetch(`/api/deep-analysis?${params.toString()}`);
+                        if (!response.ok) {
+                            const err = await response.json();
+                            throw new Error(err.error || 'Failed to get advice');
+                        }
+                        const { analysis } = await response.json();
+                        aiAdviceContent.textContent = analysis;
+                    } catch (error) {
+                        aiAdviceContent.textContent = `Ошибка: ${error.message}`;
+                    }
+                }
+            });
             
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
