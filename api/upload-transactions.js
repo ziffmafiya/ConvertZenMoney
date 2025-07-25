@@ -20,8 +20,11 @@ if (process.env.GEMINI_API_KEY) {
   });
 }
 
+// Функция для задержки выполнения
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
- * Генерирует числовое "встраивание" (embedding) для заданного текста.
+ * Генерирует числовое "встраивание" (embedding) для заданного текста с повторными попытками и ограничением частоты.
  * Это позволяет AI понимать и сравнивать текстовые описания транзакций.
  * @param {string} text - Текст для генерации встраивания.
  * @returns {Promise<number[]>} - Массив чисел, представляющий встраивание текста.
@@ -31,19 +34,30 @@ async function getEmbedding(text, taskType = "CLUSTERING") {
     console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
     throw new Error('Embedding model not initialized.');
   }
-  
-  try {
-    // Правильный формат с taskType
-    const result = await embeddingModel.embedContent({
-      content: { parts: [{ text }] },
-      taskType: taskType
-    });
-    
-    return result.embedding.values;
-  } catch (error) {
-    console.error('Error generating embedding for text:', text, error);
-    throw new Error(`Failed to generate embedding: ${error.message}`);
+
+  const MAX_RETRIES = 5;
+  const INITIAL_DELAY_MS = 7000; // Начальная задержка 7 секунд (для 10 RPM)
+
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      // Правильный формат с taskType
+      const result = await embeddingModel.embedContent({
+        content: { parts: [{ text }] },
+        taskType: taskType
+      });
+      return result.embedding.values;
+    } catch (error) {
+      console.error(`Error generating embedding for text: "${text}". Attempt ${i + 1}/${MAX_RETRIES}. Error: ${error.message}`);
+      if (error.message.includes('429 Too Many Requests') && i < MAX_RETRIES - 1) {
+        const delay = INITIAL_DELAY_MS * Math.pow(2, i) + Math.random() * 1000; // Экспоненциальная задержка + случайный джиттер
+        console.warn(`Retrying after ${delay / 1000} seconds...`);
+        await sleep(delay);
+      } else {
+        throw new Error(`Failed to generate embedding after ${i + 1} attempts: ${error.message}`);
+      }
+    }
   }
+  throw new Error('Failed to generate embedding after multiple retries.');
 }
 
 /**
@@ -203,49 +217,37 @@ export default async function handler(req, res) {
         
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
-        // 4. Генерируем встраивания (embeddings) для новых транзакций пакетами.
-        const BATCH_SIZE = 50;
-        const DELAY_MS = 500; // 0.5 секунды
-
-        let transactionsToInsert = [];
-
-        for (let i = 0; i < transactionsToProcess.length; i += BATCH_SIZE) {
-            const batch = transactionsToProcess.slice(i, i + BATCH_SIZE);
-            console.log(`DEBUG: Processing embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(transactionsToProcess.length / BATCH_SIZE)} (size: ${batch.length})`);
-
-            const batchWithEmbeddings = await Promise.all(batch.map(async (t) => {
-                const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
-                const embedding = await getEmbedding(description);
-                
-                return {
-                    date: t.date,
-                    category_name: t.categoryName,
-                    payee: t.payee,
-                    comment: t.comment,
-                    outcome_account_name: t.outcomeAccountName,
-                    outcome: t.outcome,
-                    income_account_name: t.incomeAccountName,
-                    income: t.income,
-                    unique_hash: t.unique_hash,
-                    description_embedding: embedding
-                };
-            }));
-            transactionsToInsert.push(...batchWithEmbeddings);
-
-            if (i + BATCH_SIZE < transactionsToProcess.length) {
-                console.log(`DEBUG: Waiting for ${DELAY_MS}ms before next embedding batch...`);
-                await new Promise(resolve => setTimeout(resolve, DELAY_MS));
-            }
-        }
+        // 4. Генерируем встраивания (embeddings) только для новых транзакций.
+        let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
+            // Создаем описание для генерации встраивания, включая все релевантные поля.
+            const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+            const embedding = await getEmbedding(description); // Получаем встраивание.
+            
+            // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
+            // а также преобразуем имена полей в snake_case для соответствия колонкам Supabase.
+            return {
+                date: t.date,
+                category_name: t.categoryName,
+                payee: t.payee,
+                comment: t.comment,
+                outcome_account_name: t.outcomeAccountName,
+                outcome: t.outcome,
+                income_account_name: t.incomeAccountName,
+                income: t.income,
+                unique_hash: t.unique_hash, // Передаем хэш
+                description_embedding: embedding // Добавляем встраивание
+            };
+        }));
 
         console.log('DEBUG: Transactions to insert before final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
 
         // Дополнительная проверка на дубликаты перед окончательной вставкой (дополнительная мера безопасности).
         let finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
-        let finalTransactionsToInsert = transactionsToInsert;
+        let finalTransactionsToInsert = transactionsToInsert; // Используем новую переменную для итогового массива.
         if (finalHashes.size !== finalTransactionsToInsert.length) {
             console.error("ERROR: Duplicates found in transactionsToInsert before final insert! This indicates an issue with hash generation or prior filtering.");
+            // В качестве меры предосторожности, повторно фильтруем, чтобы обеспечить уникальность перед вставкой.
             finalTransactionsToInsert = Array.from(new Map(finalTransactionsToInsert.map(item => [item.unique_hash, item])).values());
             console.log(`DEBUG: Corrected to ${finalTransactionsToInsert.length} unique transactions before insert.`);
         }
