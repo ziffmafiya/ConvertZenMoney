@@ -10,51 +10,30 @@ let embeddingModel;
 // Проверяем, установлен ли ключ API Gemini в переменных окружения.
 // Если ключ есть, инициализируем модели AI.
 if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  embeddingModel = genAI.getGenerativeModel({
-    model: "gemini-embedding-001", // или "embedding-001"
-    // 🔹 Дополняем параметром taskType
-    
-  });
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    embeddingModel = genAI.getGenerativeModel({ model: "embedding-001" });
 }
 
-// Функция для задержки выполнения
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 /**
- * Генерирует числовое "встраивание" (embedding) для заданного текста с повторными попытками и ограничением частоты.
+ * Генерирует числовое "встраивание" (embedding) для заданного текста.
  * Это позволяет AI понимать и сравнивать текстовые описания транзакций.
  * @param {string} text - Текст для генерации встраивания.
  * @returns {Promise<number[]>} - Массив чисел, представляющий встраивание текста.
  */
 async function getEmbedding(text) {
-  if (!embeddingModel) {
-    console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
-    throw new Error('Embedding model not initialized.');
-  }
-
-  const MAX_RETRIES = 5;
-  const INITIAL_DELAY_MS = 7000; // Начальная задержка 7 секунд (для 10 RPM)
-
-  for (let i = 0; i < MAX_RETRIES; i++) {
-    try {
-      // Правильный формат с taskType
-      const result = await embeddingModel.embedContent({
-        content: { parts: [{ text }] },
-      });
-      return result.embedding.values;
-    } catch (error) {
-      console.error(`Error generating embedding for text: "${text}". Attempt ${i + 1}/${MAX_RETRIES}. Error: ${error.message}`);
-      if (error.message.includes('429 Too Many Requests') && i < MAX_RETRIES - 1) {
-        const delay = INITIAL_DELAY_MS * Math.pow(2, i) + Math.random() * 1000; // Экспоненциальная задержка + случайный джиттер
-        console.warn(`Retrying after ${delay / 1000} seconds...`);
-        await sleep(delay);
-      } else {
-        throw new Error(`Failed to generate embedding after ${i + 1} attempts: ${error.message}`);
-      }
+    // Проверяем, инициализирована ли модель встраивания.
+    if (!embeddingModel) {
+        console.error('Embedding model not initialized. Check GEMINI_API_KEY.');
+        throw new Error('Embedding model not initialized.');
     }
-  }
-  throw new Error('Failed to generate embedding after multiple retries.');
+    try {
+        // Отправляем текст в модель AI для получения встраивания.
+        const result = await embeddingModel.embedContent(text);
+        return result.embedding.values;
+    } catch (error) {
+        console.error('Error generating embedding for text:', text, error);
+        throw new Error(`Failed to generate embedding: ${error.message}`);
+    }
 }
 
 /**
