@@ -203,37 +203,49 @@ export default async function handler(req, res) {
         
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
-        // 4. Генерируем встраивания (embeddings) только для новых транзакций.
-        let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
-            // Создаем описание для генерации встраивания, включая все релевантные поля.
-            const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
-            const embedding = await getEmbedding(description); // Получаем встраивание.
-            
-            // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
-            // а также преобразуем имена полей в snake_case для соответствия колонкам Supabase.
-            return {
-                date: t.date,
-                category_name: t.categoryName,
-                payee: t.payee,
-                comment: t.comment,
-                outcome_account_name: t.outcomeAccountName,
-                outcome: t.outcome,
-                income_account_name: t.incomeAccountName,
-                income: t.income,
-                unique_hash: t.unique_hash, // Передаем хэш
-                description_embedding: embedding // Добавляем встраивание
-            };
-        }));
+        // 4. Генерируем встраивания (embeddings) для новых транзакций пакетами.
+        const BATCH_SIZE = 50;
+        const DELAY_MS = 500; // 0.5 секунды
+
+        let transactionsToInsert = [];
+
+        for (let i = 0; i < transactionsToProcess.length; i += BATCH_SIZE) {
+            const batch = transactionsToProcess.slice(i, i + BATCH_SIZE);
+            console.log(`DEBUG: Processing embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(transactionsToProcess.length / BATCH_SIZE)} (size: ${batch.length})`);
+
+            const batchWithEmbeddings = await Promise.all(batch.map(async (t) => {
+                const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+                const embedding = await getEmbedding(description);
+                
+                return {
+                    date: t.date,
+                    category_name: t.categoryName,
+                    payee: t.payee,
+                    comment: t.comment,
+                    outcome_account_name: t.outcomeAccountName,
+                    outcome: t.outcome,
+                    income_account_name: t.incomeAccountName,
+                    income: t.income,
+                    unique_hash: t.unique_hash,
+                    description_embedding: embedding
+                };
+            }));
+            transactionsToInsert.push(...batchWithEmbeddings);
+
+            if (i + BATCH_SIZE < transactionsToProcess.length) {
+                console.log(`DEBUG: Waiting for ${DELAY_MS}ms before next embedding batch...`);
+                await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+            }
+        }
 
         console.log('DEBUG: Transactions to insert before final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
 
         // Дополнительная проверка на дубликаты перед окончательной вставкой (дополнительная мера безопасности).
         let finalHashes = new Set(transactionsToInsert.map(t => t.unique_hash));
-        let finalTransactionsToInsert = transactionsToInsert; // Используем новую переменную для итогового массива.
+        let finalTransactionsToInsert = transactionsToInsert;
         if (finalHashes.size !== finalTransactionsToInsert.length) {
             console.error("ERROR: Duplicates found in transactionsToInsert before final insert! This indicates an issue with hash generation or prior filtering.");
-            // В качестве меры предосторожности, повторно фильтруем, чтобы обеспечить уникальность перед вставкой.
             finalTransactionsToInsert = Array.from(new Map(finalTransactionsToInsert.map(item => [item.unique_hash, item])).values());
             console.log(`DEBUG: Corrected to ${finalTransactionsToInsert.length} unique transactions before insert.`);
         }
