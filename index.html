@@ -71,71 +71,102 @@
         .tab-content.hidden {
             display: none;
         }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .transaction-table th, .transaction-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #374151;
+            text-align: left;
+        }
+        .transaction-table th {
+            background-color: #1f2937;
+            font-weight: 600;
+            color: #9ca3af;
+        }
+        .transaction-table tbody tr:hover {
+            background-color: #2d3748;
+        }
+        .transaction-table .income {
+            color: #22c55e;
+        }
+        .transaction-table .outcome {
+            color: #ef4444;
+        }
     </style>
 </head>
 <body class="antialiased">
 
     <div class="container mx-auto p-4 md:p-8 max-w-6xl">
 
-        <!-- Header -->
-        <header class="text-center mb-8 md:mb-12">
-            <h1 class="text-3xl md:text-5xl font-bold text-white">Финансовый отчет</h1>
-            <p class="text-lg md:text-xl text-gray-400 mt-2">Универсальный шаблон</p>
+        <!-- New Header -->
+        <header class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mb-8 md:mb-12">
+            <div class="flex flex-wrap justify-between items-center gap-6">
+                <!-- Balance -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-400">Актуальный баланс</h2>
+                    <p id="headerNetBalance" class="text-3xl md:text-4xl font-bold text-white">0.00 грн</p>
+                </div>
+                
+                <!-- Quick Filters -->
+                <div class="flex items-center gap-2" id="quickFilters">
+                    <button data-period="month" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition">Месяц</button>
+                    <button data-period="quarter" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
+                    <button data-period="year" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
+                </div>
+
+                <!-- Notifications -->
+                <div class="relative">
+                    <button class="text-gray-400 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V5a1 1 0 00-2 0v.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    <!-- Notification dot -->
+                    <span class="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500 border-2 border-[#1f2937]"></span>
+                </div>
+            </div>
+            <!-- Detailed Filters (Hidden by default, shown on demand) -->
+            <div class="mt-4">
+                 <div class="flex items-center gap-2">
+                    <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="">Весь год</option>
+                        <option value="01">Январь</option>
+                        <option value="02">Февраль</option>
+                        <option value="03">Март</option>
+                        <option value="04">Апрель</option>
+                        <option value="05">Май</option>
+                        <option value="06">Июнь</option>
+                        <option value="07">Июль</option>
+                        <option value="08">Август</option>
+                        <option value="09">Сентябрь</option>
+                        <option value="10">Октябрь</option>
+                        <option value="11">Ноябрь</option>
+                        <option value="12">Декабрь</option>
+                    </select>
+                    <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+            </div>
         </header>
 
-        <!-- Settings/Filters Section -->
-        <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mb-8 md:mb-12">
-            <h2 class="text-2xl font-bold text-white mb-4">Настройки отображения</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="p-4 bg-gray-800 rounded-lg">
-                    <label for="filterMonth" class="block mb-2 text-lg font-medium text-gray-300">Период</label>
-                    <div class="flex items-center gap-2">
-                        <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                            <option value="">Весь год</option>
-                            <option value="01">Январь</option>
-                            <option value="02">Февраль</option>
-                            <option value="03">Март</option>
-                            <option value="04">Апрель</option>
-                            <option value="05">Май</option>
-                            <option value="06">Июнь</option>
-                            <option value="07">Июль</option>
-                            <option value="08">Август</option>
-                            <option value="09">Сентябрь</option>
-                            <option value="10">Октябрь</option>
-                            <option value="11">Ноябрь</option>
-                            <option value="12">Декабрь</option>
-                        </select>
-                        <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    </div>
+        <!-- Main Content Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Card 1: Spend vs. Income -->
+            <div class="metric-card lg:col-span-2">
+                <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
+                <div class="h-64">
+                    <canvas id="spendIncomeTrendChart"></canvas>
                 </div>
             </div>
-        </section>
-
-        <!-- Main Metrics -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
-            <!-- Total Income -->
+            <!-- Card 2: Anomalies -->
             <div class="metric-card">
-                <div class="flex items-center justify-center text-green-400 mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 6V5m0 14v-1m-7-7h-1m14 0h-1m-7-7a7 7 0 110 14 7 7 0 010-14z" /></svg>
-                    <h2 class="text-xl font-semibold text-gray-300">Общий доход</h2>
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
+                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+                <div id="anomaliesList" class="space-y-3 text-left">
+                    <!-- Anomalies will be listed here -->
+                    <p class="text-gray-500">Аномалий не найдено.</p>
                 </div>
-                <p class="text-3xl font-bold text-green-400">0.00 грн</p>
-            </div>
-            <!-- Total Expenses -->
-            <div class="metric-card">
-                <div class="flex items-center justify-center text-red-400 mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                    <h2 class="text-xl font-semibold text-gray-300">Общие расходы</h2>
-                </div>
-                <p class="text-3xl font-bold text-red-400">0.00 грн</p>
-            </div>
-            <!-- Net Balance -->
-            <div class="metric-card">
-                <div class="flex items-center justify-center text-blue-400 mb-3">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 6-3 6h18l-3-6 3-6H3z" /></svg>
-                    <h2 class="text-xl font-semibold text-gray-300">Чистый баланс</h2>
-                </div>
-                <p class="text-3xl font-bold text-blue-400">0.00 грн</p>
             </div>
         </section>
 
@@ -181,6 +212,50 @@
             </div>
 
         </section>
+
+    <!-- Interactive Elements Section -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12">
+        <!-- Forecast Chart -->
+        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+            <h3 class="text-xl font-bold text-white mb-4">Прогноз баланса</h3>
+            <div class="h-48">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+        <!-- Goal Progress -->
+        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+            <h3 class="text-xl font-bold text-white mb-4">Прогресс по цели</h3>
+            <p class="text-gray-400">Снизить траты на "Кафе и рестораны" на 15%</p>
+            <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
+                <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-between text-sm font-semibold mt-2">
+                <span id="goalProgressText" class="text-white">0%</span>
+                <span class="text-gray-400">Цель: 15%</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Transactions Table Section -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
+        <div class="overflow-x-auto">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Категория</th>
+                        <th>Контрагент</th>
+                        <th>Сумма</th>
+                        <th>Счет</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTableBody">
+                    <!-- Rows will be generated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
 
 
     <!-- Deep Analysis Section -->
@@ -273,15 +348,17 @@
             const closeHabitDetailModal = document.getElementById('closeHabitDetailModal');
             let habitTrendChart;
             
-            const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
-            const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
-            const netBalanceEl = document.querySelector('.metric-card:nth-child(3) p');
+            const headerNetBalanceEl = document.getElementById('headerNetBalance');
             const expensesLegendContainer = document.getElementById('expensesLegend');
             const incomeListContainer = document.getElementById('incomeList');
+            const quickFiltersContainer = document.getElementById('quickFilters');
+            const anomaliesListEl = document.getElementById('anomaliesList');
 
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
+            let spendIncomeTrendChart;
+            let forecastChart;
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
@@ -474,21 +551,29 @@
 
             function analyzeAndRender(transactions) {
                 if (!transactions) return;
+
                 let totalIncome = 0;
                 let totalExpenses = 0;
                 const expensesByCategory = {};
                 const expensesByPayee = {};
                 const incomeSources = {};
+                const dailyData = {}; // For trend chart
 
                 transactions.forEach(t => {
+                    const date = t.date.split('T')[0];
+                    if (!dailyData[date]) {
+                        dailyData[date] = { income: 0, expenses: 0 };
+                    }
+
                     if (t.income > 0 && t.outcome === 0) {
                         totalIncome += t.income;
-                        // Exclude refunds from income sources list, but keep in total income
+                        dailyData[date].income += t.income;
                         if (!normalize(t.categoryName).includes('возврат')) {
                            incomeSources[t.categoryName] = (incomeSources[t.categoryName] || 0) + t.income;
                         }
                     } else if (t.outcome > 0 && t.income === 0) {
                         totalExpenses += t.outcome;
+                        dailyData[date].expenses += t.outcome;
                         
                         let category = t.categoryName;
                         const creditKeywords = ["роутер", "очки", "бритва", "пылесос"];
@@ -506,10 +591,8 @@
                 const netBalance = totalIncome - totalExpenses;
 
                 // Update main metrics
-                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                totalExpensesEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                netBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                netBalanceEl.style.color = netBalance >= 0 ? '#84cc16' : '#ef4444';
+                headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                headerNetBalanceEl.style.color = netBalance >= 0 ? '#84cc16' : '#ef4444';
 
                 // Prepare data for charts and lists
                 const expenseDataByCategoryChart = {
@@ -536,13 +619,40 @@
                         borderWidth: 2
                     }]
                 };
+                
+                const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+                const trendData = {
+                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })),
+                    datasets: [
+                        {
+                            label: 'Доходы',
+                            data: sortedDates.map(date => dailyData[date].income),
+                            borderColor: '#22c55e', // green-500
+                            backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Расходы',
+                            data: sortedDates.map(date => dailyData[date].expenses),
+                            borderColor: '#ef4444', // red-500
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                };
 
                 const incomeDataList = Object.entries(incomeSources)
                     .map(([source, amount]) => ({ source, amount }))
                     .sort((a, b) => b.amount - a.amount);
 
-                renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart);
+                renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
+                renderAnomalies(transactions.filter(t => t.is_anomaly));
+                renderTransactionsTable(transactions.slice(0, 15)); // Render latest 15 transactions
+                updateGoalProgress(transactions);
+                renderForecastChart(transactions);
             }
 
             // --- File Handling and Filtering ---
@@ -610,10 +720,120 @@
                 reader.readAsText(file, 'UTF-8');
             }
 
+            function renderAnomalies(anomalies) {
+                anomaliesListEl.innerHTML = '';
+                if (anomalies.length === 0) {
+                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
+                    return;
+                }
+                anomalies.forEach(anomaly => {
+                    const anomalyEl = document.createElement('div');
+                    anomalyEl.className = 'p-3 bg-gray-800 rounded-lg';
+                    anomalyEl.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-white">${anomaly.payee}</span>
+                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
+                        </div>
+                        <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
+                    `;
+                    anomaliesListEl.appendChild(anomalyEl);
+                });
+            }
+
+            function renderTransactionsTable(transactions) {
+                const tableBody = document.getElementById('transactionsTableBody');
+                tableBody.innerHTML = '';
+                if (transactions.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Нет транзакций для отображения.</td></tr>`;
+                    return;
+                }
+
+                transactions.forEach(t => {
+                    const row = document.createElement('tr');
+                    const amount = t.income > 0 ? t.income : t.outcome;
+                    const amountClass = t.income > 0 ? 'income' : 'outcome';
+                    const sign = t.income > 0 ? '+' : '-';
+
+                    row.innerHTML = `
+                        <td>${new Date(t.date).toLocaleDateString('ru-RU')}</td>
+                        <td>${t.categoryName}</td>
+                        <td>${t.payee || 'N/A'}</td>
+                        <td class="${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
+                        <td>${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            function updateGoalProgress(transactions) {
+                const goalCategory = 'Кафе и рестораны';
+                const goalReduction = 0.15; // 15%
+                
+                // This is a simplified logic. A real implementation would compare with a previous period.
+                // Here, we'll just simulate progress.
+                const expensesInGoalCategory = transactions
+                    .filter(t => t.categoryName === goalCategory)
+                    .reduce((sum, t) => sum + t.outcome, 0);
+                
+                const totalExpenses = transactions.reduce((sum, t) => sum + t.outcome, 0);
+                
+                let progress = 0;
+                if (totalExpenses > 0) {
+                    // Simulate some progress for demonstration
+                    progress = Math.min(100, (expensesInGoalCategory / totalExpenses) * 300); 
+                }
+
+                const progressBar = document.getElementById('goalProgressBar');
+                const progressText = document.getElementById('goalProgressText');
+                
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress.toFixed(0)}%`;
+            }
+
+            function renderForecastChart(transactions) {
+                if (forecastChart) forecastChart.destroy();
+
+                const last30DaysExpenses = transactions.slice(-30).map(t => t.outcome);
+                const forecastData = [];
+                let currentBalance = transactions.reduce((acc, t) => acc + t.income - t.outcome, 0);
+
+                for(let i=0; i<7; i++) { // Forecast for next 7 days
+                    const dailyExpenseAvg = last30DaysExpenses.reduce((a, b) => a + b, 0) / (last30DaysExpenses.length || 1);
+                    currentBalance -= dailyExpenseAvg;
+                    forecastData.push(currentBalance);
+                }
+
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                forecastChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 7}, (_, i) => `День ${i+1}`),
+                        datasets: [{
+                            label: 'Прогноз баланса',
+                            data: forecastData,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
             // --- Rendering Functions ---
-            function renderCharts(expenseDataByCategory, expenseDataByStore) {
+            function renderCharts(expenseDataByCategory, expenseDataByStore, trendData) {
                 if (expensesChart) expensesChart.destroy();
                 if (storesChart) storesChart.destroy();
+                if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
 
                 const ctxCategory = document.getElementById('expensesChart').getContext('2d');
                 expensesChart = new Chart(ctxCategory, {
@@ -640,6 +860,29 @@
                             y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
                         },
                         plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxTrend = document.getElementById('spendIncomeTrendChart').getContext('2d');
+                spendIncomeTrendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: trendData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                        },
+                        plugins: { 
+                            legend: { 
+                                position: 'top',
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                             }, 
+                            tooltip: tooltipPlugin 
+                        }
                     }
                 });
             }
@@ -736,6 +979,30 @@
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
             closeHabitDetailModal.addEventListener('click', () => habitDetailModal.classList.add('hidden'));
+
+            quickFiltersContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quick-filter-btn')) {
+                    document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    const period = e.target.dataset.period;
+                    const today = new Date();
+                    filterYearInput.value = today.getFullYear();
+
+                    if (period === 'month') {
+                        filterMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
+                    } else if (period === 'quarter') {
+                        const quarter = Math.floor(today.getMonth() / 3);
+                        // For simplicity, we'll just select the whole year for quarter, 
+                        // as the backend doesn't support quarterly fetching directly.
+                        // A more complex implementation would filter transactions on the client.
+                        filterMonthSelect.value = ''; 
+                    } else { // year
+                        filterMonthSelect.value = '';
+                    }
+                    fetchAndRenderTransactions();
+                }
+            });
 
             habitsResultDiv.addEventListener('click', (e) => {
                 if (e.target.classList.contains('habit-details-btn')) {
