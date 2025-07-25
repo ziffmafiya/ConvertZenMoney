@@ -1,26 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Обработчик для получения транзакций
 export default async function handler(req, res) {
+    // Принимаем только GET-запросы
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    // Получаем параметры фильтрации из запроса
     const { month, year } = req.query;
 
+    // Получаем ключи доступа к Supabase из переменных окружения
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
+    // Проверяем наличие ключей
     if (!supabaseUrl || !supabaseKey) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
+    // Создаем клиент Supabase
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Начинаем строить запрос к таблице 'transactions'
         let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
 
-        // Apply filters on the server-side if they are provided
+        // Применяем фильтры по дате, если они указаны
         if (year) {
             const startDate = `${year}-${month || '01'}-01`;
             const endDate = month 
@@ -30,16 +37,18 @@ export default async function handler(req, res) {
             query = query.gte('date', startDate).lte('date', endDate);
         }
 
+        // Выполняем запрос
         const { data, error } = await query;
 
+        // Обрабатываем ошибку при выполнении запроса
         if (error) {
             console.error('Supabase select error:', error);
             return res.status(500).json({ error: error.message });
         }
 
-        // The data from Supabase has snake_case column names.
-        // The frontend expects camelCase property names.
-        // We need to map the keys before sending the response.
+        // Данные из Supabase приходят с именами столбцов в snake_case.
+        // Фронтенд ожидает camelCase.
+        // Необходимо преобразовать ключи перед отправкой ответа.
         const transactions = data.map(t => ({
             date: t.date,
             categoryName: t.category_name,
@@ -53,6 +62,7 @@ export default async function handler(req, res) {
             anomaly_reason: t.anomaly_reason
         }));
 
+        // Отправляем успешный ответ с преобразованными данными
         res.status(200).json({ transactions });
     } catch (error) {
         console.error('Unhandled server error:', error);

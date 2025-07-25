@@ -327,17 +327,18 @@
     </div>
 
     <script>
+        // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
         document.addEventListener('DOMContentLoaded', function () {
-            // --- DOM Element References ---
+            // --- Ссылки на DOM-элементы ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
             const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
-            const skipEmbeddingOnUploadCheckbox = document.getElementById('skipEmbeddingOnUpload'); // New reference
+            const skipEmbeddingOnUploadCheckbox = document.getElementById('skipEmbeddingOnUpload'); // Ссылка на чекбокс для пропуска эмбеддингов
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
             const deepAnalysisButton = document.getElementById('deepAnalysisButton');
-            const analysisCategoryInput = document.getElementById('analysisCategory'); // New reference
-            const analysisModelSelect = document.getElementById('analysisModel'); // New reference
+            const analysisCategoryInput = document.getElementById('analysisCategory'); // Ссылка на инпут категории для анализа
+            const analysisModelSelect = document.getElementById('analysisModel'); // Ссылка на селект модели ИИ
             const analysisResultDiv = document.getElementById('analysisResult');
             const analysisLoadingDiv = document.getElementById('analysisLoading');
             const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
@@ -346,7 +347,7 @@
             const habitDetailModal = document.getElementById('habitDetailModal');
             const habitDetailTitle = document.getElementById('habitDetailTitle');
             const closeHabitDetailModal = document.getElementById('closeHabitDetailModal');
-            let habitTrendChart;
+            let habitTrendChart; // Переменная для хранения экземпляра графика тренда привычки
             
             const headerNetBalanceEl = document.getElementById('headerNetBalance');
             const expensesLegendContainer = document.getElementById('expensesLegend');
@@ -354,17 +355,19 @@
             const quickFiltersContainer = document.getElementById('quickFilters');
             const anomaliesListEl = document.getElementById('anomaliesList');
 
-            // --- Chart.js Variables ---
+            // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
             let storesChart;
             let spendIncomeTrendChart;
             let forecastChart;
 
+            // Цветовая палитра для графиков
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
                 '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
             ];
 
+            // Плагин для кастомизации всплывающих подсказок в Chart.js
             const tooltipPlugin = {
                 callbacks: {
                     label: function(context) {
@@ -381,19 +384,20 @@
                 }
             };
             
+            // Функция для нормализации строк (удаление лишних пробелов, приведение к нижнему регистру)
             function normalize(str) {
                 return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
             }
             
-            // --- Data Processing and Analysis ---
-            // --- Data Fetching & Rendering ---
+            // --- Обработка данных и рендеринг ---
+            // Асинхронная функция для получения и отображения транзакций
             async function fetchAndRenderTransactions() {
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
 
-                // A year must be selected to fetch data
+                // Год должен быть выбран для получения данных
                 if (!selectedYear) {
-                    analyzeAndRender([]); // Clear charts if no year is selected
+                    analyzeAndRender([]); // Очищаем графики, если год не выбран
                     return;
                 }
 
@@ -403,6 +407,7 @@
                 }
 
                 try {
+                    // Отправляем запрос на сервер для получения транзакций
                     const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
@@ -410,6 +415,7 @@
                     }
                     const { transactions } = await response.json();
                     
+                    // Запускаем анализ и отображение полученных транзакций
                     analyzeAndRender(transactions);
                     fetchAndRenderHabits();
 
@@ -419,6 +425,7 @@
                 }
             }
 
+            // Асинхронная функция для получения и отображения привычек
             async function fetchAndRenderHabits() {
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
@@ -428,25 +435,27 @@
                     return;
                 }
 
-                habitsLoadingDiv.classList.remove('hidden');
+                habitsLoadingDiv.classList.remove('hidden'); // Показываем индикатор загрузки
                 const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
                 try {
+                    // Отправляем запрос на сервер для анализа привычек
                     const response = await fetch(`/api/analyze-habits?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch habits');
                     }
                     const { habits } = await response.json();
-                    renderHabits(habits);
+                    renderHabits(habits); // Отображаем полученные привычки
                 } catch (error) {
                     console.error('Error fetching habits:', error);
                     alert(`Не удалось загрузить привычки: ${error.message}`);
                 } finally {
-                    habitsLoadingDiv.classList.add('hidden');
+                    habitsLoadingDiv.classList.add('hidden'); // Скрываем индикатор загрузки
                 }
             }
 
+            // Функция для отображения карточек привычек
             function renderHabits(habits) {
                 habitsResultDiv.innerHTML = '';
                 if (Object.keys(habits).length === 0) {
@@ -454,6 +463,7 @@
                     return;
                 }
 
+                // Иконки для разных категорий привычек
                 const categoryIcons = {
                     'Продукты': '🛒',
                     'Кафе и рестораны': '☕',
@@ -491,11 +501,12 @@
                 }
             }
 
+            // Асинхронная функция для выполнения глубокого анализа трат с помощью ИИ
             async function performDeepAnalysis() {
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
-                const analysisCategory = analysisCategoryInput.value.trim(); // Get category value
-                const analysisModel = analysisModelSelect.value; // Get selected model
+                const analysisCategory = analysisCategoryInput.value.trim(); // Получаем значение категории
+                const analysisModel = analysisModelSelect.value; // Получаем выбранную модель
 
                 if (!selectedMonth || !selectedYear) {
                     alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
@@ -507,10 +518,11 @@
 
                 const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
                 if (analysisCategory) {
-                    params.append('category', analysisCategory); // Add category to params
+                    params.append('category', analysisCategory); // Добавляем категорию в параметры, если она указана
                 }
 
                 try {
+                    // Отправляем запрос на сервер для глубокого анализа
                     const response = await fetch(`/api/deep-analysis?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
@@ -526,12 +538,14 @@
                 }
             }
 
+            // Асинхронная функция для обнаружения аномалий
             async function detectAnomalies() {
                 analysisResultDiv.textContent = '';
                 analysisLoadingDiv.classList.remove('hidden');
                 analysisLoadingDiv.querySelector('p').textContent = 'Идет поиск аномалий, это может занять некоторое время...';
 
                 try {
+                    // Отправляем запрос на сервер для обнаружения аномалий
                     const response = await fetch('/api/detect-anomalies');
                     if (!response.ok) {
                         const err = await response.json();
@@ -539,16 +553,17 @@
                     }
                     const result = await response.json();
                     alert(`Поиск аномалий завершен. Найдено: ${result.anomalies_found}. Данные на странице будут обновлены.`);
-                    fetchAndRenderTransactions(); // Refresh data to show anomalies
+                    fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать аномалии
                 } catch (error) {
                     console.error('Error detecting anomalies:', error);
                     alert(`Ошибка при поиске аномалий: ${error.message}`);
                 } finally {
                     analysisLoadingDiv.classList.add('hidden');
-                    analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Reset text
+                    analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Сбрасываем текст
                 }
             }
 
+            // Основная функция для анализа и отображения данных
             function analyzeAndRender(transactions) {
                 if (!transactions) return;
 
