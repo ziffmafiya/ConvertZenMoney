@@ -46,8 +46,18 @@ export default async function handler(req, res) {
         });
 
         const sortedMonths = Object.keys(monthlyData).sort();
-        const historicalIncome = sortedMonths.map(m => [sortedMonths.indexOf(m), monthlyData[m].income]);
-        const historicalOutcome = sortedMonths.map(m => [sortedMonths.indexOf(m), monthlyData[m].outcome]);
+
+        // We need at least 2 data points to create a forecast model
+        if (sortedMonths.length < 2) {
+            return res.status(200).json({ 
+                historical: sortedMonths.map(m => ({ month: m, ...monthlyData[m] })),
+                forecast: [],
+                message: "Недостаточно исторических данных для построения прогноза (требуется минимум 2 месяца)."
+            });
+        }
+
+        const historicalIncome = sortedMonths.map((m, i) => [i, monthlyData[m].income]);
+        const historicalOutcome = sortedMonths.map((m, i) => [i, monthlyData[m].outcome]);
 
         // Simple linear regression for forecasting
         const incomeModel = stats.regression.linear(historicalIncome);
@@ -73,7 +83,7 @@ export default async function handler(req, res) {
 
         res.status(200).json({ 
             historical: sortedMonths.map(m => ({ month: m, ...monthlyData[m] })),
-            forecast 
+            forecast
         });
 
     } catch (error) {

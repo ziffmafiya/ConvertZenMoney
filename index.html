@@ -412,8 +412,13 @@
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to generate forecast');
                     }
-                    const { historical, forecast } = await response.json();
-                    renderForecastChart(historical, forecast);
+                    const result = await response.json();
+                    if (result.message) {
+                        alert(result.message);
+                        renderForecastChart([], []); // Clear the chart
+                    } else {
+                        renderForecastChart(result.historical, result.forecast);
+                    }
                 } catch (error) {
                     console.error('Error performing forecast:', error);
                     alert(`Ошибка при построении прогноза: ${error.message}`);
