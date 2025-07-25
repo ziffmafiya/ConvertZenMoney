@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-const winkStatistics = require('wink-statistics');
+import winkStatistics from './wink-loader.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
