@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/forecast-transactions.js": {
+      "maxDuration": 30
+    },
+    "api/deep-analysis.js": {
+      "maxDuration": 30
+    },
+    "api/detect-anomalies.js": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "GEMINI_API_KEY": "@gemini-api-key"
+  }
+}

@@ -210,6 +210,121 @@
         </div>
     </section>
 
+    <!-- Forecasting Section -->
+    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Прогнозирование доходов и расходов</h2>
+        <p class="text-gray-400 mb-4">Используйте различные модели машинного обучения для прогнозирования будущих финансовых трендов.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Model Selection -->
+            <div class="p-4 bg-gray-800 rounded-lg">
+                <label for="forecastModel" class="block mb-2 text-lg font-medium text-gray-300">Модель прогнозирования</label>
+                <select id="forecastModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="linear">Линейная регрессия</option>
+                    <option value="moving_average">Скользящее среднее</option>
+                    <option value="exponential_smoothing">Экспоненциальное сглаживание</option>
+                    <option value="arima">ARIMA</option>
+                    <option value="prophet">Prophet-подобная</option>
+                    <option value="ensemble">Ансамбль моделей</option>
+                </select>
+            </div>
+            
+            <!-- Forecast Type -->
+            <div class="p-4 bg-gray-800 rounded-lg">
+                <label for="forecastType" class="block mb-2 text-lg font-medium text-gray-300">Тип прогноза</label>
+                <select id="forecastType" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="expenses">Расходы</option>
+                    <option value="income">Доходы</option>
+                </select>
+            </div>
+            
+            <!-- Periods -->
+            <div class="p-4 bg-gray-800 rounded-lg">
+                <label for="forecastPeriods" class="block mb-2 text-lg font-medium text-gray-300">Периоды (месяцы)</label>
+                <input type="number" id="forecastPeriods" min="1" max="24" value="6" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+            
+            <!-- Category Filter -->
+            <div class="p-4 bg-gray-800 rounded-lg">
+                <label for="forecastCategory" class="block mb-2 text-lg font-medium text-gray-300">Категория (опционально)</label>
+                <input type="text" id="forecastCategory" placeholder="Например: Продукты" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <button id="generateForecastButton" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">
+                Создать прогноз
+            </button>
+            <button id="compareForecastButton" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">
+                Сравнить модели
+            </button>
+        </div>
+        
+        <!-- Forecast Results -->
+        <div id="forecastResults" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Forecast Chart -->
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="text-xl font-bold text-white mb-4">Прогноз временного ряда</h3>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Accuracy Metrics -->
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="text-xl font-bold text-white mb-4">Метрики точности</h3>
+                    <div id="accuracyMetrics" class="space-y-3">
+                        <!-- Metrics will be populated by JavaScript -->
+                    </div>
+                    
+                    <h4 class="text-lg font-bold text-white mt-6 mb-3">Сезонность</h4>
+                    <div id="seasonalityInfo" class="space-y-2">
+                        <!-- Seasonality info will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Forecast Table -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Детальный прогноз</h3>
+                <div class="overflow-x-auto">
+                    <table id="forecastTable" class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Период</th>
+                                <th scope="col" class="px-6 py-3">Прогноз</th>
+                                <th scope="col" class="px-6 py-3">Нижняя граница</th>
+                                <th scope="col" class="px-6 py-3">Верхняя граница</th>
+                                <th scope="col" class="px-6 py-3">Тренд</th>
+                            </tr>
+                        </thead>
+                        <tbody id="forecastTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Comparison Results -->
+        <div id="comparisonResults" class="hidden">
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Сравнение моделей</h3>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                <div id="modelComparison" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Model comparison cards will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="forecastLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Генерация прогноза, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
     <!-- Data Input Section (Moved to the bottom) -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
@@ -244,6 +359,17 @@
             const analysisLoadingDiv = document.getElementById('analysisLoading');
             const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
             
+            // Forecasting elements
+            const generateForecastButton = document.getElementById('generateForecastButton');
+            const compareForecastButton = document.getElementById('compareForecastButton');
+            const forecastModelSelect = document.getElementById('forecastModel');
+            const forecastTypeSelect = document.getElementById('forecastType');
+            const forecastPeriodsInput = document.getElementById('forecastPeriods');
+            const forecastCategoryInput = document.getElementById('forecastCategory');
+            const forecastResultsDiv = document.getElementById('forecastResults');
+            const comparisonResultsDiv = document.getElementById('comparisonResults');
+            const forecastLoadingDiv = document.getElementById('forecastLoading');
+            
             const totalIncomeEl = document.querySelector('.metric-card:nth-child(1) p');
             const totalExpensesEl = document.querySelector('.metric-card:nth-child(2) p');
             const netBalanceEl = document.querySelector('.metric-card:nth-child(3) p');
@@ -253,6 +379,8 @@
             // --- Chart.js Variables ---
             let expensesChart;
             let storesChart;
+            let forecastChart;
+            let comparisonChart;
 
             const COLORS = [
                 '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
@@ -633,6 +761,460 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            generateForecastButton.addEventListener('click', generateForecast);
+            compareForecastButton.addEventListener('click', compareModels);
+            
+            // --- Forecasting Functions ---
+            async function generateForecast() {
+                const model = forecastModelSelect.value;
+                const type = forecastTypeSelect.value;
+                const periods = parseInt(forecastPeriodsInput.value);
+                const category = forecastCategoryInput.value.trim() || null;
+                
+                forecastLoadingDiv.classList.remove('hidden');
+                forecastResultsDiv.classList.add('hidden');
+                comparisonResultsDiv.classList.add('hidden');
+                
+                try {
+                    const response = await fetch('/api/forecast-transactions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            type: type,
+                            periods: periods,
+                            category: category
+                        }),
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to generate forecast');
+                    }
+                    
+                    const result = await response.json();
+                    displayForecastResults(result);
+                    
+                } catch (error) {
+                    console.error('Forecasting error:', error);
+                    alert(`Ошибка при создании прогноза: ${error.message}`);
+                } finally {
+                    forecastLoadingDiv.classList.add('hidden');
+                }
+            }
+            
+            async function compareModels() {
+                const type = forecastTypeSelect.value;
+                const periods = parseInt(forecastPeriodsInput.value);
+                const category = forecastCategoryInput.value.trim() || null;
+                const models = ['linear', 'moving_average', 'exponential_smoothing', 'prophet', 'ensemble'];
+                
+                forecastLoadingDiv.classList.remove('hidden');
+                forecastResultsDiv.classList.add('hidden');
+                comparisonResultsDiv.classList.add('hidden');
+                
+                try {
+                    const promises = models.map(model =>
+                        fetch('/api/forecast-transactions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                model: model,
+                                type: type,
+                                periods: periods,
+                                category: category
+                            }),
+                        }).then(response => response.json())
+                    );
+                    
+                    const results = await Promise.all(promises);
+                    displayModelComparison(results, models);
+                    
+                } catch (error) {
+                    console.error('Model comparison error:', error);
+                    alert(`Ошибка при сравнении моделей: ${error.message}`);
+                } finally {
+                    forecastLoadingDiv.classList.add('hidden');
+                }
+            }
+            
+            function displayForecastResults(result) {
+                forecastResultsDiv.classList.remove('hidden');
+                
+                // Render forecast chart
+                renderForecastChart(result);
+                
+                // Display accuracy metrics
+                displayAccuracyMetrics(result.accuracy);
+                
+                // Display seasonality info
+                displaySeasonalityInfo(result.seasonality);
+                
+                // Populate forecast table
+                populateForecastTable(result.forecast);
+            }
+            
+            function renderForecastChart(result) {
+                if (forecastChart) forecastChart.destroy();
+                
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                const historical = result.historical_data;
+                const forecast = result.forecast;
+                
+                // Prepare data
+                const historicalLabels = historical.map(item => item.date);
+                const historicalValues = historical.map(item => item.value);
+                const forecastLabels = forecast.dates;
+                const forecastValues = forecast.values;
+                const confidenceUpper = forecast.confidence_intervals.map(ci => ci.upper);
+                const confidenceLower = forecast.confidence_intervals.map(ci => ci.lower);
+                
+                // Combine labels
+                const allLabels = [...historicalLabels, ...forecastLabels];
+                
+                // Prepare datasets
+                const historicalData = [...historicalValues, ...new Array(forecastValues.length).fill(null)];
+                const forecastData = [...new Array(historicalValues.length).fill(null), ...forecastValues];
+                const upperBoundData = [...new Array(historicalValues.length).fill(null), ...confidenceUpper];
+                const lowerBoundData = [...new Array(historicalValues.length).fill(null), ...confidenceLower];
+                
+                forecastChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: allLabels,
+                        datasets: [
+                            {
+                                label: 'Исторические данные',
+                                data: historicalData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                pointRadius: 4
+                            },
+                            {
+                                label: 'Прогноз',
+                                data: forecastData,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 4
+                            },
+                            {
+                                label: 'Верхняя граница',
+                                data: upperBoundData,
+                                borderColor: 'rgba(239, 68, 68, 0.5)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                borderWidth: 1,
+                                fill: '+1',
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Нижняя граница',
+                                data: lowerBoundData,
+                                borderColor: 'rgba(239, 68, 68, 0.5)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                borderWidth: 1,
+                                fill: false,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#9ca3af',
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('ru-RU', {
+                                            style: 'currency',
+                                            currency: 'UAH',
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0
+                                        }).format(value);
+                                    }
+                                },
+                                grid: { color: '#374151' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e5e7eb' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' +
+                                            new Intl.NumberFormat('ru-RU', {
+                                                style: 'currency',
+                                                currency: 'UAH'
+                                            }).format(context.parsed.y);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function displayAccuracyMetrics(accuracy) {
+                const metricsContainer = document.getElementById('accuracyMetrics');
+                metricsContainer.innerHTML = '';
+                
+                if (!accuracy || (!accuracy.mae && !accuracy.rmse && !accuracy.mape)) {
+                    metricsContainer.innerHTML = '<p class="text-gray-400">Недостаточно данных для расчета метрик точности</p>';
+                    return;
+                }
+                
+                const metrics = [
+                    { name: 'MAE (Средняя абсолютная ошибка)', value: accuracy.mae, format: 'currency' },
+                    { name: 'RMSE (Среднеквадратичная ошибка)', value: accuracy.rmse, format: 'currency' },
+                    { name: 'MAPE (Средняя абсолютная процентная ошибка)', value: accuracy.mape, format: 'percent' }
+                ];
+                
+                metrics.forEach(metric => {
+                    if (metric.value !== null && metric.value !== undefined) {
+                        const metricDiv = document.createElement('div');
+                        metricDiv.className = 'flex justify-between items-center p-3 bg-gray-700 rounded';
+                        
+                        let formattedValue;
+                        if (metric.format === 'currency') {
+                            formattedValue = new Intl.NumberFormat('ru-RU', {
+                                style: 'currency',
+                                currency: 'UAH'
+                            }).format(metric.value);
+                        } else if (metric.format === 'percent') {
+                            formattedValue = metric.value.toFixed(2) + '%';
+                        } else {
+                            formattedValue = metric.value.toFixed(2);
+                        }
+                        
+                        metricDiv.innerHTML = `
+                            <span class="text-gray-300">${metric.name}</span>
+                            <span class="font-bold text-white">${formattedValue}</span>
+                        `;
+                        metricsContainer.appendChild(metricDiv);
+                    }
+                });
+            }
+            
+            function displaySeasonalityInfo(seasonality) {
+                const seasonalityContainer = document.getElementById('seasonalityInfo');
+                seasonalityContainer.innerHTML = '';
+                
+                const seasonalDiv = document.createElement('div');
+                seasonalDiv.className = 'flex justify-between items-center p-3 bg-gray-700 rounded';
+                seasonalDiv.innerHTML = `
+                    <span class="text-gray-300">Сезонность обнаружена</span>
+                    <span class="font-bold ${seasonality.seasonal ? 'text-green-400' : 'text-red-400'}">
+                        ${seasonality.seasonal ? 'Да' : 'Нет'}
+                    </span>
+                `;
+                seasonalityContainer.appendChild(seasonalDiv);
+                
+                if (seasonality.seasonal) {
+                    const periodDiv = document.createElement('div');
+                    periodDiv.className = 'flex justify-between items-center p-3 bg-gray-700 rounded';
+                    periodDiv.innerHTML = `
+                        <span class="text-gray-300">Период сезонности</span>
+                        <span class="font-bold text-white">${seasonality.period} месяцев</span>
+                    `;
+                    seasonalityContainer.appendChild(periodDiv);
+                    
+                    const strengthDiv = document.createElement('div');
+                    strengthDiv.className = 'flex justify-between items-center p-3 bg-gray-700 rounded';
+                    strengthDiv.innerHTML = `
+                        <span class="text-gray-300">Сила сезонности</span>
+                        <span class="font-bold text-white">${(seasonality.strength * 100).toFixed(1)}%</span>
+                    `;
+                    seasonalityContainer.appendChild(strengthDiv);
+                }
+            }
+            
+            function populateForecastTable(forecast) {
+                const tableBody = document.getElementById('forecastTableBody');
+                tableBody.innerHTML = '';
+                
+                forecast.dates.forEach((date, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'bg-gray-800 border-b border-gray-700';
+                    
+                    const value = forecast.values[index];
+                    const confidence = forecast.confidence_intervals[index];
+                    const trend = forecast.trend || 'неопределен';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-white">${date}</td>
+                        <td class="px-6 py-4 text-green-400 font-bold">
+                            ${new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value)}
+                        </td>
+                        <td class="px-6 py-4 text-gray-300">
+                            ${new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(confidence.lower)}
+                        </td>
+                        <td class="px-6 py-4 text-gray-300">
+                            ${new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(confidence.upper)}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded ${
+                                trend === 'increasing' ? 'bg-green-900 text-green-300' :
+                                trend === 'decreasing' ? 'bg-red-900 text-red-300' :
+                                'bg-gray-900 text-gray-300'
+                            }">
+                                ${trend === 'increasing' ? 'Рост' : trend === 'decreasing' ? 'Снижение' : 'Стабильно'}
+                            </span>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            function displayModelComparison(results, models) {
+                comparisonResultsDiv.classList.remove('hidden');
+                
+                // Render comparison chart
+                renderComparisonChart(results, models);
+                
+                // Display model comparison cards
+                displayModelCards(results, models);
+            }
+            
+            function renderComparisonChart(results, models) {
+                if (comparisonChart) comparisonChart.destroy();
+                
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                
+                const datasets = results.map((result, index) => ({
+                    label: getModelDisplayName(models[index]),
+                    data: result.forecast ? result.forecast.values : [],
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 3
+                }));
+                
+                const labels = results[0].forecast ? results[0].forecast.dates : [];
+                
+                comparisonChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#9ca3af',
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('ru-RU', {
+                                            style: 'currency',
+                                            currency: 'UAH',
+                                            minimumFractionDigits: 0,
+                                            maximumFractionDigits: 0
+                                        }).format(value);
+                                    }
+                                },
+                                grid: { color: '#374151' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e5e7eb' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' +
+                                            new Intl.NumberFormat('ru-RU', {
+                                                style: 'currency',
+                                                currency: 'UAH'
+                                            }).format(context.parsed.y);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function displayModelCards(results, models) {
+                const container = document.getElementById('modelComparison');
+                container.innerHTML = '';
+                
+                results.forEach((result, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-gray-700 p-4 rounded-lg';
+                    
+                    const accuracy = result.accuracy || {};
+                    const avgForecast = result.forecast ?
+                        result.forecast.values.reduce((sum, val) => sum + val, 0) / result.forecast.values.length : 0;
+                    
+                    card.innerHTML = `
+                        <h4 class="text-lg font-bold text-white mb-3">${getModelDisplayName(models[index])}</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Средний прогноз:</span>
+                                <span class="font-bold text-green-400">
+                                    ${new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(avgForecast)}
+                                </span>
+                            </div>
+                            ${accuracy.mae ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">MAE:</span>
+                                    <span class="text-white">${new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(accuracy.mae)}</span>
+                                </div>
+                            ` : ''}
+                            ${accuracy.mape ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">MAPE:</span>
+                                    <span class="text-white">${accuracy.mape.toFixed(2)}%</span>
+                                </div>
+                            ` : ''}
+                            ${result.seasonality ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">Сезонность:</span>
+                                    <span class="${result.seasonality.seasonal ? 'text-green-400' : 'text-red-400'}">
+                                        ${result.seasonality.seasonal ? 'Да' : 'Нет'}
+                                    </span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+            
+            function getModelDisplayName(model) {
+                const names = {
+                    'linear': 'Линейная регрессия',
+                    'moving_average': 'Скользящее среднее',
+                    'exponential_smoothing': 'Экспоненциальное сглаживание',
+                    'arima': 'ARIMA',
+                    'prophet': 'Prophet-подобная',
+                    'ensemble': 'Ансамбль моделей'
+                };
+                return names[model] || model;
+            }
             
             // --- Supabase Upload Function ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
