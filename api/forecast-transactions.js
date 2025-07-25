@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import stats from 'wink-statistics';
+import winkStatistics from 'wink-statistics';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -60,8 +60,8 @@ export default async function handler(req, res) {
         const historicalOutcome = sortedMonths.map((m, i) => [i, monthlyData[m].outcome]);
 
         // Simple linear regression for forecasting
-        const incomeModel = stats.regression.linear(historicalIncome);
-        const outcomeModel = stats.regression.linear(historicalOutcome);
+        const incomeModel = winkStatistics.regression.linear(historicalIncome);
+        const outcomeModel = winkStatistics.regression.linear(historicalOutcome);
 
         const forecast = [];
         const lastMonthIndex = sortedMonths.length - 1;
