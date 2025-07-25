@@ -185,11 +185,19 @@
     <!-- Deep Analysis Section -->
     <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
-        <p class="text-gray-400 mb-4">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+        <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+        <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
         <button id="deepAnalysisButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ за месяц</button>
         <div class="mt-4 p-4 bg-gray-800 rounded-lg">
             <label for="analysisCategory" class="block mb-2 text-lg font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
             <input type="text" id="analysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+        </div>
+        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
+            <label for="analysisModel" class="block mb-2 text-lg font-medium text-gray-300">Модель ИИ для анализа</label>
+            <select id="analysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            </select>
         </div>
         <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
             <!-- Analysis results will be displayed here -->
@@ -208,6 +216,10 @@
             <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
             <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
         </div>
+        <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+            <input id="skipEmbeddingOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+            <label for="skipEmbeddingOnUpload" class="ml-3 text-lg font-medium text-gray-300">Не генерировать эмбеддинги при загрузке (для экономии квоты)</label>
+        </div>
         <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
     </section>
 
@@ -219,10 +231,12 @@
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
             const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
+            const skipEmbeddingOnUploadCheckbox = document.getElementById('skipEmbeddingOnUpload'); // New reference
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
             const deepAnalysisButton = document.getElementById('deepAnalysisButton');
             const analysisCategoryInput = document.getElementById('analysisCategory'); // New reference
+            const analysisModelSelect = document.getElementById('analysisModel'); // New reference
             const analysisResultDiv = document.getElementById('analysisResult');
             const analysisLoadingDiv = document.getElementById('analysisLoading');
             
@@ -298,6 +312,7 @@
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
                 const analysisCategory = analysisCategoryInput.value.trim(); // Get category value
+                const analysisModel = analysisModelSelect.value; // Get selected model
 
                 if (!selectedMonth || !selectedYear) {
                     alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
@@ -307,7 +322,7 @@
                 analysisResultDiv.textContent = '';
                 analysisLoadingDiv.classList.remove('hidden');
 
-                const params = new URLSearchParams({ month: selectedMonth, year: selectedYear });
+                const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
                 if (analysisCategory) {
                     params.append('category', analysisCategory); // Add category to params
                 }
@@ -456,7 +471,7 @@
                     }
                     
                     // Upload all parsed data from the file. The server will handle deduplication.
-                    uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked);
+                    uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked, skipEmbeddingOnUploadCheckbox.checked);
                 };
 
                 reader.onerror = () => {
@@ -568,14 +583,14 @@
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             
             // --- Supabase Upload Function ---
-            async function uploadTransactionsToSupabase(transactions, excludeDebts) {
+            async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
                 try {
                     const response = await fetch('/api/upload-transactions', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ transactions, excludeDebts }),
+                        body: JSON.stringify({ transactions, excludeDebts, skipEmbedding }),
                     });
 
                     const result = await response.json();
@@ -603,29 +618,3 @@
 
 </body>
 </html>
-
-</final_file_content>
-
-IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
-
-<environment_details>
-# VSCode Visible Files
-index.html
-
-# VSCode Open Tabs
-package.json
-api/get-transactions.js
-api/upload-transactions.js
-index.html
-package-lock.json
-README.md
-
-# Current Time
-7/24/2025, 2:17:40 PM (Europe/Kiev, UTC+3:00)
-
-# Context Window Usage
-219,237 / 1,048.576K tokens used (21%)
-
-# Current Mode
-ACT MODE
-</environment_details>

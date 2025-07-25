@@ -6,7 +6,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { month, year, category } = req.query;
+    const { month, year, category, model: selectedModel } = req.query;
 
     if (!month || !year) {
         return res.status(400).json({ error: 'Month and year are required for deep analysis.' });
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+    const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или по умолчанию
 
     try {
         const currentMonthStartDate = `${currentYear}-${currentMonthPadded}-01`;

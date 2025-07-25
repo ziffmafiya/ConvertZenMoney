@@ -72,9 +72,9 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Извлекаем транзакции и флаг excludeDebts (исключить долги) из тела запроса.
-    const { transactions, excludeDebts } = req.body;
-    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts);
+    // Извлекаем транзакции, флаг excludeDebts (исключить долги) и skipEmbedding (пропустить генерацию эмбеддингов) из тела запроса.
+    const { transactions, excludeDebts, skipEmbedding } = req.body;
+    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts, 'Skip Embedding:', skipEmbedding);
 
     // Проверяем, что транзакции предоставлены и имеют правильный формат.
     if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
@@ -217,11 +217,14 @@ export default async function handler(req, res) {
         
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
-        // 4. Генерируем встраивания (embeddings) только для новых транзакций.
+        // 4. Генерируем встраивания (embeddings) только для новых транзакций, если не указано пропустить.
         let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
-            // Создаем описание для генерации встраивания, включая все релевантные поля.
-            const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
-            const embedding = await getEmbedding(description); // Получаем встраивание.
+            let embedding = null;
+            if (!skipEmbedding) {
+                // Создаем описание для генерации встраивания, включая все релевантные поля.
+                const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+                embedding = await getEmbedding(description); // Получаем встраивание.
+            }
             
             // Возвращаем объект транзакции с добавленным уникальным хэшем и встраиванием,
             // а также преобразуем имена полей в snake_case для соответствия колонкам Supabase.
@@ -235,7 +238,7 @@ export default async function handler(req, res) {
                 income_account_name: t.incomeAccountName,
                 income: t.income,
                 unique_hash: t.unique_hash, // Передаем хэш
-                description_embedding: embedding // Добавляем встраивание
+                description_embedding: embedding // Добавляем встраивание (может быть null)
             };
         }));
 
