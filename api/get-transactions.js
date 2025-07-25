@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        let query = supabase.from('transactions').select('*');
+        let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
 
         // Apply filters on the server-side if they are provided
         if (year) {
@@ -48,7 +48,9 @@ export default async function handler(req, res) {
             outcomeAccountName: t.outcome_account_name,
             outcome: t.outcome,
             incomeAccountName: t.income_account_name,
-            income: t.income
+            income: t.income,
+            is_anomaly: t.is_anomaly,
+            anomaly_reason: t.anomaly_reason
         }));
 
         res.status(200).json({ transactions });
