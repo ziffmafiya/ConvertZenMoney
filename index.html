@@ -168,17 +168,15 @@
             </div>
         </section>
 
-        <!-- Remaining Content Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
-            <!-- Card 2: Anomalies -->
-            <div class="metric-card">
-                <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
-                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
-                <div id="anomaliesList" class="space-y-3">
-                    <!-- Anomalies will be listed here -->
-                    <p class="text-gray-500">Аномалий не найдено.</p>
-                </div>
+        <!-- Anomalies Section -->
+        <section class="metric-card mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
+            <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+            <div id="anomaliesList" class="space-y-3">
+                <!-- Anomalies will be listed here -->
+                <p class="text-gray-500">Аномалий не найдено.</p>
             </div>
+        </section>
 
         <!-- Breakdown Section with Tabs -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
@@ -299,7 +297,7 @@
     <section class="metric-card mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
         <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
-        <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             <!-- Habit cards will be displayed here -->
         </div>
         <div id="habitsLoading" class="hidden mt-4 text-center text-blue-400">
