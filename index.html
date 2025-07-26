@@ -116,16 +116,30 @@
                     <button data-period="quarter" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
                     <button data-period="year" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
                 </div>
-                <button class="text-gray-400 hover:text-white p-2 rounded-full bg-[#161b22] border border-[#30363d]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </button>
-                <button class="text-gray-400 hover:text-white p-2 rounded-full bg-[#161b22] border border-[#30363d] relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V5a1 1 0 00-2 0v.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    <span class="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-violet-500"></span>
-                </button>
-                <img src="https://i.pravatar.cc/40" alt="User Avatar" class="h-10 w-10 rounded-full">
             </div>
         </header>
+
+        <!-- Detailed Filters (Originally removed, now re-added) -->
+        <div class="mb-8 md:mb-12">
+             <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
+                <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="">Весь год</option>
+                    <option value="01">Январь</option>
+                    <option value="02">Февраль</option>
+                    <option value="03">Март</option>
+                    <option value="04">Апрель</option>
+                    <option value="05">Май</option>
+                    <option value="06">Июнь</option>
+                    <option value="07">Июль</option>
+                    <option value="08">Август</option>
+                    <option value="09">Сентябрь</option>
+                    <option value="10">Октябрь</option>
+                    <option value="11">Ноябрь</option>
+                    <option value="12">Декабрь</option>
+                </select>
+                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+        </div>
 
         <!-- Main Content Grid -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
