@@ -141,18 +141,8 @@
             </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <section class="grid grid-cols-1 gap-4 md:gap-8 mb-8 md:mb-12">
-            <!-- Card 1: Spend vs. Income -->
-            <div class="metric-card">
-                <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
-                <div class="h-96"> <!-- Increased height -->
-                    <canvas id="spendIncomeTrendChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-8 md:mb-12">
+        <!-- Top Metrics Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Main Balance Card -->
             <div class="metric-card">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
@@ -168,6 +158,18 @@
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
                 <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
             </div>
+        </section>
+
+        <!-- Spend vs. Income Chart Section -->
+        <section class="metric-card mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
+            <div class="h-96">
+                <canvas id="spendIncomeTrendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Remaining Content Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Card 2: Anomalies -->
             <div class="metric-card">
                 <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
@@ -177,7 +179,6 @@
                     <p class="text-gray-500">Аномалий не найдено.</p>
                 </div>
             </div>
-        </section>
 
         <!-- Breakdown Section with Tabs -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
