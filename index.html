@@ -142,7 +142,17 @@
         </div>
 
         <!-- Main Content Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+        <section class="grid grid-cols-1 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Card 1: Spend vs. Income -->
+            <div class="metric-card">
+                <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
+                <div class="h-96"> <!-- Increased height -->
+                    <canvas id="spendIncomeTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Main Balance Card -->
             <div class="metric-card">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
@@ -157,13 +167,6 @@
             <div class="metric-card">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
                 <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
-            </div>
-            <!-- Card 1: Spend vs. Income -->
-            <div class="metric-card lg:col-span-2">
-                <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
-                <div class="h-64">
-                    <canvas id="spendIncomeTrendChart"></canvas>
-                </div>
             </div>
             <!-- Card 2: Anomalies -->
             <div class="metric-card">
