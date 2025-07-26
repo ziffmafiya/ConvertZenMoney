@@ -3,409 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Универсальный Финансовый Отчет</title>
+    <title>Финансовый Дашборд</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0D1117;
-            color: #c9d1d9;
+            background-color: #F3F4F6; /* Light gray background for main area */
         }
-        .chart-container {
-            position: relative;
-            height: 35vh;
-            width: 100%;
-            max-width: 450px;
-            margin: auto;
+        .sidebar {
+            background-color: #111827; /* Dark sidebar */
+            color: #e5e7eb;
+            transition: width 0.3s ease;
         }
-        .bar-chart-container {
-            position: relative;
-            height: 45vh;
-            width: 100%;
+        .main-content {
+            background-color: #F3F4F6;
         }
         .metric-card {
-            background-color: #161b22;
-            border-radius: 1rem; /* More rounded corners */
+            background-color: #ffffff;
+            border-radius: 1rem;
             padding: 1.5rem;
-            text-align: left; /* Align text to the left */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #30363d;
         }
         .metric-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-            border-color: #8b5cf6; /* Purple accent on hover */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .legend-color-box {
-            width: 1rem;
-            height: 1rem;
-            margin-right: 0.75rem;
-            border-radius: 0.25rem;
-        }
-        /* Tab styles */
-        .tab-button {
-            transition: all 0.3s ease;
-            border-color: transparent;
-        }
-        .tab-button.active {
-            color: #3b82f6; /* blue-500 */
-            border-color: #3b82f6;
-        }
-        .tab-button:not(.active) {
-            color: #9ca3af; /* gray-400 */
-            border-color: #374151; /* gray-700 */
-        }
-        .tab-button:hover:not(.active) {
-             background-color: #374151;
-             border-color: #4b5563;
-        }
-        .tab-content.hidden {
-            display: none;
-        }
-        .transaction-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .transaction-table th, .transaction-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #374151;
-            text-align: left;
-        }
-        .transaction-table th {
-            background-color: #1f2937;
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
             font-weight: 600;
-            color: #9ca3af;
         }
-        .transaction-table tbody tr:hover {
-            background-color: #2d3748;
+        .status-completed {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: #22C55E;
         }
-        .transaction-table .income {
-            color: #22c55e;
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
         }
-        .transaction-table .outcome {
-            color: #ef4444;
+        .sidebar-link.active {
+            background-color: #374151;
+            color: #ffffff;
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl"> <!-- Increased max-width -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 flex-shrink-0 flex flex-col p-4">
+            <div class="flex items-center gap-3 mb-8">
+                <svg class="h-8 w-8 text-emerald-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <h1 class="text-2xl font-bold text-white">Wwealthy</h1>
+            </div>
+            <nav class="flex-grow">
+                <ul>
+                    <li><a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM2 10a8 8 0 1116 0 8 8 0 01-16 0z"></path></svg> Overview</a></li>
+                    <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10 2a1 1 0 11-2 0 1 1 0 012 0zM6 8a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H7z"></path></svg> Budgets</a></li>
+                    <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 102 0V7zM9 13a1 1 0 112 0 1 1 0 01-2 0z" clip-rule="evenodd"></path></svg> Expenses</a></li>
+                </ul>
+            </nav>
+            <div class="mt-auto">
+                <a href="#" class="flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white transition">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path></svg>
+                    Log out
+                </a>
+            </div>
+        </aside>
 
-        <!-- New Header -->
-        <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
-            <!-- Welcome Message -->
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white">Welcome back, Ashley</h1>
-                <p class="text-gray-400">Here's an overview of all of your balances.</p>
-            </div>
-            
-            <!-- Actions -->
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2" id="quickFilters">
-                    <button data-period="month" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Месяц</button>
-                    <button data-period="quarter" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
-                    <button data-period="year" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
+        <!-- Main Content -->
+        <div class="main-content flex-grow p-4 md:p-8">
+            <!-- Header -->
+            <header class="flex flex-wrap justify-between items-center gap-4 mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Welcome back, Ashley</h2>
+                    <p class="text-gray-500">Here's an overview of all of your balances.</p>
                 </div>
-            </div>
-        </header>
-
-        <!-- Detailed Filters (Originally removed, now re-added) -->
-        <div class="mb-8 md:mb-12">
-             <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
-                <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <option value="">Весь год</option>
-                    <option value="01">Январь</option>
-                    <option value="02">Февраль</option>
-                    <option value="03">Март</option>
-                    <option value="04">Апрель</option>
-                    <option value="05">Май</option>
-                    <option value="06">Июнь</option>
-                    <option value="07">Июль</option>
-                    <option value="08">Август</option>
-                    <option value="09">Сентябрь</option>
-                    <option value="10">Октябрь</option>
-                    <option value="11">Ноябрь</option>
-                    <option value="12">Декабрь</option>
-                </select>
-                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-            </div>
-        </div>
-
-        <!-- Main Content Grid -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
-            <!-- Main Balance Card -->
-            <div class="metric-card">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
-                <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
-            </div>
-             <!-- Total Income Card -->
-            <div class="metric-card">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
-                <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
-            </div>
-            <!-- Total Expenses Card -->
-            <div class="metric-card">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
-                <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
-            </div>
-            <!-- Card 1: Spend vs. Income -->
-            <div class="metric-card lg:col-span-2">
-                <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
-                <div class="h-64">
-                    <canvas id="spendIncomeTrendChart"></canvas>
-                </div>
-            </div>
-            <!-- Card 2: Anomalies -->
-            <div class="metric-card">
-                <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
-                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
-                <div id="anomaliesList" class="space-y-3">
-                    <!-- Anomalies will be listed here -->
-                    <p class="text-gray-500">Аномалий не найдено.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Breakdown Section with Tabs -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-            
-            <!-- Expenses Breakdown Card -->
-            <div class="metric-card">
-                <div class="mb-4 border-b border-gray-700">
-                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
-                        <li role="presentation">
-                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg active" id="category-tab" data-tab-target="#category-content" type="button" role="tab">По категориям</button>
-                        </li>
-                        <li role="presentation">
-                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg" id="store-tab" data-tab-target="#store-content" type="button" role="tab">По магазинам</button>
-                        </li>
-                    </ul>
-                </div>
-                <div id="expensesTabContent">
-                    <div class="tab-content" id="category-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
-                        <div class="chart-container">
-                            <canvas id="expensesChart"></canvas>
-                        </div>
-                        <div id="expensesLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
-                        <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Найти аномалии в данных</button>
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Type here to search" class="w-full md:w-64 pl-10 pr-4 py-2 rounded-full bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                     </div>
-                    <div class="tab-content hidden" id="store-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
-                        <div class="bar-chart-container">
-                            <canvas id="storesChart"></canvas>
+                    <button class="text-gray-500 hover:text-gray-800 p-2 rounded-full bg-white border border-gray-300 relative">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V5a1 1 0 00-2 0v.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span class="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-violet-500"></span>
+                    </button>
+                    <img src="https://i.pravatar.cc/40" alt="User Avatar" class="h-10 w-10 rounded-full">
+                </div>
+            </header>
+
+            <!-- Main Grid -->
+            <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Account Balance Chart -->
+                    <div class="metric-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">Account Balance</h3>
+                            <div class="flex items-center gap-2" id="quickFilters">
+                                <button data-period="month" class="quick-filter-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1 px-3 rounded-full text-sm transition">Месяц</button>
+                                <button data-period="quarter" class="quick-filter-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1 px-3 rounded-full text-sm transition">Квартал</button>
+                                <button data-period="year" class="quick-filter-btn bg-violet-500 text-white font-semibold py-1 px-3 rounded-full text-sm transition active">Год</button>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="spendIncomeTrendChart"></canvas>
                         </div>
                     </div>
+                    <!-- Recent Transactions Table -->
+                    <div class="metric-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">Recent Transactions</h3>
+                            <a href="#" class="text-sm font-semibold text-violet-600 hover:underline">See all</a>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th class="py-2 text-gray-500 font-semibold">Name</th>
+                                    <th class="py-2 text-gray-500 font-semibold">Date</th>
+                                    <th class="py-2 text-gray-500 font-semibold">Status</th>
+                                    <th class="py-2 text-gray-500 font-semibold text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <!-- JS will populate this -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Income Sources Card -->
-            <div class="metric-card">
-                <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
-                <div class="space-y-4" id="incomeList">
-                    <!-- Income bars will be generated by JS -->
+                <!-- Right Column -->
+                <div class="space-y-8">
+                    <!-- Key Metrics -->
+                    <div class="metric-card space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-gray-500">Total Balance</h4>
+                                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+                            </div>
+                            <p id="headerNetBalance" class="text-3xl font-bold text-gray-800 mt-1">0.00 грн</p>
+                        </div>
+                        <hr>
+                        <div>
+                            <h4 class="text-gray-500">Total Income</h4>
+                            <p id="totalIncome" class="text-2xl font-bold text-green-500 mt-1">0.00 грн</p>
+                        </div>
+                        <hr>
+                        <div>
+                            <h4 class="text-gray-500">Total Expenses</h4>
+                            <p id="totalExpenses" class="text-2xl font-bold text-red-500 mt-1">0.00 грн</p>
+                        </div>
+                    </div>
+                    <!-- Habits/Insights -->
+                    <div class="metric-card">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Habits Insights</h3>
+                        <div id="habitsResult" class="space-y-4">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-        </section>
-
-    <!-- Interactive Elements Section -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12">
-        <!-- Forecast Chart -->
-        <div class="metric-card">
-            <h3 class="text-xl font-bold text-white mb-4">Прогноз баланса</h3>
-            <div class="h-48">
-                <canvas id="forecastChart"></canvas>
+            </main>
+            
+            <!-- Detailed Filters -->
+            <div class="hidden">
+                <select id="filterMonth"><option value=""></option></select>
+                <input type="number" id="filterYear">
             </div>
         </div>
-        <!-- Goal Progress -->
-        <div class="metric-card">
-            <h3 class="text-xl font-bold text-white mb-4">Прогресс по цели</h3>
-            <p class="text-gray-400">Снизить траты на "Кафе и рестораны" на 15%</p>
-            <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
-                <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
-            </div>
-            <div class="flex justify-between text-sm font-semibold mt-2">
-                <span id="goalProgressText" class="text-white">0%</span>
-                <span class="text-gray-400">Цель: 15%</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Transactions Table Section -->
-    <section class="metric-card mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
-        <div class="overflow-x-auto">
-            <table class="transaction-table">
-                <thead>
-                    <tr>
-                        <th>Дата</th>
-                        <th>Категория</th>
-                        <th>Контрагент</th>
-                        <th>Сумма</th>
-                        <th>Счет</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionsTableBody">
-                    <!-- Rows will be generated by JS -->
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-
-    <!-- Deep Analysis Section -->
-    <section class="metric-card mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
-        <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
-        <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-            <button id="deepAnalysisButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
-        </div>
-        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
-            <label for="analysisCategory" class="block mb-2 text-lg font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
-            <input type="text" id="analysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-        </div>
-        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
-            <label for="analysisModel" class="block mb-2 text-lg font-medium text-gray-300">Модель ИИ для анализа</label>
-            <select id="analysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            </select>
-        </div>
-        <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
-            <!-- Analysis results will be displayed here -->
-        </div>
-        <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
-            <p>Анализ выполняется, пожалуйста, подождите...</p>
-        </div>
-    </section>
-
-    <!-- Habits Analysis Section -->
-    <section class="metric-card mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
-        <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
-        <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Habit cards will be displayed here -->
-        </div>
-        <div id="habitsLoading" class="hidden mt-4 text-center text-blue-400">
-            <p>Анализ привычек, пожалуйста, подождите...</p>
-        </div>
-    </section>
-
-    <!-- Habit Details Modal -->
-    <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
-            <h2 id="habitDetailTitle" class="text-2xl font-bold text-white mb-4">Подробности привычки</h2>
-            <div class="chart-container" style="height: 40vh;">
-                <canvas id="habitTrendChart"></canvas>
-            </div>
-            <button id="closeHabitDetailModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
-        </div>
-    </div>
-
-    <!-- Data Input Section (Moved to the bottom) -->
-    <section class="metric-card mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
-        <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
-        <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-        <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
-            <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-            <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
-        </div>
-        <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
-            <input id="skipEmbeddingOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-            <label for="skipEmbeddingOnUpload" class="ml-3 text-lg font-medium text-gray-300">Не генерировать эмбеддинги при загрузке (для экономии квоты)</label>
-        </div>
-        <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
-    </section>
-
     </div>
 
     <script>
-        // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
         document.addEventListener('DOMContentLoaded', function () {
-            // --- Ссылки на DOM-элементы ---
-            const csvFile = document.getElementById('csvFile');
-            const processDataButton = document.getElementById('processDataButton');
-            const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
-            const skipEmbeddingOnUploadCheckbox = document.getElementById('skipEmbeddingOnUpload'); // Ссылка на чекбокс для пропуска эмбеддингов
+            // --- DOM Element References ---
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
-            const deepAnalysisButton = document.getElementById('deepAnalysisButton');
-            const analysisCategoryInput = document.getElementById('analysisCategory'); // Ссылка на инпут категории для анализа
-            const analysisModelSelect = document.getElementById('analysisModel'); // Ссылка на селект модели ИИ
-            const analysisResultDiv = document.getElementById('analysisResult');
-            const analysisLoadingDiv = document.getElementById('analysisLoading');
-            const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
-            const habitsResultDiv = document.getElementById('habitsResult');
-            const habitsLoadingDiv = document.getElementById('habitsLoading');
-            const habitDetailModal = document.getElementById('habitDetailModal');
-            const habitDetailTitle = document.getElementById('habitDetailTitle');
-            const closeHabitDetailModal = document.getElementById('closeHabitDetailModal');
-            let habitTrendChart; // Переменная для хранения экземпляра графика тренда привычки
+            const quickFiltersContainer = document.getElementById('quickFilters');
             
             const headerNetBalanceEl = document.getElementById('headerNetBalance');
             const totalIncomeEl = document.getElementById('totalIncome');
             const totalExpensesEl = document.getElementById('totalExpenses');
-            const expensesLegendContainer = document.getElementById('expensesLegend');
-            const incomeListContainer = document.getElementById('incomeList');
-            const quickFiltersContainer = document.getElementById('quickFilters');
-            const anomaliesListEl = document.getElementById('anomaliesList');
+            const transactionsTableBody = document.getElementById('transactionsTableBody');
+            const habitsResultDiv = document.getElementById('habitsResult');
 
-            // --- Переменные для хранения экземпляров графиков Chart.js ---
-            let expensesChart;
-            let storesChart;
+            // --- Chart.js Variables ---
             let spendIncomeTrendChart;
-            let forecastChart;
 
-            // Цветовая палитра для графиков
-            const COLORS = [
-                '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
-                '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
-            ];
-
-            // Плагин для кастомизации всплывающих подсказок в Chart.js
-            const tooltipPlugin = {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.label || '';
-                        if (label) {
-                            label += ': ';
-                        }
-                        if (context.parsed.x !== null || context.parsed !== null) {
-                            const value = context.parsed.x ?? context.parsed;
-                            label += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
-                        }
-                        return label;
-                    }
-                }
-            };
-            
-            // Функция для нормализации строк (удаление лишних пробелов, приведение к нижнему регистру)
-            function normalize(str) {
-                return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
-            }
-            
-            // --- Обработка данных и рендеринг ---
-            // Асинхронная функция для получения и отображения транзакций
+            // --- Data Fetching & Rendering ---
             async function fetchAndRenderTransactions() {
                 const selectedMonth = filterMonthSelect.value;
                 const selectedYear = filterYearInput.value;
 
-                // Год должен быть выбран для получения данных
                 if (!selectedYear) {
-                    analyzeAndRender([]); // Очищаем графики, если год не выбран
+                    analyzeAndRender([]);
                     return;
                 }
 
@@ -415,600 +209,127 @@
                 }
 
                 try {
-                    // Отправляем запрос на сервер для получения транзакций
                     const response = await fetch(`/api/get-transactions?${params.toString()}`);
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to fetch transactions');
-                    }
+                    if (!response.ok) throw new Error('Failed to fetch transactions');
                     const { transactions } = await response.json();
-                    
-                    // Запускаем анализ и отображение полученных транзакций
                     analyzeAndRender(transactions);
-                    fetchAndRenderHabits();
-
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
-                    alert(`Не удалось загрузить транзакции: ${error.message}`);
                 }
             }
 
-            // Асинхронная функция для получения и отображения привычек
-            async function fetchAndRenderHabits() {
-                const selectedMonth = filterMonthSelect.value;
-                const selectedYear = filterYearInput.value;
-
-                if (!selectedYear || !selectedMonth) {
-                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Пожалуйста, выберите год и месяц для анализа привычек.</p>';
-                    return;
-                }
-
-                habitsLoadingDiv.classList.remove('hidden'); // Показываем индикатор загрузки
-                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
-
-                try {
-                    // Отправляем запрос на сервер для анализа привычек
-                    const response = await fetch(`/api/analyze-habits?${params.toString()}`);
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to fetch habits');
-                    }
-                    const { habits } = await response.json();
-                    renderHabits(habits); // Отображаем полученные привычки
-                } catch (error) {
-                    console.error('Error fetching habits:', error);
-                    alert(`Не удалось загрузить привычки: ${error.message}`);
-                } finally {
-                    habitsLoadingDiv.classList.add('hidden'); // Скрываем индикатор загрузки
-                }
-            }
-
-            // Функция для отображения карточек привычек
-            function renderHabits(habits) {
-                habitsResultDiv.innerHTML = '';
-                if (Object.keys(habits).length === 0) {
-                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Привычки не найдены для выбранного периода.</p>';
-                    return;
-                }
-
-                // Иконки для разных категорий привычек
-                const categoryIcons = {
-                    'Продукты': '🛒',
-                    'Кафе и рестораны': '☕',
-                    'Транспорт': '🚕',
-                    'Развлечения': '🎬',
-                    'Онлайн-сервисы': '💻',
-                    'default': '💰'
-                };
-
-                for (const payee in habits) {
-                    const habit = habits[payee];
-                    const trendColor = habit.trend > 0 ? 'text-red-400' : 'text-green-400';
-                    const trendArrow = habit.trend > 0 ? '↑' : '↓';
-                    const icon = categoryIcons[habit.category] || categoryIcons['default'];
-
-                    const habitCard = document.createElement('div');
-                    habitCard.className = 'metric-card p-4 flex flex-col';
-                    habitCard.innerHTML = `
-                        <div class="flex-grow">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-semibold text-gray-300">${payee}</h3>
-                                <span class="text-2xl">${icon}</span>
-                            </div>
-                            <p class="text-gray-400 text-sm">Всего потрачено</p>
-                            <p class="text-2xl font-bold text-blue-400">${parseFloat(habit.totalSpent).toLocaleString('ru-RU')} грн</p>
-                            <div class="flex justify-between items-center text-sm text-gray-400 mt-1">
-                                <span>${habit.count} раз за месяц</span>
-                                <span class="${trendColor}">${trendArrow} ${Math.abs(habit.trend)}%</span>
-                            </div>
-                            <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
-                        </div>
-                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${payee}" data-habit='${JSON.stringify(habit)}'>Подробнее</button>
-                    `;
-                    habitsResultDiv.appendChild(habitCard);
-                }
-            }
-
-            // Асинхронная функция для выполнения глубокого анализа трат с помощью ИИ
-            async function performDeepAnalysis() {
-                const selectedMonth = filterMonthSelect.value;
-                const selectedYear = filterYearInput.value;
-                const analysisCategory = analysisCategoryInput.value.trim(); // Получаем значение категории
-                const analysisModel = analysisModelSelect.value; // Получаем выбранную модель
-
-                if (!selectedMonth || !selectedYear) {
-                    alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
-                    return;
-                }
-
-                analysisResultDiv.textContent = '';
-                analysisLoadingDiv.classList.remove('hidden');
-
-                const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
-                if (analysisCategory) {
-                    params.append('category', analysisCategory); // Добавляем категорию в параметры, если она указана
-                }
-
-                try {
-                    // Отправляем запрос на сервер для глубокого анализа
-                    const response = await fetch(`/api/deep-analysis?${params.toString()}`);
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to perform deep analysis');
-                    }
-                    const { analysis } = await response.json();
-                    analysisResultDiv.textContent = analysis;
-                } catch (error) {
-                    console.error('Error performing deep analysis:', error);
-                    analysisResultDiv.textContent = `Ошибка при выполнении глубокого анализа: ${error.message}`;
-                } finally {
-                    analysisLoadingDiv.classList.add('hidden');
-                }
-            }
-
-            // Асинхронная функция для обнаружения аномалий
-            async function detectAnomalies() {
-                analysisResultDiv.textContent = '';
-                analysisLoadingDiv.classList.remove('hidden');
-                analysisLoadingDiv.querySelector('p').textContent = 'Идет поиск аномалий, это может занять некоторое время...';
-
-                try {
-                    // Отправляем запрос на сервер для обнаружения аномалий
-                    const response = await fetch('/api/detect-anomalies');
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to detect anomalies');
-                    }
-                    const result = await response.json();
-                    alert(`Поиск аномалий завершен. Найдено: ${result.anomalies_found}. Данные на странице будут обновлены.`);
-                    fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать аномалии
-                } catch (error) {
-                    console.error('Error detecting anomalies:', error);
-                    alert(`Ошибка при поиске аномалий: ${error.message}`);
-                } finally {
-                    analysisLoadingDiv.classList.add('hidden');
-                    analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Сбрасываем текст
-                }
-            }
-
-            // Основная функция для анализа и отображения данных
             function analyzeAndRender(transactions) {
                 if (!transactions) return;
 
                 let totalIncome = 0;
                 let totalExpenses = 0;
-                const expensesByCategory = {};
-                const expensesByPayee = {};
-                const incomeSources = {};
-                const dailyData = {}; // For trend chart
+                const dailyData = {};
 
                 transactions.forEach(t => {
                     const date = t.date.split('T')[0];
                     if (!dailyData[date]) {
                         dailyData[date] = { income: 0, expenses: 0 };
                     }
-
-                    if (t.income > 0 && t.outcome === 0) {
+                    if (t.income > 0) {
                         totalIncome += t.income;
                         dailyData[date].income += t.income;
-                        if (!normalize(t.categoryName).includes('возврат')) {
-                           incomeSources[t.categoryName] = (incomeSources[t.categoryName] || 0) + t.income;
-                        }
-                    } else if (t.outcome > 0 && t.income === 0) {
+                    } else {
                         totalExpenses += t.outcome;
                         dailyData[date].expenses += t.outcome;
-                        
-                        let category = t.categoryName;
-                        const creditKeywords = ["роутер", "очки", "бритва", "пылесос"];
-                        const description = normalize(t.payee + ' ' + t.comment + ' ' + t.incomeAccountName);
-
-                        if (creditKeywords.some(keyword => description.includes(keyword))) {
-                            category = "Платеж по кредиту";
-                        }
-                        
-                        expensesByCategory[category] = (expensesByCategory[category] || 0) + t.outcome;
-                        expensesByPayee[t.payee] = (expensesByPayee[t.payee] || 0) + t.outcome;
                     }
                 });
 
                 const netBalance = totalIncome - totalExpenses;
 
-                // Update main metrics
-                headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                headerNetBalanceEl.style.color = netBalance >= 0 ? '#22c55e' : '#ef4444';
-                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                totalExpensesEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                // Update metrics
+                headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU')} грн`;
+                totalIncomeEl.textContent = `+${totalIncome.toLocaleString('ru-RU')} грн`;
+                totalExpensesEl.textContent = `-${totalExpenses.toLocaleString('ru-RU')} грн`;
 
-                // Prepare data for charts and lists
-                const expenseDataByCategoryChart = {
-                    labels: Object.keys(expensesByCategory),
-                    datasets: [{
-                        data: Object.values(expensesByCategory),
-                        backgroundColor: COLORS.slice(0, Object.keys(expensesByCategory).length),
-                        borderColor: '#1f2937',
-                        borderWidth: 3,
-                        hoverOffset: 15
-                    }]
-                };
+                // Render charts and tables
+                renderTrendChart(dailyData);
+                renderTransactionsTable(transactions.slice(0, 5)); // Show top 5
+                // Placeholder for habits
+                habitsResultDiv.innerHTML = '<p class="text-gray-500">Анализ привычек в разработке.</p>';
+            }
 
-                const sortedExpensesByPayee = Object.entries(expensesByPayee)
-                    .sort(([, a], [, b]) => b - a)
-                    .slice(0, 10); // Top 10
-                const expenseDataByStoreChart = {
-                    labels: sortedExpensesByPayee.map(([payee]) => payee),
-                    datasets: [{
-                        label: 'Расходы',
-                        data: sortedExpensesByPayee.map(([, amount]) => amount),
-                        backgroundColor: COLORS.slice(0, sortedExpensesByPayee.length),
-                        borderColor: '#1f2937',
-                        borderWidth: 2
-                    }]
-                };
-                
+            function renderTrendChart(dailyData) {
+                if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
+
                 const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
                 const trendData = {
-                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })),
+                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' })),
                     datasets: [
-                        {
-                            label: 'Доходы',
-                            data: sortedDates.map(date => dailyData[date].income),
-                            borderColor: '#22c55e', // green-500
-                            backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                            fill: true,
-                            tension: 0.4
-                        },
                         {
                             label: 'Расходы',
                             data: sortedDates.map(date => dailyData[date].expenses),
-                            borderColor: '#ef4444', // red-500
-                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                            fill: true,
-                            tension: 0.4
+                            borderColor: '#EF4444',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Доходы',
+                            data: sortedDates.map(date => dailyData[date].income),
+                            borderColor: '#22C55E',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            yAxisID: 'y',
                         }
                     ]
                 };
-
-                const incomeDataList = Object.entries(incomeSources)
-                    .map(([source, amount]) => ({ source, amount }))
-                    .sort((a, b) => b.amount - a.amount);
-
-                renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
-                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
-                renderAnomalies(transactions.filter(t => t.is_anomaly));
-                renderTransactionsTable(transactions.slice(0, 15)); // Render latest 15 transactions
-                updateGoalProgress(transactions);
-                renderForecastChart(transactions);
-            }
-
-            // --- File Handling and Filtering ---
-            function handleFileProcessing() {
-                if (csvFile.files.length === 0) {
-                    alert('Пожалуйста, выберите CSV файл.');
-                    return;
-                }
-
-                const file = csvFile.files[0];
-                const reader = new FileReader();
-
-                reader.onload = (e) => {
-                    const csvData = e.target.result;
-                    const lines = csvData.split('\n').filter(line => line.trim() !== '');
-
-                    const headers = [
-                        "date", "categoryName", "payee", "comment", "outcomeAccountName",
-                        "outcome", "outcomeCurrencyShortTitle", "incomeAccountName",
-                        "income", "incomeCurrencyShortTitle", "createdDate", "changedDate", "qrCode"
-                    ];
-
-                    const data = [];
-                    lines.forEach(line => {
-                        const values = line.split(';');
-                        if (values.length >= headers.length - 1) { // Allow for missing qrCode
-                            let row = {};
-                            headers.forEach((header, index) => {
-                                row[header] = (values[index] || '').replace(/"/g, '');
-                            });
-                            data.push(row);
-                        } else {
-                            console.warn(`Skipping malformed line: ${line}`);
-                        }
-                    });
-
-                    const transactionData = data.filter(row => {
-                        const income = parseFloat(row.income.replace(',', '.')) || 0;
-                        const outcome = parseFloat(row.outcome.replace(',', '.')) || 0;
-                        return (income > 0 && outcome === 0) || (outcome > 0 && income === 0);
-                    }).map(row => ({
-                        date: row.date,
-                        categoryName: row.categoryName,
-                        payee: row.payee,
-                        comment: row.comment,
-                        outcomeAccountName: row.outcomeAccountName,
-                        outcome: parseFloat(row.outcome.replace(',', '.')) || 0,
-                        incomeAccountName: row.incomeAccountName,
-                        income: parseFloat(row.income.replace(',', '.')) || 0,
-                    }));
-
-                    if (transactionData.length === 0) {
-                        alert('В файле не найдено подходящих транзакций для загрузки.');
-                        return;
-                    }
-                    
-                    // Upload all parsed data from the file. The server will handle deduplication.
-                    uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked, skipEmbeddingOnUploadCheckbox.checked);
-                };
-
-                reader.onerror = () => {
-                    alert('Ошибка при чтении файла.');
-                };
-
-                reader.readAsText(file, 'UTF-8');
-            }
-
-            function renderAnomalies(anomalies) {
-                anomaliesListEl.innerHTML = '';
-                if (anomalies.length === 0) {
-                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
-                    return;
-                }
-                anomalies.forEach(anomaly => {
-                    const anomalyEl = document.createElement('div');
-                    anomalyEl.className = 'p-3 bg-gray-800 rounded-lg';
-                    anomalyEl.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-semibold text-white">${anomaly.payee}</span>
-                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
-                        </div>
-                        <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
-                    `;
-                    anomaliesListEl.appendChild(anomalyEl);
-                });
-            }
-
-            function renderTransactionsTable(transactions) {
-                const tableBody = document.getElementById('transactionsTableBody');
-                tableBody.innerHTML = '';
-                if (transactions.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Нет транзакций для отображения.</td></tr>`;
-                    return;
-                }
-
-                transactions.forEach(t => {
-                    const row = document.createElement('tr');
-                    const amount = t.income > 0 ? t.income : t.outcome;
-                    const amountClass = t.income > 0 ? 'income' : 'outcome';
-                    const sign = t.income > 0 ? '+' : '-';
-
-                    row.innerHTML = `
-                        <td>${new Date(t.date).toLocaleDateString('ru-RU')}</td>
-                        <td>${t.categoryName}</td>
-                        <td>${t.payee || 'N/A'}</td>
-                        <td class="${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
-                        <td>${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }
-
-            function updateGoalProgress(transactions) {
-                const goalCategory = 'Кафе и рестораны';
-                const goalReduction = 0.15; // 15%
                 
-                // This is a simplified logic. A real implementation would compare with a previous period.
-                // Here, we'll just simulate progress.
-                const expensesInGoalCategory = transactions
-                    .filter(t => t.categoryName === goalCategory)
-                    .reduce((sum, t) => sum + t.outcome, 0);
-                
-                const totalExpenses = transactions.reduce((sum, t) => sum + t.outcome, 0);
-                
-                let progress = 0;
-                if (totalExpenses > 0) {
-                    // Simulate some progress for demonstration
-                    progress = Math.min(100, (expensesInGoalCategory / totalExpenses) * 300); 
-                }
-
-                const progressBar = document.getElementById('goalProgressBar');
-                const progressText = document.getElementById('goalProgressText');
-                
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${progress.toFixed(0)}%`;
-            }
-
-            function renderForecastChart(transactions) {
-                if (forecastChart) forecastChart.destroy();
-
-                const last30DaysExpenses = transactions.slice(-30).map(t => t.outcome);
-                const forecastData = [];
-                let currentBalance = transactions.reduce((acc, t) => acc + t.income - t.outcome, 0);
-
-                for(let i=0; i<7; i++) { // Forecast for next 7 days
-                    const dailyExpenseAvg = last30DaysExpenses.reduce((a, b) => a + b, 0) / (last30DaysExpenses.length || 1);
-                    currentBalance -= dailyExpenseAvg;
-                    forecastData.push(currentBalance);
-                }
-
-                const ctx = document.getElementById('forecastChart').getContext('2d');
-                forecastChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: Array.from({length: 7}, (_, i) => `День ${i+1}`),
-                        datasets: [{
-                            label: 'Прогноз баланса',
-                            data: forecastData,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        },
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            }
-
-            // --- Rendering Functions ---
-            function renderCharts(expenseDataByCategory, expenseDataByStore, trendData) {
-                if (expensesChart) expensesChart.destroy();
-                if (storesChart) storesChart.destroy();
-                if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
-
-                const ctxCategory = document.getElementById('expensesChart').getContext('2d');
-                expensesChart = new Chart(ctxCategory, {
-                    type: 'doughnut',
-                    data: expenseDataByCategory,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
-                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
-                    }
-                });
-
-                const ctxStore = document.getElementById('storesChart').getContext('2d');
-                storesChart = new Chart(ctxStore, {
-                    type: 'bar',
-                    data: expenseDataByStore,
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                            y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
-                        },
-                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
-                    }
-                });
-
-                const ctxTrend = document.getElementById('spendIncomeTrendChart').getContext('2d');
-                spendIncomeTrendChart = new Chart(ctxTrend, {
+                const ctx = document.getElementById('spendIncomeTrendChart').getContext('2d');
+                spendIncomeTrendChart = new Chart(ctx, {
                     type: 'line',
                     data: trendData,
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                            x: { grid: { display: false } },
+                            y: { position: 'left' }
                         },
-                        plugins: { 
-                            legend: { 
-                                position: 'top',
-                                labels: {
-                                    color: '#d1d5db'
-                                }
-                             }, 
-                            tooltip: tooltipPlugin 
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             }
 
-            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
-                expensesLegendContainer.innerHTML = '';
-                if (expenseDataByCategory.labels.length > 0) {
-                    // Sort categories by value descending for the legend
-                    const sortedCategories = expenseDataByCategory.labels
-                        .map((label, i) => ({
-                            label,
-                            value: expenseDataByCategory.datasets[0].data[i],
-                            color: expenseDataByCategory.datasets[0].backgroundColor[i]
-                        }))
-                        .sort((a, b) => b.value - a.value);
-
-                    sortedCategories.forEach(category => {
-                        const { label, value, color } = category;
-                        const actualPercentage = totalIncome > 0 ? (value / totalIncome) * 100 : 0;
-                        
-                        const legendItem = document.createElement('div');
-                        legendItem.className = 'legend-item relative'; // Added relative for tooltip positioning
-                        
-                        // --- Более надежная проверка аномалий ---
-                        const anomalousTransactions = transactions.filter(t => t.categoryName === label && t.is_anomaly);
-                        const isCategoryAnomalous = anomalousTransactions.length > 0;
-                        
-                        // Собираем все причины аномалий в этой категории
-                        const anomalyReason = isCategoryAnomalous 
-                            ? anomalousTransactions.map(t => t.anomaly_reason).join('\\n') // Используем \n для переноса строк в tooltip
-                            : '';
-
-                        // Отладочный лог
-                        if(isCategoryAnomalous) {
-                            console.log(`Аномалия в категории "${label}":`, anomalousTransactions);
-                        }
-
-                        // A flexbox-based layout for better alignment and wrapping
-                        legendItem.innerHTML = `
-                            <div class="flex w-full items-center">
-                                <div class="legend-color-box flex-shrink-0" style="background-color: ${color}"></div>
-                                <div class="flex-grow min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-300 mr-2">${label}</span>
-                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
-                                        ${isCategoryAnomalous ? `
-                                            <div class="relative group">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
-                                                </svg>
-                                                <div class="absolute bottom-full mb-2 w-64 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 whitespace-pre-line" style="left: 50%; transform: translateX(-50%);">
-                                                    ${anomalyReason}
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>`;
-                        expensesLegendContainer.appendChild(legendItem);
-                    });
+            function renderTransactionsTable(transactions) {
+                transactionsTableBody.innerHTML = '';
+                if (transactions.length === 0) {
+                    transactionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">No transactions found.</td></tr>`;
+                    return;
                 }
-
-                incomeListContainer.innerHTML = '';
-                const totalIncomeForList = incomeData.reduce((sum, item) => sum + item.amount, 0);
-                if (totalIncomeForList > 0) {
-                    incomeData.forEach(item => {
-                        const percentage = (item.amount / totalIncomeForList) * 100;
-                        const incomeElement = document.createElement('div');
-                        incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
-                        incomeListContainer.appendChild(incomeElement);
-                    });
-                }
-            }
-            
-            // --- Tab Logic ---
-            const tabs = document.querySelectorAll('.tab-button');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const target = document.querySelector(tab.dataset.tabTarget);
-                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
-                    target.classList.remove('hidden');
+                transactions.forEach(t => {
+                    const isIncome = t.income > 0;
+                    const amount = isIncome ? t.income : t.outcome;
+                    const row = `
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-3 flex items-center gap-3">
+                                <span class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">${(t.payee || 'N/A')[0]}</span>
+                                ${t.payee || 'N/A'}
+                            </td>
+                            <td class="py-3 text-gray-600">${new Date(t.date).toLocaleDateString('ru-RU')}</td>
+                            <td class="py-3"><span class="status-pill status-completed">Completed</span></td>
+                            <td class="py-3 font-semibold text-right ${isIncome ? 'text-green-500' : 'text-gray-800'}">
+                                ${isIncome ? '+' : '-'}${amount.toLocaleString('ru-RU')} грн
+                            </td>
+                        </tr>
+                    `;
+                    transactionsTableBody.innerHTML += row;
                 });
-            });
+            }
 
-            // --- Event Listeners and Initial Call ---
-            processDataButton.addEventListener('click', handleFileProcessing);
-            filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
-            filterYearInput.addEventListener('change', fetchAndRenderTransactions);
-            deepAnalysisButton.addEventListener('click', performDeepAnalysis);
-            detectAnomaliesButton.addEventListener('click', detectAnomalies);
-            closeHabitDetailModal.addEventListener('click', () => habitDetailModal.classList.add('hidden'));
-
+            // --- Event Listeners ---
             quickFiltersContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('quick-filter-btn')) {
-                    document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
+                    document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                        btn.classList.remove('bg-violet-500', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-700');
+                    });
+                    e.target.classList.add('bg-violet-500', 'text-white');
+                    e.target.classList.remove('bg-gray-100', 'text-gray-700');
                     
                     const period = e.target.dataset.period;
                     const today = new Date();
@@ -1016,98 +337,14 @@
 
                     if (period === 'month') {
                         filterMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
-                    } else if (period === 'quarter') {
-                        const quarter = Math.floor(today.getMonth() / 3);
-                        // For simplicity, we'll just select the whole year for quarter, 
-                        // as the backend doesn't support quarterly fetching directly.
-                        // A more complex implementation would filter transactions on the client.
-                        filterMonthSelect.value = ''; 
-                    } else { // year
+                    } else {
                         filterMonthSelect.value = '';
                     }
                     fetchAndRenderTransactions();
                 }
             });
 
-            habitsResultDiv.addEventListener('click', (e) => {
-                if (e.target.classList.contains('habit-details-btn')) {
-                    const habitData = JSON.parse(e.target.dataset.habit);
-                    const payee = e.target.dataset.payee;
-                    
-                    habitDetailTitle.textContent = `Динамика трат: ${payee}`;
-                    
-                    const chartData = {
-                        labels: habitData.transactions.map(t => new Date(t.date).toLocaleDateString('ru-RU')),
-                        datasets: [{
-                            label: 'Сумма траты',
-                            data: habitData.transactions.map(t => t.amount),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    };
-
-                    if (habitTrendChart) {
-                        habitTrendChart.destroy();
-                    }
-
-                    habitTrendChart = new Chart(document.getElementById('habitTrendChart').getContext('2d'), {
-                        type: 'line',
-                        data: chartData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { color: '#9ca3af' }, 
-                                    grid: { color: '#374151' }
-                                },
-                                x: {
-                                    ticks: { color: '#9ca3af' }, 
-                                    grid: { color: '#374151' }
-                                }
-                            },
-                            plugins: {
-                                legend: { display: false }
-                            }
-                        }
-                    });
-
-                    habitDetailModal.classList.remove('hidden');
-                }
-            });
-            
-            // --- Supabase Upload Function ---
-            async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
-                try {
-                    const response = await fetch('/api/upload-transactions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ transactions, excludeDebts, skipEmbedding }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        console.log('Transactions uploaded successfully:', result);
-                        alert(result.message || 'Транзакции успешно загружены в Supabase!');
-                        fetchAndRenderTransactions(); // Refresh data from DB
-                    } else {
-                        console.error('Error uploading transactions:', result.error);
-                        alert(`Ошибка при загрузке транзакций: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error('Network or server error during upload:', error);
-                    alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
-                }
-            }
-
             // --- Initial Load ---
-            // Set current year and trigger initial fetch
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
         });
