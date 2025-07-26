@@ -176,6 +176,11 @@
                 <!-- Anomalies will be listed here -->
                 <p class="text-gray-500">Аномалий не найдено.</p>
             </div>
+            <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
+                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+            </div>
         </section>
 
         <!-- Breakdown Section with Tabs -->
@@ -364,12 +369,20 @@
             const incomeListContainer = document.getElementById('incomeList');
             const quickFiltersContainer = document.getElementById('quickFilters');
             const anomaliesListEl = document.getElementById('anomaliesList');
+            const prevAnomalyPageBtn = document.getElementById('prevAnomalyPage');
+            const nextAnomalyPageBtn = document.getElementById('nextAnomalyPage');
+            const anomalyPageInfoEl = document.getElementById('anomalyPageInfo');
 
             // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
             let storesChart;
             let spendIncomeTrendChart;
             let forecastChart;
+
+            // Переменные для пагинации аномалий
+            const anomaliesPerPage = 5;
+            let currentAnomalyPage = 1;
+            let allAnomalies = [];
 
             // Цветовая палитра для графиков
             const COLORS = [
@@ -676,10 +689,47 @@
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
-                renderAnomalies(transactions.filter(t => t.is_anomaly));
+                allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
+                renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
                 renderTransactionsTable(transactions.slice(0, 15)); // Render latest 15 transactions
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
+            }
+
+            // Функция для отображения аномалий с пагинацией
+            function renderAnomalies(anomalies) {
+                anomaliesListEl.innerHTML = '';
+                if (anomalies.length === 0) {
+                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
+                    anomalyPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevAnomalyPageBtn.disabled = true;
+                    nextAnomalyPageBtn.disabled = true;
+                    return;
+                }
+
+                const totalPages = Math.ceil(anomalies.length / anomaliesPerPage);
+                currentAnomalyPage = Math.min(Math.max(1, currentAnomalyPage), totalPages); // Убедимся, что страница в пределах допустимого
+
+                const startIndex = (currentAnomalyPage - 1) * anomaliesPerPage;
+                const endIndex = startIndex + anomaliesPerPage;
+                const anomaliesToDisplay = anomalies.slice(startIndex, endIndex);
+
+                anomaliesToDisplay.forEach(anomaly => {
+                    const anomalyEl = document.createElement('div');
+                    anomalyEl.className = 'p-3 bg-gray-800 rounded-lg';
+                    anomalyEl.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-white">${anomaly.payee}</span>
+                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
+                        </div>
+                        <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
+                    `;
+                    anomaliesListEl.appendChild(anomalyEl);
+                });
+
+                anomalyPageInfoEl.textContent = `Страница ${currentAnomalyPage} из ${totalPages}`;
+                prevAnomalyPageBtn.disabled = currentAnomalyPage === 1;
+                nextAnomalyPageBtn.disabled = currentAnomalyPage === totalPages;
             }
 
             // --- File Handling and Filtering ---
@@ -745,26 +795,6 @@
                 };
 
                 reader.readAsText(file, 'UTF-8');
-            }
-
-            function renderAnomalies(anomalies) {
-                anomaliesListEl.innerHTML = '';
-                if (anomalies.length === 0) {
-                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
-                    return;
-                }
-                anomalies.forEach(anomaly => {
-                    const anomalyEl = document.createElement('div');
-                    anomalyEl.className = 'p-3 bg-gray-800 rounded-lg';
-                    anomalyEl.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-semibold text-white">${anomaly.payee}</span>
-                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
-                        </div>
-                        <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
-                    `;
-                    anomaliesListEl.appendChild(anomalyEl);
-                });
             }
 
             function renderTransactionsTable(transactions) {
@@ -1006,6 +1036,21 @@
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
             closeHabitDetailModal.addEventListener('click', () => habitDetailModal.classList.add('hidden'));
+
+            prevAnomalyPageBtn.addEventListener('click', () => {
+                if (currentAnomalyPage > 1) {
+                    currentAnomalyPage--;
+                    renderAnomalies(allAnomalies);
+                }
+            });
+
+            nextAnomalyPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allAnomalies.length / anomaliesPerPage);
+                if (currentAnomalyPage < totalPages) {
+                    currentAnomalyPage++;
+                    renderAnomalies(allAnomalies);
+                }
+            });
 
             quickFiltersContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('quick-filter-btn')) {
