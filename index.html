@@ -12,32 +12,33 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Dark background */
-            color: #e5e7eb; /* Light text */
+            background-color: #0D1117;
+            color: #c9d1d9;
         }
         .chart-container {
             position: relative;
-            height: 35vh; /* Adjusted height */
+            height: 35vh;
             width: 100%;
             max-width: 450px;
             margin: auto;
         }
         .bar-chart-container {
             position: relative;
-            height: 45vh; /* Taller for horizontal bar */
+            height: 45vh;
             width: 100%;
         }
         .metric-card {
-            background-color: #1f2937;
-            border-radius: 0.75rem;
+            background-color: #161b22;
+            border-radius: 1rem; /* More rounded corners */
             padding: 1.5rem;
-            text-align: center;
+            text-align: left; /* Align text to the left */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #374151;
+            border: 1px solid #30363d;
         }
         .metric-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+            border-color: #8b5cf6; /* Purple accent on hover */
         }
         .legend-item {
             display: flex;
@@ -98,60 +99,51 @@
 </head>
 <body class="antialiased">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl"> <!-- Increased max-width -->
 
         <!-- New Header -->
-        <header class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mb-8 md:mb-12">
-            <div class="flex flex-wrap justify-between items-center gap-6">
-                <!-- Balance -->
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-400">Актуальный баланс</h2>
-                    <p id="headerNetBalance" class="text-3xl md:text-4xl font-bold text-white">0.00 грн</p>
-                </div>
-                
-                <!-- Quick Filters -->
-                <div class="flex items-center gap-2" id="quickFilters">
-                    <button data-period="month" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition">Месяц</button>
-                    <button data-period="quarter" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
-                    <button data-period="year" class="quick-filter-btn bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
-                </div>
-
-                <!-- Notifications -->
-                <div class="relative">
-                    <button class="text-gray-400 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V5a1 1 0 00-2 0v.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                    </button>
-                    <!-- Notification dot -->
-                    <span class="absolute top-0 right-0 block h-3 w-3 rounded-full bg-red-500 border-2 border-[#1f2937]"></span>
-                </div>
+        <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
+            <!-- Welcome Message -->
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-white">Welcome back, Ashley</h1>
+                <p class="text-gray-400">Here's an overview of all of your balances.</p>
             </div>
-            <!-- Detailed Filters (Hidden by default, shown on demand) -->
-            <div class="mt-4">
-                 <div class="flex items-center gap-2">
-                    <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                        <option value="">Весь год</option>
-                        <option value="01">Январь</option>
-                        <option value="02">Февраль</option>
-                        <option value="03">Март</option>
-                        <option value="04">Апрель</option>
-                        <option value="05">Май</option>
-                        <option value="06">Июнь</option>
-                        <option value="07">Июль</option>
-                        <option value="08">Август</option>
-                        <option value="09">Сентябрь</option>
-                        <option value="10">Октябрь</option>
-                        <option value="11">Ноябрь</option>
-                        <option value="12">Декабрь</option>
-                    </select>
-                    <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            
+            <!-- Actions -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2" id="quickFilters">
+                    <button data-period="month" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Месяц</button>
+                    <button data-period="quarter" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
+                    <button data-period="year" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
                 </div>
+                <button class="text-gray-400 hover:text-white p-2 rounded-full bg-[#161b22] border border-[#30363d]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </button>
+                <button class="text-gray-400 hover:text-white p-2 rounded-full bg-[#161b22] border border-[#30363d] relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V5a1 1 0 00-2 0v.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <span class="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-violet-500"></span>
+                </button>
+                <img src="https://i.pravatar.cc/40" alt="User Avatar" class="h-10 w-10 rounded-full">
             </div>
         </header>
 
         <!-- Main Content Grid -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Main Balance Card -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
+                <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
+            </div>
+             <!-- Total Income Card -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
+                <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
+            </div>
+            <!-- Total Expenses Card -->
+            <div class="metric-card">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
+                <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
+            </div>
             <!-- Card 1: Spend vs. Income -->
             <div class="metric-card lg:col-span-2">
                 <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
@@ -163,7 +155,7 @@
             <div class="metric-card">
                 <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
                 <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
-                <div id="anomaliesList" class="space-y-3 text-left">
+                <div id="anomaliesList" class="space-y-3">
                     <!-- Anomalies will be listed here -->
                     <p class="text-gray-500">Аномалий не найдено.</p>
                 </div>
@@ -174,7 +166,7 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
             
             <!-- Expenses Breakdown Card -->
-            <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+            <div class="metric-card">
                 <div class="mb-4 border-b border-gray-700">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
                         <li role="presentation">
@@ -204,7 +196,7 @@
             </div>
 
             <!-- Income Sources Card -->
-            <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+            <div class="metric-card">
                 <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
                 <div class="space-y-4" id="incomeList">
                     <!-- Income bars will be generated by JS -->
@@ -216,14 +208,14 @@
     <!-- Interactive Elements Section -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12">
         <!-- Forecast Chart -->
-        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+        <div class="metric-card">
             <h3 class="text-xl font-bold text-white mb-4">Прогноз баланса</h3>
             <div class="h-48">
                 <canvas id="forecastChart"></canvas>
             </div>
         </div>
         <!-- Goal Progress -->
-        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151]">
+        <div class="metric-card">
             <h3 class="text-xl font-bold text-white mb-4">Прогресс по цели</h3>
             <p class="text-gray-400">Снизить траты на "Кафе и рестораны" на 15%</p>
             <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
@@ -237,7 +229,7 @@
     </section>
 
     <!-- Transactions Table Section -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+    <section class="metric-card mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
         <div class="overflow-x-auto">
             <table class="transaction-table">
@@ -259,7 +251,7 @@
 
 
     <!-- Deep Analysis Section -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+    <section class="metric-card mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
         <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
         <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
@@ -286,7 +278,7 @@
     </section>
 
     <!-- Habits Analysis Section -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+    <section class="metric-card mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
         <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
         <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -309,7 +301,7 @@
     </div>
 
     <!-- Data Input Section (Moved to the bottom) -->
-    <section class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] mt-8 md:mt-12">
+    <section class="metric-card mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
         <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
         <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
@@ -350,6 +342,8 @@
             let habitTrendChart; // Переменная для хранения экземпляра графика тренда привычки
             
             const headerNetBalanceEl = document.getElementById('headerNetBalance');
+            const totalIncomeEl = document.getElementById('totalIncome');
+            const totalExpensesEl = document.getElementById('totalExpenses');
             const expensesLegendContainer = document.getElementById('expensesLegend');
             const incomeListContainer = document.getElementById('incomeList');
             const quickFiltersContainer = document.getElementById('quickFilters');
@@ -607,7 +601,9 @@
 
                 // Update main metrics
                 headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                headerNetBalanceEl.style.color = netBalance >= 0 ? '#84cc16' : '#ef4444';
+                headerNetBalanceEl.style.color = netBalance >= 0 ? '#22c55e' : '#ef4444';
+                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                totalExpensesEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
 
                 // Prepare data for charts and lists
                 const expenseDataByCategoryChart = {
