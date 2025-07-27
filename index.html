@@ -260,8 +260,8 @@
     </div>
 
     <!-- Модальное окно настройки цели -->
-    <div id="goalSetupModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
-        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-lg w-full">
+    <div id="goalSetupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
             <h2 class="text-2xl font-bold text-white mb-4">Настройка цели</h2>
             <div class="mb-4 border-b border-gray-700">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="goalTab" role="tablist">
@@ -791,7 +791,7 @@
                 renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
                 allTransactions = transactions; // Сохраняем все транзакции
                 renderTransactionsTable(allTransactions); // Отображаем первую страницу транзакций
-                updateGoalProgress(transactions);
+                updateGoalProgress(); // Теперь вызывается здесь, когда allTransactions точно определены
                 // renderForecastChart(transactions); // Removed
                 renderSparklines(transactions);
                 theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
@@ -1401,35 +1401,47 @@
                     return;
                 }
                 
+                console.log(`Requesting recommendation for ${selectedMonth}/${selectedYear}...`);
                 getGoalRecommendationButton.textContent = 'Анализируем...';
                 getGoalRecommendationButton.disabled = true;
+                recommendationResultDiv.classList.remove('hidden');
+                recommendationResultDiv.innerHTML = `<p class="text-gray-400">Загрузка...</p>`;
 
                 try {
                     const response = await fetch(`/api/recommend-goal?year=${selectedYear}&month=${selectedMonth}`);
+                    const result = await response.json();
+
                     if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to get recommendation');
+                        throw new Error(result.error || `HTTP error! status: ${response.status}`);
                     }
-                    const { recommendation } = await response.json();
                     
-                    recommendationResultDiv.classList.remove('hidden');
+                    console.log('Received recommendation response:', result);
+                    const { recommendation } = result;
+                    
                     if (recommendation) {
+                        console.log('Displaying recommendation:', recommendation);
                         recommendationResultDiv.innerHTML = `
                             <p class="text-gray-300">${recommendation.reason}</p>
                             <button id="applyRecommendationButton" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Применить эту цель</button>
                         `;
                         document.getElementById('applyRecommendationButton').addEventListener('click', () => {
-                            localStorage.setItem('userGoal', JSON.stringify(recommendation));
+                            const goalToStore = {
+                                category: recommendation.category,
+                                type: recommendation.type,
+                                value: recommendation.value
+                            };
+                            localStorage.setItem('userGoal', JSON.stringify(goalToStore));
                             goalSetupModal.classList.add('hidden');
                             updateGoalProgress();
                         });
                     } else {
-                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">Недостаточно данных для рекомендации.</p>`;
+                        console.log('No recommendation available.');
+                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">Недостаточно данных для рекомендации за выбранный период.</p>`;
                     }
 
                 } catch (error) {
                     console.error('Error getting recommendation:', error);
-                    recommendationResultDiv.innerHTML = `<p class="text-red-400">Ошибка: ${error.message}</p>`;
+                    recommendationResultDiv.innerHTML = `<p class="text-red-400">Ошибка при получении рекомендации: ${error.message}</p>`;
                 } finally {
                     getGoalRecommendationButton.textContent = 'Получить рекомендацию';
                     getGoalRecommendationButton.disabled = false;
