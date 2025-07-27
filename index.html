@@ -167,14 +167,17 @@
     <section class="grid grid-cols-1 md:grid-cols-1 gap-8 md:gap-12 mt-8 md:mt-12">
         <!-- Прогресс по цели -->
         <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-            <h3 class="text-xl font-bold text-white mb-4">Прогресс по цели</h3>
-            <p class="text-gray-400">Снизить траты на "Кафе и рестораны" на 15%</p>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">Прогресс по цели</h3>
+                <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Настроить</button>
+            </div>
+            <p id="goalDescription" class="text-gray-400">Цель не задана</p>
             <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
                 <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
             </div>
             <div class="flex justify-between text-sm font-semibold mt-2">
                 <span id="goalProgressText" class="text-white">0%</span>
-                <span class="text-gray-400">Цель: 15%</span>
+                <span id="goalTargetText" class="text-gray-400">Цель: -</span>
             </div>
         </div>
     </section>
@@ -253,6 +256,57 @@
                 <canvas id="habitTrendChart"></canvas>
             </div>
             <button id="closeHabitDetailModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно настройки цели -->
+    <div id="goalSetupModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-lg w-full">
+            <h2 class="text-2xl font-bold text-white mb-4">Настройка цели</h2>
+            <div class="mb-4 border-b border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="goalTab" role="tablist">
+                    <li role="presentation">
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" data-tab-target="#manualGoalSetup">Задать вручную</button>
+                    </li>
+                    <li role="presentation">
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-300" data-tab-target="#recommendedGoalSetup">Получить рекомендацию</button>
+                    </li>
+                </ul>
+            </div>
+            <div id="goalTabContent">
+                <div class="goal-tab-content" id="manualGoalSetup">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="goalCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория расходов</label>
+                            <select id="goalCategory" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="goalType" class="block mb-2 text-sm font-medium text-gray-300">Тип цели</label>
+                            <select id="goalType" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="reduce">Сократить расходы на (в %)</option>
+                                <option value="limit">Потратить не более (в грн)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="goalValue" class="block mb-2 text-sm font-medium text-gray-300">Значение</label>
+                            <input type="number" id="goalValue" placeholder="Например: 15" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-tab-content hidden" id="recommendedGoalSetup">
+                    <p class="text-gray-400 mb-4">Нажмите кнопку, чтобы получить рекомендацию по цели на основе вашего анализа трат.</p>
+                    <button id="getGoalRecommendationButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">Получить рекомендацию</button>
+                    <div id="recommendationResult" class="mt-4 p-4 bg-gray-800 rounded-lg hidden">
+                        <!-- Recommendation will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeGoalModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+                <button id="saveGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
         </div>
     </div>
 
@@ -347,12 +401,17 @@
             const tooltipPlugin = {
                 callbacks: {
                     label: function(context) {
-                        let labelText = context.dataset.label || ''; // Используем метку набора данных
+                        let labelText = context.dataset.label || context.label || '';
                         if (labelText) {
                             labelText += ': ';
                         }
-                        // Для doughnut/pie chart используем context.parsed.value
-                        const value = context.parsed.value !== undefined ? context.parsed.value : context.parsed.y;
+                        let value = 0;
+                        if (context.parsed.y !== null && !isNaN(context.parsed.y)) {
+                            value = context.parsed.y;
+                        } else if (context.parsed !== null && !isNaN(context.parsed)) {
+                            value = context.parsed;
+                        }
+                        
                         labelText += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
                         return labelText;
                     }
@@ -884,29 +943,66 @@
                 nextTransactionPageBtn.disabled = currentTransactionPage === totalPages;
             }
 
-            function updateGoalProgress(transactions) {
-                const goalCategory = 'Кафе и рестораны';
-                const goalReduction = 0.15; // 15%
-                
-                // Это упрощенная логика. Реальная реализация будет сравнивать с предыдущим периодом.
-                // Здесь мы просто симулируем прогресс.
-                const expensesInGoalCategory = transactions
-                    .filter(t => t.categoryName === goalCategory)
-                    .reduce((sum, t) => sum + t.outcome, 0);
-                
-                const totalExpenses = transactions.reduce((sum, t) => sum + t.outcome, 0);
-                
-                let progress = 0;
-                if (totalExpenses > 0) {
-                    // Симулируем некоторый прогресс для демонстрации
-                    progress = Math.min(100, (expensesInGoalCategory / totalExpenses) * 300); 
+            async function updateGoalProgress() {
+                const goal = JSON.parse(localStorage.getItem('userGoal'));
+                const goalDescriptionEl = document.getElementById('goalDescription');
+                const goalProgressBar = document.getElementById('goalProgressBar');
+                const goalProgressText = document.getElementById('goalProgressText');
+                const goalTargetText = document.getElementById('goalTargetText');
+
+                if (!goal) {
+                    goalDescriptionEl.textContent = 'Цель не задана';
+                    goalProgressBar.style.width = '0%';
+                    goalProgressText.textContent = '0%';
+                    goalTargetText.textContent = 'Цель: -';
+                    return;
                 }
 
-                const progressBar = document.getElementById('goalProgressBar');
-                const progressText = document.getElementById('goalProgressText');
-                
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${progress.toFixed(0)}%`;
+                // Update UI with goal details
+                if (goal.type === 'reduce') {
+                    goalDescriptionEl.textContent = `Снизить траты в категории "${goal.category}" на ${goal.value}%`;
+                    goalTargetText.textContent = `Цель: ${goal.value}%`;
+                } else {
+                    goalDescriptionEl.textContent = `Потратить не более ${goal.value} грн в категории "${goal.category}"`;
+                    goalTargetText.textContent = `Цель: ${goal.value} грн`;
+                }
+
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    return; // Need month and year to calculate progress
+                }
+
+                try {
+                    const response = await fetch('/api/get-goal-progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ year: selectedYear, month: selectedMonth, goal })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to get goal progress');
+                    }
+
+                    const { progress } = await response.json();
+                    
+                    goalProgressBar.style.width = `${Math.min(100, progress)}%`;
+                    goalProgressText.textContent = `${progress.toFixed(0)}%`;
+
+                    if (progress > 100) {
+                        goalProgressBar.classList.remove('bg-blue-500');
+                        goalProgressBar.classList.add('bg-red-500');
+                    } else {
+                        goalProgressBar.classList.remove('bg-red-500');
+                        goalProgressBar.classList.add('bg-blue-500');
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching goal progress:', error);
+                    goalProgressText.textContent = 'Ошибка';
+                }
             }
 
             function renderSparklines(transactions) {
@@ -1257,6 +1353,106 @@
                     target.classList.remove('hidden');
                 });
             });
+
+            // --- Goal Modal Logic ---
+            const setupGoalButton = document.getElementById('setupGoalButton');
+            const goalSetupModal = document.getElementById('goalSetupModal');
+            const closeGoalModalButton = document.getElementById('closeGoalModalButton');
+            const saveGoalButton = document.getElementById('saveGoalButton');
+            const goalCategorySelect = document.getElementById('goalCategory');
+            const goalTabs = document.querySelectorAll('.goal-tab-button');
+            const getGoalRecommendationButton = document.getElementById('getGoalRecommendationButton');
+            const recommendationResultDiv = document.getElementById('recommendationResult');
+
+            setupGoalButton.addEventListener('click', () => {
+                // Populate categories
+                const categories = [...new Set(allTransactions.filter(t => t.outcome > 0).map(t => t.categoryName))];
+                goalCategorySelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+                goalSetupModal.classList.remove('hidden');
+            });
+
+            closeGoalModalButton.addEventListener('click', () => {
+                goalSetupModal.classList.add('hidden');
+            });
+
+            saveGoalButton.addEventListener('click', () => {
+                const goal = {
+                    category: document.getElementById('goalCategory').value,
+                    type: document.getElementById('goalType').value,
+                    value: parseFloat(document.getElementById('goalValue').value)
+                };
+
+                if (!goal.category || !goal.type || isNaN(goal.value)) {
+                    alert('Пожалуйста, заполните все поля корректно.');
+                    return;
+                }
+
+                localStorage.setItem('userGoal', JSON.stringify(goal));
+                goalSetupModal.classList.add('hidden');
+                updateGoalProgress(); // Refresh the goal card
+            });
+
+            getGoalRecommendationButton.addEventListener('click', async () => {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    alert('Пожалуйста, выберите год и месяц для получения рекомендации.');
+                    return;
+                }
+                
+                getGoalRecommendationButton.textContent = 'Анализируем...';
+                getGoalRecommendationButton.disabled = true;
+
+                try {
+                    const response = await fetch(`/api/recommend-goal?year=${selectedYear}&month=${selectedMonth}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to get recommendation');
+                    }
+                    const { recommendation } = await response.json();
+                    
+                    recommendationResultDiv.classList.remove('hidden');
+                    if (recommendation) {
+                        recommendationResultDiv.innerHTML = `
+                            <p class="text-gray-300">${recommendation.reason}</p>
+                            <button id="applyRecommendationButton" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Применить эту цель</button>
+                        `;
+                        document.getElementById('applyRecommendationButton').addEventListener('click', () => {
+                            localStorage.setItem('userGoal', JSON.stringify(recommendation));
+                            goalSetupModal.classList.add('hidden');
+                            updateGoalProgress();
+                        });
+                    } else {
+                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">Недостаточно данных для рекомендации.</p>`;
+                    }
+
+                } catch (error) {
+                    console.error('Error getting recommendation:', error);
+                    recommendationResultDiv.innerHTML = `<p class="text-red-400">Ошибка: ${error.message}</p>`;
+                } finally {
+                    getGoalRecommendationButton.textContent = 'Получить рекомендацию';
+                    getGoalRecommendationButton.disabled = false;
+                }
+            });
+            
+            goalTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    goalTabs.forEach(t => {
+                        t.classList.remove('text-blue-500', 'border-blue-500');
+                        t.classList.add('text-gray-400', 'border-transparent', 'hover:text-gray-300', 'hover:border-gray-300');
+                    });
+                    tab.classList.add('text-blue-500', 'border-blue-500');
+                    tab.classList.remove('text-gray-400', 'border-transparent', 'hover:text-gray-300', 'hover:border-gray-300');
+                    
+                    const targetId = tab.dataset.tabTarget;
+                    document.querySelectorAll('.goal-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.querySelector(targetId).classList.remove('hidden');
+                });
+            });
+
 
             // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
