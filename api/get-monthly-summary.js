@@ -70,14 +70,20 @@ export default async function handler(req, res) {
 
         let prevMonthOutcome = prevMonthTransactions.reduce((sum, t) => sum + (t.outcome || 0), 0);
         let prevMonthIncome = prevMonthTransactions.reduce((sum, t) => sum + (t.income || 0), 0);
-        let prevMonthDifference = prevMonthIncome - prevMonthOutcome;
 
-        const chartData = [
-            { name: `${prevMonthInfo.month}/${prevMonthInfo.year}`, value: prevMonthDifference },
-            { name: `${month}/${year}`, value: currentMonthDifference }
-        ];
+        // Функция для расчета процентного изменения
+        const calculatePercentageChange = (current, previous) => {
+            if (previous === 0) {
+                return current === 0 ? "0%" : "N/A"; // Или "Infinity%" если current > 0
+            }
+            const change = ((current - previous) / previous) * 100;
+            return `${change.toFixed(2)}%`;
+        };
 
-        res.status(200).json({ chartData });
+        const incomeChange = calculatePercentageChange(currentMonthIncome, prevMonthIncome);
+        const outcomeChange = calculatePercentageChange(currentMonthOutcome, prevMonthOutcome);
+
+        res.status(200).json({ incomeChange, outcomeChange });
 
     } catch (error) {
         console.error('Unhandled server error:', error);
