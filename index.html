@@ -353,6 +353,30 @@
                     }
                 }
             };
+
+            // Стандартное распределение расходов в процентах
+            const STANDARD_EXPENSE_DISTRIBUTION = {
+                "Необходимые расходы": {
+                    "Платежи и комиссии": 0.225, // 20-25%
+                    "Продукты": 0.175, // 15-20%
+                    "Проезд": 0.05,
+                    "Забота о себе, здоровье и фитнес (базовая часть)": 0.05
+                },
+                "Желания": {
+                    "Кафе и рестораны": 0.06, // 5-7%
+                    "Кофе": 0.015, // 1-2%
+                    "Отдых и развлечения": 0.06, // 5-7%
+                    "Бар": 0.025, // 2-3%
+                    "Покупки одежды и техники": 0.06, // 5-7%
+                    "Подарки": 0.025, // 2-3%
+                    "Хотелки": 0.025, // 2-3%
+                    "Забота о себе, здоровье и фитнес": 0.0 // оставшаяся часть, если есть
+                },
+                "Сбережения и долги": {
+                    "Образование": 0.075, // 5-10%
+                    "Сбережения и погашение кредитов/долгов": 0.125 // 10-15%
+                }
+            };
             
             // Функция для нормализации строк (удаление лишних пробелов, приведение к нижнему регистру)
             function normalize(str) {
@@ -627,6 +651,14 @@
 
                 const netBalance = totalIncome - totalExpenses;
 
+                // Calculate actual expense percentages
+                const actualExpensePercentages = {};
+                if (totalExpenses > 0) {
+                    for (const category in expensesByCategory) {
+                        actualExpensePercentages[category] = (expensesByCategory[category] / totalExpenses);
+                    }
+                }
+
                 // Update main metrics
                 headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 headerNetBalanceEl.style.color = netBalance >= 0 ? '#22c55e' : '#ef4444';
@@ -687,7 +719,7 @@
                     .sort((a, b) => b.amount - a.amount);
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
-                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions, actualExpensePercentages);
                 allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
                 renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
                 allTransactions = transactions; // Сохраняем все транзакции
@@ -1135,7 +1167,16 @@
 
             // Removed renderExpensesToIncomeChart function
 
-            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
+            function getStandardPercentage(categoryName) {
+                for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
+                    if (STANDARD_EXPENSE_DISTRIBUTION[group][categoryName] !== undefined) {
+                        return STANDARD_EXPENSE_DISTRIBUTION[group][categoryName];
+                    }
+                }
+                return null; // Категория не найдена в стандартном распределении
+            }
+
+            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions, actualExpensePercentages) {
                 expensesLegendContainer.innerHTML = '';
                 if (expenseDataByCategory.labels.length > 0) {
                     // Sort categories by value descending for the legend
@@ -1149,7 +1190,30 @@
 
                     sortedCategories.forEach(category => {
                         const { label, value, color } = category;
-                        const actualPercentage = totalIncome > 0 ? (value / totalIncome) * 100 : 0;
+                        const actualPercentage = actualExpensePercentages[label] !== undefined ? actualExpensePercentages[label] * 100 : 0;
+                        const standardPercentage = getStandardPercentage(label) !== null ? getStandardPercentage(label) * 100 : null;
+                        
+                        let percentageComparisonHtml = '';
+                        if (standardPercentage !== null) {
+                            const diff = actualPercentage - standardPercentage;
+                            let diffColorClass = 'text-gray-400';
+                            let diffSign = '';
+                            if (diff > 0.5) { // Если фактический процент значительно выше стандартного
+                                diffColorClass = 'text-red-400';
+                                diffSign = '↑';
+                            } else if (diff < -0.5) { // Если фактический процент значительно ниже стандартного
+                                diffColorClass = 'text-green-400';
+                                diffSign = '↓';
+                            }
+
+                            percentageComparisonHtml = `
+                                <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
+                                <span class="text-gray-500"> / </span>
+                                <span class="font-bold ${diffColorClass}">${standardPercentage.toFixed(1)}% ${diffSign}</span>
+                            `;
+                        } else {
+                            percentageComparisonHtml = `<span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>`;
+                        }
                         
                         const legendItem = document.createElement('div');
                         legendItem.className = 'flex items-center mb-2 text-sm relative'; // Added relative for tooltip positioning
@@ -1178,7 +1242,7 @@
                                         <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
                                     </div>
                                     <div class="flex justify-between items-center text-sm">
-                                        <span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>
+                                        ${percentageComparisonHtml}
                                         ${isCategoryAnomalous ? `
                                             <div class="relative group">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
