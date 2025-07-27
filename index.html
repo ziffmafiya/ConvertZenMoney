@@ -16,18 +16,9 @@
 
         <!-- New Header -->
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
-            <!-- Welcome Message -->
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white">Welcome back, Ashley</h1>
-                <p class="text-gray-400">Here's an overview of all of your balances.</p>
-            </div>
-            
             <!-- Actions -->
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2" id="quickFilters">
-                    <button data-period="month" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Месяц</button>
-                    <button data-period="quarter" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition">Квартал</button>
-                    <button data-period="year" class="quick-filter-btn bg-[#161b22] border border-[#30363d] hover:border-violet-500 text-white font-semibold py-2 px-4 rounded-lg transition active">Год</button>
                 </div>
             </div>
         </header>
@@ -77,12 +68,16 @@
             <!-- Total Expenses Card -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
-                <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span id="expensesChange" class="text-sm font-semibold"></span>
-                    <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span id="expensesChange" class="text-sm font-semibold"></span>
+                            <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="h-24 w-24"><canvas id="expensesToIncomeChart"></canvas></div>
                 </div>
-                <div class="mt-4 h-24 w-24 mx-auto"><canvas id="expensesToIncomeChart"></canvas></div>
                 <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
             </div>
             <!-- Theoretical Savings Card -->
@@ -925,8 +920,27 @@
                 const expensesData = labelsForSparklines.map(label => dataForSparklines[label]?.expenses || 0);
 
                 function calculateChange(current, previous) {
-                    if (previous === 0) return current > 0 ? 100 : (current < 0 ? -100 : 0);
+                    if (previous === 0) {
+                        if (current === 0) return 0; // No change if both are zero
+                        return current > 0 ? 100 : -100; // 100% increase/decrease from zero
+                    }
                     return ((current - previous) / previous) * 100;
+                }
+
+                function updateChangeText(element, change) {
+                    if (isNaN(change) || !isFinite(change)) {
+                        element.className = 'text-sm font-semibold text-gray-400';
+                        element.textContent = 'Нет данных';
+                    } else if (change > 0) {
+                        element.className = 'text-sm font-semibold text-green-400';
+                        element.textContent = `+${change.toFixed(1)}%`;
+                    } else if (change < 0) {
+                        element.className = 'text-sm font-semibold text-red-400';
+                        element.textContent = `${change.toFixed(1)}%`;
+                    } else {
+                        element.className = 'text-sm font-semibold text-gray-400';
+                        element.textContent = '0%';
+                    }
                 }
 
                 // Use currentPeriodTotal and previousPeriodTotal for change calculation
@@ -939,22 +953,9 @@
                     updateChangeText(incomeChangeEl, incomeChange);
                     updateChangeText(expensesChangeEl, expensesChange);
                 } else {
-                    netBalanceChangeEl.textContent = '';
-                    incomeChangeEl.textContent = '';
-                    expensesChangeEl.textContent = '';
-                }
-
-                function updateChangeText(element, change) {
-                    if (change > 0) {
-                        element.className = 'text-sm font-semibold text-green-400';
-                        element.textContent = `+${change.toFixed(1)}%`;
-                    } else if (change < 0) {
-                        element.className = 'text-sm font-semibold text-red-400';
-                        element.textContent = `${change.toFixed(1)}%`;
-                    } else {
-                        element.className = 'text-sm font-semibold text-gray-400';
-                        element.textContent = '0%';
-                    }
+                    netBalanceChangeEl.textContent = 'Нет данных';
+                    incomeChangeEl.textContent = 'Нет данных';
+                    expensesChangeEl.textContent = 'Нет данных';
                 }
 
                 const sparklineOptions = {
