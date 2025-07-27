@@ -645,7 +645,6 @@
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
                 renderSparklines(transactions);
-                // Removed renderExpensesToIncomeChart call
                 theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
             }
@@ -1028,9 +1027,6 @@
                 if (expensesChart) expensesChart.destroy();
                 if (storesChart) storesChart.destroy();
                 if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
-                // Removed expensesToIncomeChart destroy
-                if (expensesToIncomeChart) expensesToIncomeChart.destroy();
-
                 const ctxCategory = document.getElementById('expensesChart').getContext('2d');
                 expensesChart = new Chart(ctxCategory, {
                     type: 'doughnut',
