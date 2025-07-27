@@ -1,9 +1,14 @@
-const { createClient } = require('@supabase/supabase-js');
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from '@supabase/supabase-js';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        return res.status(500).json({ error: 'Server configuration error: Supabase environment variables are not set.' });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const { year, month, goal } = req.body;
 
     if (!year || !month || !goal) {
