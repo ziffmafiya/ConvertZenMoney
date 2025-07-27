@@ -343,15 +343,13 @@
             const tooltipPlugin = {
                 callbacks: {
                     label: function(context) {
-                        let label = context.label || '';
-                        if (label) {
-                            label += ': ';
+                        let labelText = context.dataset.label || ''; // Используем метку набора данных
+                        if (labelText) {
+                            labelText += ': ';
                         }
-                        if (context.parsed.x !== null || context.parsed !== null) {
-                            const value = context.parsed.x ?? context.parsed;
-                            label += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
-                        }
-                        return label;
+                        const value = context.parsed.y; // Используем context.parsed.y для получения значения по оси Y
+                        labelText += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                        return labelText;
                     }
                 }
             };
