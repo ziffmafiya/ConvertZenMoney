@@ -6,6 +6,7 @@
     <title>Универсальный Финансовый Отчет</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -76,7 +77,10 @@
                             <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
                         </div>
                     </div>
-                    <div class="h-24 w-24"><canvas id="expensesToIncomeChart"></canvas></div>
+                    <div class="relative h-24 w-24">
+                        <canvas id="expensesToIncomeChart"></canvas>
+                        <div id="expensesCenterText" class="absolute inset-0 flex items-center justify-center text-white text-lg font-bold"></div>
+                    </div>
                 </div>
                 <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
             </div>
@@ -838,15 +842,15 @@
                     // Monthly view: aggregate by day for current and previous month
                     const currentMonthTransactions = transactions.filter(t => {
                         const date = new Date(t.date);
-                        return date.getFullYear() == selectedYear && (date.getMonth() + 1) == parseInt(selectedMonth);
+                        return date.getFullYear() === selectedYear && (date.getMonth() + 1) === parseInt(selectedMonth);
                     });
 
                     const previousMonth = parseInt(selectedMonth) === 1 ? 12 : parseInt(selectedMonth) - 1;
-                    const previousYear = parseInt(selectedMonth) === 1 ? parseInt(selectedYear) - 1 : parseInt(selectedYear);
+                    const previousYear = parseInt(selectedMonth) === 1 ? selectedYear - 1 : selectedYear;
 
                     const previousMonthTransactions = transactions.filter(t => {
                         const date = new Date(t.date);
-                        return date.getFullYear() == previousYear && (date.getMonth() + 1) == previousMonth;
+                        return date.getFullYear() === previousYear && (date.getMonth() + 1) === previousMonth;
                     });
 
                     // Aggregate daily data for current month
@@ -886,10 +890,11 @@
                     }
 
                 } else {
-                    // Yearly view: aggregate by month
+                    // Yearly view: aggregate by month for sparkline, but compare current year vs previous year totals
                     const monthlyData = {};
                     transactions.forEach(t => {
-                        const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
+                        const date = new Date(t.date);
+                        const monthYear = date.toISOString().substring(0, 7); // YYYY-MM
                         if (!monthlyData[monthYear]) {
                             monthlyData[monthYear] = { income: 0, expenses: 0, netBalance: 0 };
                         }
@@ -899,20 +904,26 @@
                     });
 
                     const sortedMonths = Object.keys(monthlyData).sort();
-                    const lastSixMonths = sortedMonths.slice(-6); // Get data for last 6 months
+                    const lastSixMonths = sortedMonths.filter(month => new Date(month).getFullYear() === selectedYear).slice(-6); // Get data for last 6 months of current year
 
                     lastSixMonths.forEach(month => {
                         dataForSparklines[month] = monthlyData[month];
                     });
                     labelsForSparklines = lastSixMonths;
 
-                    // Calculate current and previous period totals for yearly view
-                    if (sortedMonths.length >= 2) {
-                        const currentMonthKey = sortedMonths[sortedMonths.length - 1];
-                        const previousMonthKey = sortedMonths[sortedMonths.length - 2];
-                        currentPeriodTotal = monthlyData[currentMonthKey];
-                        previousPeriodTotal = monthlyData[previousMonthKey];
-                    }
+                    // Calculate current year total
+                    transactions.filter(t => new Date(t.date).getFullYear() === selectedYear).forEach(t => {
+                        currentPeriodTotal.income += t.income;
+                        currentPeriodTotal.expenses += t.outcome;
+                        currentPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
+
+                    // Calculate previous year total
+                    transactions.filter(t => new Date(t.date).getFullYear() === selectedYear - 1).forEach(t => {
+                        previousPeriodTotal.income += t.income;
+                        previousPeriodTotal.expenses += t.outcome;
+                        previousPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
                 }
 
                 const netBalanceData = labelsForSparklines.map(label => dataForSparklines[label]?.netBalance || 0);
@@ -944,7 +955,7 @@
                 }
 
                 // Use currentPeriodTotal and previousPeriodTotal for change calculation
-                if (Object.keys(currentPeriodTotal).length > 0 && Object.keys(previousPeriodTotal).length > 0) {
+                if (Object.keys(currentPeriodTotal).length > 0 || Object.keys(previousPeriodTotal).length > 0) { // Check if any data exists
                     const netBalanceChange = calculateChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
                     const incomeChange = calculateChange(currentPeriodTotal.income, previousPeriodTotal.income);
                     const expensesChange = calculateChange(currentPeriodTotal.expenses, previousPeriodTotal.expenses);
@@ -1117,10 +1128,19 @@
                                         return label;
                                     }
                                 }
-                            }
+                            },
+                            // datalabels: { ... } // Удалено, так как текст будет отображаться в центре
                         }
                     }
+                    // plugins: [ChartDataLabels] // Удалено, так как datalabels не используется для этой диаграммы
                 });
+
+                // Добавляем текст в центр диаграммы
+                const expensesCenterTextEl = document.getElementById('expensesCenterText');
+                if (expensesCenterTextEl) {
+                    expensesCenterTextEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} грн`;
+                }
+
                 expensesToIncomeTextEl.textContent = `Потрачено ${expensesPercentage.toFixed(1)}% от дохода`;
             }
 
