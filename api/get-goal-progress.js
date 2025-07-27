@@ -34,6 +34,7 @@ export default async (req, res) => {
 
         let progress = 0;
         let status = 'On Track';
+        let comparisonMonth = null;
 
         if (goal.type === 'limit') {
             if (goal.value > 0) {
@@ -46,6 +47,7 @@ export default async (req, res) => {
             // Fetch previous month's expenses for comparison
             const prevMonthDate = new Date(year, month - 2, 1);
             const prevMonthEndDate = new Date(year, month - 1, 0);
+            comparisonMonth = prevMonthDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
 
             const { data: prevTransactions, error: prevError } = await supabase
                 .from('transactions')
@@ -77,7 +79,8 @@ export default async (req, res) => {
             progress: Math.max(0, progress), // Don't show negative progress
             currentValue: currentMonthExpenses,
             targetValue: goal.value,
-            status
+            status,
+            comparisonMonth
         });
 
     } catch (error) {
