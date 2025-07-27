@@ -21,7 +21,7 @@ export default async (req, res) => {
     try {
         const { data: transactions, error } = await supabase
             .from('transactions')
-            .select('categoryName, outcome')
+            .select('category_name, outcome')
             .gte('date', startDate.toISOString())
             .lte('date', endDate.toISOString())
             .gt('outcome', 0);
@@ -33,7 +33,7 @@ export default async (req, res) => {
         }
 
         const expensesByCategory = transactions.reduce((acc, t) => {
-            acc[t.categoryName] = (acc[t.categoryName] || 0) + t.outcome;
+            acc[t.category_name] = (acc[t.category_name] || 0) + t.outcome;
             return acc;
         }, {});
 

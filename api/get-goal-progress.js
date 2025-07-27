@@ -23,7 +23,7 @@ export default async (req, res) => {
         const { data: currentTransactions, error: currentError } = await supabase
             .from('transactions')
             .select('outcome')
-            .eq('categoryName', goal.category)
+            .eq('category_name', goal.category)
             .gte('date', startDate.toISOString())
             .lte('date', endDate.toISOString())
             .gt('outcome', 0);
@@ -50,7 +50,7 @@ export default async (req, res) => {
             const { data: prevTransactions, error: prevError } = await supabase
                 .from('transactions')
                 .select('outcome')
-                .eq('categoryName', goal.category)
+                .eq('category_name', goal.category)
                 .gte('date', prevMonthDate.toISOString())
                 .lte('date', prevMonthEndDate.toISOString())
                 .gt('outcome', 0);
