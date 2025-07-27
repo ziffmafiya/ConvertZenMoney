@@ -406,10 +406,17 @@
                             labelText += ': ';
                         }
                         let value = 0;
-                        if (context.parsed.y !== null && !isNaN(context.parsed.y)) {
-                            value = context.parsed.y;
-                        } else if (context.parsed !== null && !isNaN(context.parsed)) {
-                            value = context.parsed;
+                        // For bar charts with indexAxis: 'y', the value is in 'x'
+                        if (context.chart.config.type === 'bar' && context.chart.config.options.indexAxis === 'y') {
+                            if (context.parsed.x !== null && !isNaN(context.parsed.x)) {
+                                value = context.parsed.x;
+                            }
+                        } else { // For doughnut and other charts
+                            if (context.parsed.y !== null && !isNaN(context.parsed.y)) {
+                                value = context.parsed.y;
+                            } else if (context.parsed !== null && !isNaN(context.parsed)) {
+                                value = context.parsed;
+                            }
                         }
                         
                         labelText += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
