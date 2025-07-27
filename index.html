@@ -347,7 +347,8 @@
                         if (labelText) {
                             labelText += ': ';
                         }
-                        const value = context.parsed.y; // Используем context.parsed.y для получения значения по оси Y
+                        // Для doughnut/pie chart используем context.parsed.value
+                        const value = context.parsed.value !== undefined ? context.parsed.value : context.parsed.y;
                         labelText += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
                         return labelText;
                     }
@@ -1193,61 +1194,45 @@
                         const actualPercentage = actualExpensePercentages[label] !== undefined ? actualExpensePercentages[label] * 100 : 0;
                         const standardPercentage = getStandardPercentage(label) !== null ? getStandardPercentage(label) * 100 : null;
                         
-                        let percentageComparisonHtml = '';
+                        let progressBarColor = 'bg-gray-500'; // Default for no standard or exact match
+                        let tooltipText = `Факт: ${actualPercentage.toFixed(1)}%`;
+                        let barWidth = actualPercentage; // По умолчанию ширина бара равна фактическому проценту
+
                         if (standardPercentage !== null) {
                             const diff = actualPercentage - standardPercentage;
-                            let diffColorClass = 'text-gray-400';
-                            let diffSign = '';
-                            if (diff > 0.5) { // Если фактический процент значительно выше стандартного
-                                diffColorClass = 'text-red-400';
-                                diffSign = '↑';
-                            } else if (diff < -0.5) { // Если фактический процент значительно ниже стандартного
-                                diffColorClass = 'text-green-400';
-                                diffSign = '↓';
+                            tooltipText += ` | Стандарт: ${standardPercentage.toFixed(1)}%`;
+
+                            if (diff > 0.5) { // Перерасход
+                                progressBarColor = 'bg-red-500';
+                                tooltipText += ` (Перерасход на ${diff.toFixed(1)}%)`;
+                            } else if (diff < -0.5) { // Экономия
+                                progressBarColor = 'bg-green-500';
+                                tooltipText += ` (Экономия на ${Math.abs(diff).toFixed(1)}%)`;
+                            } else { // В пределах нормы
+                                progressBarColor = 'bg-blue-500';
+                                tooltipText += ` (В пределах нормы)`;
                             }
-
-                            let progressBarColor = 'bg-gray-500'; // Default for no standard or exact match
-                            let tooltipText = `Факт: ${actualPercentage.toFixed(1)}%`;
-                            let barWidth = actualPercentage;
-
-                            if (standardPercentage !== null) {
-                                const diff = actualPercentage - standardPercentage;
-                                tooltipText += ` | Стандарт: ${standardPercentage.toFixed(1)}%`;
-
-                                if (diff > 0.5) { // Перерасход
-                                    progressBarColor = 'bg-red-500';
-                                    tooltipText += ` (Перерасход на ${diff.toFixed(1)}%)`;
-                                } else if (diff < -0.5) { // Экономия
-                                    progressBarColor = 'bg-green-500';
-                                    tooltipText += ` (Экономия на ${Math.abs(diff).toFixed(1)}%)`;
-                                } else { // В пределах нормы
-                                    progressBarColor = 'bg-blue-500';
-                                    tooltipText += ` (В пределах нормы)`;
-                                }
-                                // Для визуализации, если фактический процент сильно отличается,
-                                // можно масштабировать бар, чтобы он не выходил за 100%
-                                barWidth = Math.min(100, (actualPercentage / standardPercentage) * 100);
-                                if (standardPercentage === 0 && actualPercentage > 0) {
-                                    barWidth = 100; // Если стандарт 0, а факт > 0, показываем полный бар
-                                } else if (standardPercentage === 0 && actualPercentage === 0) {
-                                    barWidth = 0;
-                                }
+                            // Для визуализации, если фактический процент сильно отличается,
+                            // можно масштабировать бар, чтобы он не выходил за 100%
+                            barWidth = Math.min(100, (actualPercentage / standardPercentage) * 100);
+                            if (standardPercentage === 0 && actualPercentage > 0) {
+                                barWidth = 100; // Если стандарт 0, а факт > 0, показываем полный бар
+                            } else if (standardPercentage === 0 && actualPercentage === 0) {
+                                barWidth = 0;
                             }
-
-                            percentageComparisonHtml = `
-                                <div class="w-full bg-gray-600 rounded-full h-2.5 relative group">
-                                    <div class="${progressBarColor} h-2.5 rounded-full" style="width: ${barWidth}%"></div>
-                                    <div class="absolute top-0 left-0 w-full h-full flex justify-center items-center text-xs font-bold text-white">
-                                        ${actualPercentage.toFixed(1)}%
-                                    </div>
-                                    <div class="absolute bottom-full mb-2 w-48 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 whitespace-nowrap" style="left: 50%; transform: translateX(-50%);">
-                                        ${tooltipText}
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            percentageComparisonHtml = `<span class="font-bold text-blue-400">${actualPercentage.toFixed(1)}%</span>`;
                         }
+
+                        const percentageComparisonHtml = `
+                            <div class="w-full bg-gray-600 rounded-full h-2.5 relative group">
+                                <div class="${progressBarColor} h-2.5 rounded-full" style="width: ${barWidth}%"></div>
+                                <div class="absolute top-0 left-0 w-full h-full flex justify-center items-center text-xs font-bold text-white">
+                                    ${actualPercentage.toFixed(1)}%
+                                </div>
+                                <div class="absolute bottom-full mb-2 w-48 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 whitespace-nowrap" style="left: 50%; transform: translateX(-50%);">
+                                    ${tooltipText}
+                                </div>
+                            </div>
+                        `;
                         
                         const legendItem = document.createElement('div');
                         legendItem.className = 'flex items-center mb-2 text-sm relative'; // Added relative for tooltip positioning
