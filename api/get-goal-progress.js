@@ -63,16 +63,19 @@ export default async (req, res) => {
 
             if (previousMonthExpenses > 0) {
                 const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
-                // Рассчитываем прогресс как отношение достигнутого снижения к цели
+                // Возвращаем процент достижения цели
                 progress = (reduction / goal.value) * 100;
             } else if (currentMonthExpenses > 0) {
-                progress = -100; // Spent something when previously spent nothing
+                progress = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
             } else {
-                progress = 100; // Spent nothing, same as before
+                progress = 100; // Если трат не было ни в одном из месяцев - цель достигнута
             }
             
+            // Статус определяется относительно 100% достижения цели
             if (progress < 100) {
                 status = 'Behind';
+            } else {
+                status = 'On Track';
             }
         }
 
