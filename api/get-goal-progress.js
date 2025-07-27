@@ -76,7 +76,7 @@ export default async (req, res) => {
         }
 
         res.status(200).json({
-            progress: Math.max(0, progress), // Don't show negative progress
+            progress: Math.min(100, Math.max(0, progress)), // Don't show negative progress and cap at 100%
             currentValue: currentMonthExpenses,
             targetValue: goal.value,
             status,

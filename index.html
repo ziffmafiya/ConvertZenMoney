@@ -997,8 +997,8 @@
 
                     const { progress, comparisonMonth } = await response.json();
                     
-                    goalProgressBar.style.width = `${Math.min(100, progress)}%`;
-                    goalProgressText.textContent = `${progress.toFixed(0)}%`;
+                    goalProgressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                    goalProgressText.textContent = `${Math.min(100, Math.max(0, progress)).toFixed(0)}%`;
 
                     if (comparisonMonth) {
                         comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
