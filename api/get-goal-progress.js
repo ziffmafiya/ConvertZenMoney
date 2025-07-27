@@ -63,7 +63,7 @@ export default async (req, res) => {
 
             if (previousMonthExpenses > 0) {
                 const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
-                progress = (reduction / goal.value) * 100;
+                progress = reduction; // Убираем деление на goal.value, так как reduction уже в процентах
             } else if (currentMonthExpenses > 0) {
                 progress = -100; // Spent something when previously spent nothing
             } else {
