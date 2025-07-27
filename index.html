@@ -60,16 +60,28 @@
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
                 <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="netBalanceChange" class="text-sm font-semibold"></span>
+                    <div class="h-8 w-24"><canvas id="netBalanceSparkline"></canvas></div>
+                </div>
             </div>
              <!-- Total Income Card -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
                 <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="incomeChange" class="text-sm font-semibold"></span>
+                    <div class="h-8 w-24"><canvas id="incomeSparkline"></canvas></div>
+                </div>
             </div>
             <!-- Total Expenses Card -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
                 <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="expensesChange" class="text-sm font-semibold"></span>
+                    <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
+                </div>
             </div>
         </section>
 
@@ -293,6 +305,13 @@
             const prevTransactionPageBtn = document.getElementById('prevTransactionPage');
             const nextTransactionPageBtn = document.getElementById('nextTransactionPage');
             const transactionPageInfoEl = document.getElementById('transactionPageInfo');
+
+            const netBalanceChangeEl = document.getElementById('netBalanceChange');
+            const incomeChangeEl = document.getElementById('incomeChange');
+            const expensesChangeEl = document.getElementById('expensesChange');
+            let netBalanceSparklineChart;
+            let incomeSparklineChart;
+            let expensesSparklineChart;
 
             // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
@@ -621,6 +640,7 @@
                 renderTransactionsTable(allTransactions); // Отображаем первую страницу транзакций
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
+                renderSparklines(transactions);
             }
 
             // Функция для отображения аномалий с пагинацией
@@ -791,6 +811,92 @@
                 
                 progressBar.style.width = `${progress}%`;
                 progressText.textContent = `${progress.toFixed(0)}%`;
+            }
+
+            function renderSparklines(transactions) {
+                if (netBalanceSparklineChart) netBalanceSparklineChart.destroy();
+                if (incomeSparklineChart) incomeSparklineChart.destroy();
+                if (expensesSparklineChart) expensesSparklineChart.destroy();
+
+                const monthlyData = {};
+                transactions.forEach(t => {
+                    const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
+                    if (!monthlyData[monthYear]) {
+                        monthlyData[monthYear] = { income: 0, expenses: 0, netBalance: 0 };
+                    }
+                    monthlyData[monthYear].income += t.income;
+                    monthlyData[monthYear].expenses += t.outcome;
+                    monthlyData[monthYear].netBalance += (t.income - t.outcome);
+                });
+
+                const sortedMonths = Object.keys(monthlyData).sort();
+                const lastSixMonths = sortedMonths.slice(-6); // Get data for last 6 months
+
+                const netBalanceData = lastSixMonths.map(month => monthlyData[month].netBalance);
+                const incomeData = lastSixMonths.map(month => monthlyData[month].income);
+                const expensesData = lastSixMonths.map(month => monthlyData[month].expenses);
+
+                // Calculate percentage change for current month vs previous month
+                const currentMonthIndex = netBalanceData.length - 1;
+                const previousMonthIndex = netBalanceData.length - 2;
+
+                function calculateChange(current, previous) {
+                    if (previous === 0) return current > 0 ? 100 : (current < 0 ? -100 : 0);
+                    return ((current - previous) / previous) * 100;
+                }
+
+                if (currentMonthIndex >= 0 && previousMonthIndex >= 0) {
+                    const netBalanceChange = calculateChange(netBalanceData[currentMonthIndex], netBalanceData[previousMonthIndex]);
+                    const incomeChange = calculateChange(incomeData[currentMonthIndex], incomeData[previousMonthIndex]);
+                    const expensesChange = calculateChange(expensesData[currentMonthIndex], expensesData[previousMonthIndex]);
+
+                    updateChangeText(netBalanceChangeEl, netBalanceChange);
+                    updateChangeText(incomeChangeEl, incomeChange);
+                    updateChangeText(expensesChangeEl, expensesChange);
+                } else {
+                    netBalanceChangeEl.textContent = '';
+                    incomeChangeEl.textContent = '';
+                    expensesChangeEl.textContent = '';
+                }
+
+                function updateChangeText(element, change) {
+                    if (change > 0) {
+                        element.className = 'text-sm font-semibold text-green-400';
+                        element.textContent = `+${change.toFixed(1)}%`;
+                    } else if (change < 0) {
+                        element.className = 'text-sm font-semibold text-red-400';
+                        element.textContent = `${change.toFixed(1)}%`;
+                    } else {
+                        element.className = 'text-sm font-semibold text-gray-400';
+                        element.textContent = '0%';
+                    }
+                }
+
+                const sparklineOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: { point: { radius: 0 } },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                };
+
+                netBalanceSparklineChart = new Chart(document.getElementById('netBalanceSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: lastSixMonths, datasets: [{ data: netBalanceData, borderColor: '#8b5cf6', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
+
+                incomeSparklineChart = new Chart(document.getElementById('incomeSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: lastSixMonths, datasets: [{ data: incomeData, borderColor: '#22c55e', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
+
+                expensesSparklineChart = new Chart(document.getElementById('expensesSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: lastSixMonths, datasets: [{ data: expensesData, borderColor: '#ef4444', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
             }
 
             function renderForecastChart(transactions) {
