@@ -62,7 +62,7 @@ export default async (req, res) => {
             const previousMonthExpenses = prevTransactions.reduce((sum, t) => sum + t.outcome, 0);
 
             if (previousMonthExpenses > 0) {
-                const reduction = ((currentMonthExpenses - previousMonthExpenses) / previousMonthExpenses) * 100;
+                const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
                 progress = (reduction / goal.value) * 100;
             } else if (currentMonthExpenses > 0) {
                 progress = -100; // Spent something when previously spent nothing
