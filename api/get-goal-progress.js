@@ -63,7 +63,8 @@ export default async (req, res) => {
 
             if (previousMonthExpenses > 0) {
                 const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
-                progress = reduction; // Убираем деление на goal.value, так как reduction уже в процентах
+                // Рассчитываем прогресс как отношение достигнутого снижения к цели
+                progress = (reduction / goal.value) * 100;
             } else if (currentMonthExpenses > 0) {
                 progress = -100; // Spent something when previously spent nothing
             } else {
@@ -75,8 +76,11 @@ export default async (req, res) => {
             }
         }
 
+        // Don't show negative progress for reduction goals
+        const displayProgress = Math.max(0, progress);
+        
         res.status(200).json({
-            progress: Math.min(100, Math.max(0, progress)), // Don't show negative progress and cap at 100%
+            progress: displayProgress,
             currentValue: currentMonthExpenses,
             targetValue: goal.value,
             status,
