@@ -329,7 +329,7 @@
             let allAnomalies = [];
 
             // Переменные для пагинации транзакций
-            const transactionsPerPage = 15;
+            const transactionsPerPage = 8;
             let currentTransactionPage = 1;
             let allTransactions = [];
 
@@ -390,10 +390,62 @@
                     // Запускаем анализ и отображение полученных транзакций
                     analyzeAndRender(transactions);
                     fetchAndRenderHabits();
+                    fetchAndRenderMonthlySummary(); // Добавляем вызов нового API
 
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
                     alert(`Не удалось загрузить транзакции: ${error.message}`);
+                }
+            }
+
+            // Асинхронная функция для получения и отображения сводки по месяцам
+            async function fetchAndRenderMonthlySummary() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    // Очищаем поля, если нет выбранного месяца/года
+                    incomeChangeEl.textContent = 'Нет данных';
+                    expensesChangeEl.textContent = 'Нет данных';
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+
+                try {
+                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch monthly summary');
+                    }
+                    const { incomeChange, outcomeChange } = await response.json();
+                    
+                    // Обновляем элементы на странице
+                    incomeChangeEl.textContent = incomeChange;
+                    expensesChangeEl.textContent = outcomeChange;
+
+                    // Применяем цвета в зависимости от значения
+                    if (incomeChange.startsWith('+')) {
+                        incomeChangeEl.className = 'text-sm font-semibold text-green-400';
+                    } else if (incomeChange.startsWith('-')) {
+                        incomeChangeEl.className = 'text-sm font-semibold text-red-400';
+                    } else {
+                        incomeChangeEl.className = 'text-sm font-semibold text-gray-400';
+                    }
+
+                    if (outcomeChange.startsWith('+')) {
+                        expensesChangeEl.className = 'text-sm font-semibold text-red-400'; // Расходы растут - плохо
+                    } else if (outcomeChange.startsWith('-')) {
+                        expensesChangeEl.className = 'text-sm font-semibold text-green-400'; // Расходы падают - хорошо
+                    } else {
+                        expensesChangeEl.className = 'text-sm font-semibold text-gray-400';
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching monthly summary:', error);
+                    alert(`Не удалось загрузить сводку по месяцам: ${error.message}`);
+                    incomeChangeEl.textContent = 'Ошибка';
+                    expensesChangeEl.textContent = 'Ошибка';
                 }
             }
 
@@ -917,15 +969,18 @@
                 const incomeData = labelsForSparklines.map(label => dataForSparklines[label]?.income || 0);
                 const expensesData = labelsForSparklines.map(label => dataForSparklines[label]?.expenses || 0);
 
-                function calculateChange(current, previous) {
+                // Use currentPeriodTotal and previousPeriodTotal for change calculation
+                // The incomeChangeEl and expensesChangeEl are now updated by fetchAndRenderMonthlySummary()
+                // Only netBalanceChangeEl needs to be updated here.
+                function calculateNetBalanceChange(current, previous) {
                     if (previous === 0) {
-                        if (current === 0) return 0; // No change if both are zero
-                        return current > 0 ? 100 : -100; // 100% increase/decrease from zero
+                        if (current === 0) return 0;
+                        return current > 0 ? 100 : -100;
                     }
                     return ((current - previous) / previous) * 100;
                 }
 
-                function updateChangeText(element, change) {
+                function updateNetBalanceChangeText(element, change) {
                     if (isNaN(change) || !isFinite(change)) {
                         element.className = 'text-sm font-semibold text-gray-400';
                         element.textContent = 'Нет данных';
@@ -941,19 +996,11 @@
                     }
                 }
 
-                // Use currentPeriodTotal and previousPeriodTotal for change calculation
                 if (Object.keys(currentPeriodTotal).length > 0 && Object.keys(previousPeriodTotal).length > 0) {
-                    const netBalanceChange = calculateChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
-                    const incomeChange = calculateChange(currentPeriodTotal.income, previousPeriodTotal.income);
-                    const expensesChange = calculateChange(currentPeriodTotal.expenses, previousPeriodTotal.expenses);
-
-                    updateChangeText(netBalanceChangeEl, netBalanceChange);
-                    updateChangeText(incomeChangeEl, incomeChange);
-                    updateChangeText(expensesChangeEl, expensesChange);
+                    const netBalanceChange = calculateNetBalanceChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
+                    updateNetBalanceChangeText(netBalanceChangeEl, netBalanceChange);
                 } else {
                     netBalanceChangeEl.textContent = 'Нет данных';
-                    incomeChangeEl.textContent = 'Нет данных';
-                    expensesChangeEl.textContent = 'Нет данных';
                 }
 
                 const sparklineOptions = {
