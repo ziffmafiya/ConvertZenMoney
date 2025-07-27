@@ -626,7 +626,7 @@
                 const expensesByCategory = {};
                 const expensesByPayee = {};
                 const incomeSources = {};
-                const dailyData = {}; // For trend chart
+            const dailyData = {}; // Для графика трендов
 
                 transactions.forEach(t => {
                     const date = t.date.split('T')[0];
@@ -687,7 +687,7 @@
 
                 const sortedExpensesByPayee = Object.entries(expensesByPayee)
                     .sort(([, a], [, b]) => b - a)
-                    .slice(0, 10); // Top 10
+                    .slice(0, 10); // Топ 10
                 const expenseDataByStoreChart = {
                     labels: sortedExpensesByPayee.map(([payee]) => payee),
                     datasets: [{
@@ -775,7 +775,7 @@
                 nextAnomalyPageBtn.disabled = currentAnomalyPage === totalPages;
             }
 
-            // --- File Handling and Filtering ---
+            // --- Обработка файла и фильтрация ---
             function handleFileProcessing() {
                 if (csvFile.files.length === 0) {
                     alert('Пожалуйста, выберите CSV файл.');
@@ -798,7 +798,7 @@
                     const data = [];
                     lines.forEach(line => {
                         const values = line.split(';');
-                        if (values.length >= headers.length - 1) { // Allow for missing qrCode
+                        if (values.length >= headers.length - 1) { // Допускаем отсутствие qrCode
                             let row = {};
                             headers.forEach((header, index) => {
                                 row[header] = (values[index] || '').replace(/"/g, '');
@@ -829,7 +829,7 @@
                         return;
                     }
                     
-                    // Upload all parsed data from the file. The server will handle deduplication.
+                    // Загружаем все обработанные данные из файла. Сервер обработает дубликаты.
                     uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked, skipEmbeddingOnUploadCheckbox.checked);
                 };
 
@@ -873,7 +873,7 @@
                     `;
                     tableBody.appendChild(row);
                 });
-                // Add hover effect to table rows
+                // Добавляем эффект при наведении на строки таблицы
                 const tableRows = tableBody.querySelectorAll('tr');
                 tableRows.forEach(row => {
                     row.classList.add('hover:bg-gray-700');
@@ -888,8 +888,8 @@
                 const goalCategory = 'Кафе и рестораны';
                 const goalReduction = 0.15; // 15%
                 
-                // This is a simplified logic. A real implementation would compare with a previous period.
-                // Here, we'll just simulate progress.
+                // Это упрощенная логика. Реальная реализация будет сравнивать с предыдущим периодом.
+                // Здесь мы просто симулируем прогресс.
                 const expensesInGoalCategory = transactions
                     .filter(t => t.categoryName === goalCategory)
                     .reduce((sum, t) => sum + t.outcome, 0);
@@ -898,7 +898,7 @@
                 
                 let progress = 0;
                 if (totalExpenses > 0) {
-                    // Simulate some progress for demonstration
+                    // Симулируем некоторый прогресс для демонстрации
                     progress = Math.min(100, (expensesInGoalCategory / totalExpenses) * 300); 
                 }
 
@@ -923,7 +923,7 @@
                 let previousPeriodTotal = { income: 0, expenses: 0, netBalance: 0 };
 
                 if (selectedMonth) {
-                    // Monthly view: aggregate by day for current and previous month
+                    // Месячный вид: агрегируем по дням для текущего и предыдущего месяца
                     const currentMonthTransactions = transactions.filter(t => {
                         const date = new Date(t.date);
                         return date.getFullYear() == selectedYear && (date.getMonth() + 1) == parseInt(selectedMonth);
@@ -937,7 +937,7 @@
                         return date.getFullYear() == previousYear && (date.getMonth() + 1) == previousMonth;
                     });
 
-                    // Aggregate daily data for current month
+                    // Агрегируем дневные данные для текущего месяца
                     currentMonthTransactions.forEach(t => {
                         const date = t.date.split('T')[0];
                         if (!dataForSparklines[date]) {
@@ -951,7 +951,7 @@
                         currentPeriodTotal.netBalance += (t.income - t.outcome);
                     });
 
-                    // Aggregate total for previous month
+                    // Агрегируем общую сумму за предыдущий месяц
                     previousMonthTransactions.forEach(t => {
                         previousPeriodTotal.income += t.income;
                         previousPeriodTotal.expenses += t.outcome;
@@ -959,7 +959,7 @@
                     });
 
                     labelsForSparklines = Object.keys(dataForSparklines).sort();
-                    // If no data for current month, use previous month's data for sparkline visualization
+                    // Если нет данных за текущий месяц, используем данные за предыдущий для визуализации спарклайнов
                     if (labelsForSparklines.length === 0 && Object.keys(previousMonthTransactions).length > 0) {
                         previousMonthTransactions.forEach(t => {
                             const date = t.date.split('T')[0];
@@ -974,7 +974,7 @@
                     }
 
                 } else {
-                    // Yearly view: aggregate by month
+                    // Годовой вид: агрегируем по месяцам
                     const monthlyData = {};
                     transactions.forEach(t => {
                         const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
@@ -987,14 +987,14 @@
                     });
 
                     const sortedMonths = Object.keys(monthlyData).sort();
-                    const lastSixMonths = sortedMonths.slice(-6); // Get data for last 6 months
+                    const lastSixMonths = sortedMonths.slice(-6); // Получаем данные за последние 6 месяцев
 
                     lastSixMonths.forEach(month => {
                         dataForSparklines[month] = monthlyData[month];
                     });
                     labelsForSparklines = lastSixMonths;
 
-                    // Calculate current and previous period totals for yearly view
+                    // Рассчитываем итоги для текущего и предыдущего периодов в годовом виде
                     if (sortedMonths.length >= 2) {
                         const currentMonthKey = sortedMonths[sortedMonths.length - 1];
                         const previousMonthKey = sortedMonths[sortedMonths.length - 2];
@@ -1007,9 +1007,9 @@
                 const incomeData = labelsForSparklines.map(label => dataForSparklines[label]?.income || 0);
                 const expensesData = labelsForSparklines.map(label => dataForSparklines[label]?.expenses || 0);
 
-                // Use currentPeriodTotal and previousPeriodTotal for change calculation
-                // The incomeChangeEl and expensesChangeEl are now updated by fetchAndRenderMonthlySummary()
-                // Only netBalanceChangeEl needs to be updated here.
+                // Используем currentPeriodTotal и previousPeriodTotal для расчета изменений
+                // incomeChangeEl и expensesChangeEl теперь обновляются функцией fetchAndRenderMonthlySummary()
+                // Здесь нужно обновить только netBalanceChangeEl.
                 function calculateNetBalanceChange(current, previous) {
                     if (previous === 0) {
                         if (current === 0) return 0;
@@ -1068,7 +1068,7 @@
                 });
             }
 
-            // --- Rendering Functions ---
+            // --- Функции рендеринга ---
             function renderCharts(expenseDataByCategory, expenseDataByStore, trendData) {
                 if (expensesChart) expensesChart.destroy();
                 if (storesChart) storesChart.destroy();
@@ -1134,7 +1134,7 @@
                 });
             }
 
-            // Removed renderExpensesToIncomeChart function
+            // Функция renderExpensesToIncomeChart удалена
 
             function getStandardPercentage(categoryName) {
                 for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
@@ -1148,7 +1148,7 @@
             function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions, actualExpensePercentages) {
                 expensesLegendContainer.innerHTML = '';
                 if (expenseDataByCategory.labels.length > 0) {
-                    // Sort categories by value descending for the legend
+                    // Сортируем категории по значению (по убыванию) для легенды
                     const sortedCategories = expenseDataByCategory.labels
                         .map((label, i) => ({
                             label,
@@ -1242,7 +1242,7 @@
                     });
                 }
             }
-            // --- Tab Logic ---
+            // --- Логика вкладок ---
             const tabs = document.querySelectorAll('.tab-button');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -1258,7 +1258,7 @@
                 });
             });
 
-            // --- Event Listeners and Initial Call ---
+            // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
@@ -1308,11 +1308,11 @@
                     if (period === 'month') {
                         filterMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
                     } else if (period === 'quarter') {
-                        const quarter = Math.floor(today.getMonth() / 3);
-                        // For simplicity, we'll just select the whole year for quarter, 
-                        // as the backend doesn't support quarterly fetching directly.
-                        // A more complex implementation would filter transactions on the client.
-                        filterMonthSelect.value = ''; 
+                    const quarter = Math.floor(today.getMonth() / 3);
+                    // Для простоты мы просто выбираем весь год для квартала,
+                    // так как бэкенд не поддерживает получение данных поквартально напрямую.
+                    // Более сложная реализация потребовала бы фильтрации транзакций на клиенте.
+                    filterMonthSelect.value = ''; 
                     } else { // year
                         filterMonthSelect.value = '';
                     }
@@ -1370,7 +1370,7 @@
                 }
             });
             
-            // --- Supabase Upload Function ---
+            // --- Функция загрузки в Supabase ---
             async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
                 try {
                     const response = await fetch('/api/upload-transactions', {
@@ -1386,7 +1386,7 @@
                     if (response.ok) {
                         console.log('Transactions uploaded successfully:', result);
                         alert(result.message || 'Транзакции успешно загружены в Supabase!');
-                        fetchAndRenderTransactions(); // Refresh data from DB
+                        fetchAndRenderTransactions(); // Обновляем данные из БД
                     } else {
                         console.error('Error uploading transactions:', result.error);
                         alert(`Ошибка при загрузке транзакций: ${result.error}`);
@@ -1397,8 +1397,8 @@
                 }
             }
 
-            // --- Initial Load ---
-            // Set current year and trigger initial fetch
+            // --- Начальная загрузка ---
+            // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
         });
