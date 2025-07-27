@@ -181,6 +181,11 @@
                 </tbody>
             </table>
         </div>
+        <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
+            <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        </div>
     </section>
 
 
@@ -285,6 +290,9 @@
             const prevAnomalyPageBtn = document.getElementById('prevAnomalyPage');
             const nextAnomalyPageBtn = document.getElementById('nextAnomalyPage');
             const anomalyPageInfoEl = document.getElementById('anomalyPageInfo');
+            const prevTransactionPageBtn = document.getElementById('prevTransactionPage');
+            const nextTransactionPageBtn = document.getElementById('nextTransactionPage');
+            const transactionPageInfoEl = document.getElementById('transactionPageInfo');
 
             // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
@@ -296,6 +304,11 @@
             const anomaliesPerPage = 5;
             let currentAnomalyPage = 1;
             let allAnomalies = [];
+
+            // Переменные для пагинации транзакций
+            const transactionsPerPage = 15;
+            let currentTransactionPage = 1;
+            let allTransactions = [];
 
             // Цветовая палитра для графиков
             const COLORS = [
@@ -604,7 +617,8 @@
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions);
                 allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
                 renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
-                renderTransactionsTable(transactions.slice(0, 15)); // Render latest 15 transactions
+                allTransactions = transactions; // Сохраняем все транзакции
+                renderTransactionsTable(allTransactions); // Отображаем первую страницу транзакций
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
             }
@@ -715,10 +729,20 @@
                 tableBody.innerHTML = '';
                 if (transactions.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Нет транзакций для отображения.</td></tr>`;
+                    transactionPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevTransactionPageBtn.disabled = true;
+                    nextTransactionPageBtn.disabled = true;
                     return;
                 }
 
-                transactions.forEach(t => {
+                const totalPages = Math.ceil(transactions.length / transactionsPerPage);
+                currentTransactionPage = Math.min(Math.max(1, currentTransactionPage), totalPages);
+
+                const startIndex = (currentTransactionPage - 1) * transactionsPerPage;
+                const endIndex = startIndex + transactionsPerPage;
+                const transactionsToDisplay = transactions.slice(startIndex, endIndex);
+
+                transactionsToDisplay.forEach(t => {
                     const row = document.createElement('tr');
                     const amount = t.income > 0 ? t.income : t.outcome;
                     const amountClass = t.income > 0 ? 'text-green-500' : 'text-red-500';
@@ -738,6 +762,10 @@
                 tableRows.forEach(row => {
                     row.classList.add('hover:bg-gray-700');
                 });
+
+                transactionPageInfoEl.textContent = `Страница ${currentTransactionPage} из ${totalPages}`;
+                prevTransactionPageBtn.disabled = currentTransactionPage === 1;
+                nextTransactionPageBtn.disabled = currentTransactionPage === totalPages;
             }
 
             function updateGoalProgress(transactions) {
@@ -971,6 +999,21 @@
                 if (currentAnomalyPage < totalPages) {
                     currentAnomalyPage++;
                     renderAnomalies(allAnomalies);
+                }
+            });
+
+            prevTransactionPageBtn.addEventListener('click', () => {
+                if (currentTransactionPage > 1) {
+                    currentTransactionPage--;
+                    renderTransactionsTable(allTransactions);
+                }
+            });
+
+            nextTransactionPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allTransactions.length / transactionsPerPage);
+                if (currentTransactionPage < totalPages) {
+                    currentTransactionPage++;
+                    renderTransactionsTable(allTransactions);
                 }
             });
 
