@@ -358,9 +358,9 @@
             // Стандартное распределение расходов (в процентах от общего дохода)
             const STANDARD_EXPENSE_DISTRIBUTION = {
                 "Необходимые расходы": {
-                    "Платежи, комиссии /Аренда": [0.15, 0.20],
-                    "Платежи, комиссии /Комуналка": [0.05, 0.05],
-                    "Платежи, комиссии /связь": [0.01, 0.02],
+                    "Платежи, комиссии / Аренда": [0.15, 0.20],
+                    "Платежи, комиссии / Комуналка": [0.05, 0.05],
+                    "Платежи, комиссии / Связь": [0.01, 0.02],
                     "Платежи, комиссии / Почтовые услуги": [0.00, 0.01],
                     "Продукты": [0.15, 0.20],
                     "Проезд": [0.05, 0.05],
@@ -1244,7 +1244,7 @@
                         
                         // Собираем все причины аномалий в этой категории
                         const anomalyReason = isCategoryAnomalous 
-                            ? anomalousTransactions.map(t => t.anomaly_reason).join('\\n') // Используем \n для переноса строк в tooltip
+                            ? anomalousTransactions.map(t => t.anomaly_reason).join('<br>')
                             : '';
 
                         // Отладочный лог
@@ -1268,7 +1268,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
                                                 </svg>
-                                                <div class="absolute bottom-full mb-2 w-64 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 whitespace-pre-line" style="left: 50%; transform: translateX(-50%);">
+                                                <div class="absolute bottom-full mb-2 w-64 bg-gray-900 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" style="left: 50%; transform: translateX(-50%);">
                                                     ${anomalyReason}
                                                 </div>
                                             </div>
