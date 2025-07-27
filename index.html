@@ -82,6 +82,14 @@
                     <span id="expensesChange" class="text-sm font-semibold"></span>
                     <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
                 </div>
+                <div class="mt-4 h-24 w-24 mx-auto"><canvas id="expensesToIncomeChart"></canvas></div>
+                <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
+            </div>
+            <!-- Theoretical Savings Card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
+                <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
+                <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
             </div>
         </section>
 
@@ -309,9 +317,12 @@
             const netBalanceChangeEl = document.getElementById('netBalanceChange');
             const incomeChangeEl = document.getElementById('incomeChange');
             const expensesChangeEl = document.getElementById('expensesChange');
+            const theoreticalSavingsEl = document.getElementById('theoreticalSavings');
+            const expensesToIncomeTextEl = document.getElementById('expensesToIncomeText');
             let netBalanceSparklineChart;
             let incomeSparklineChart;
             let expensesSparklineChart;
+            let expensesToIncomeChart; // New chart for expenses to income ratio
 
             // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
@@ -641,6 +652,8 @@
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
                 renderSparklines(transactions);
+                renderExpensesToIncomeChart(totalExpenses, totalIncome); // Render new chart
+                theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
             }
 
             // Функция для отображения аномалий с пагинацией
@@ -818,37 +831,109 @@
                 if (incomeSparklineChart) incomeSparklineChart.destroy();
                 if (expensesSparklineChart) expensesSparklineChart.destroy();
 
-                const monthlyData = {};
-                transactions.forEach(t => {
-                    const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
-                    if (!monthlyData[monthYear]) {
-                        monthlyData[monthYear] = { income: 0, expenses: 0, netBalance: 0 };
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                let dataForSparklines = {};
+                let labelsForSparklines = [];
+                let currentPeriodTotal = { income: 0, expenses: 0, netBalance: 0 };
+                let previousPeriodTotal = { income: 0, expenses: 0, netBalance: 0 };
+
+                if (selectedMonth) {
+                    // Monthly view: aggregate by day for current and previous month
+                    const currentMonthTransactions = transactions.filter(t => {
+                        const date = new Date(t.date);
+                        return date.getFullYear() == selectedYear && (date.getMonth() + 1) == parseInt(selectedMonth);
+                    });
+
+                    const previousMonth = parseInt(selectedMonth) === 1 ? 12 : parseInt(selectedMonth) - 1;
+                    const previousYear = parseInt(selectedMonth) === 1 ? parseInt(selectedYear) - 1 : parseInt(selectedYear);
+
+                    const previousMonthTransactions = transactions.filter(t => {
+                        const date = new Date(t.date);
+                        return date.getFullYear() == previousYear && (date.getMonth() + 1) == previousMonth;
+                    });
+
+                    // Aggregate daily data for current month
+                    currentMonthTransactions.forEach(t => {
+                        const date = t.date.split('T')[0];
+                        if (!dataForSparklines[date]) {
+                            dataForSparklines[date] = { income: 0, expenses: 0, netBalance: 0 };
+                        }
+                        dataForSparklines[date].income += t.income;
+                        dataForSparklines[date].expenses += t.outcome;
+                        dataForSparklines[date].netBalance += (t.income - t.outcome);
+                        currentPeriodTotal.income += t.income;
+                        currentPeriodTotal.expenses += t.outcome;
+                        currentPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
+
+                    // Aggregate total for previous month
+                    previousMonthTransactions.forEach(t => {
+                        previousPeriodTotal.income += t.income;
+                        previousPeriodTotal.expenses += t.outcome;
+                        previousPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
+
+                    labelsForSparklines = Object.keys(dataForSparklines).sort();
+                    // If no data for current month, use previous month's data for sparkline visualization
+                    if (labelsForSparklines.length === 0 && Object.keys(previousMonthTransactions).length > 0) {
+                        previousMonthTransactions.forEach(t => {
+                            const date = t.date.split('T')[0];
+                            if (!dataForSparklines[date]) {
+                                dataForSparklines[date] = { income: 0, expenses: 0, netBalance: 0 };
+                            }
+                            dataForSparklines[date].income += t.income;
+                            dataForSparklines[date].expenses += t.outcome;
+                            dataForSparklines[date].netBalance += (t.income - t.outcome);
+                        });
+                        labelsForSparklines = Object.keys(dataForSparklines).sort();
                     }
-                    monthlyData[monthYear].income += t.income;
-                    monthlyData[monthYear].expenses += t.outcome;
-                    monthlyData[monthYear].netBalance += (t.income - t.outcome);
-                });
 
-                const sortedMonths = Object.keys(monthlyData).sort();
-                const lastSixMonths = sortedMonths.slice(-6); // Get data for last 6 months
+                } else {
+                    // Yearly view: aggregate by month
+                    const monthlyData = {};
+                    transactions.forEach(t => {
+                        const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
+                        if (!monthlyData[monthYear]) {
+                            monthlyData[monthYear] = { income: 0, expenses: 0, netBalance: 0 };
+                        }
+                        monthlyData[monthYear].income += t.income;
+                        monthlyData[monthYear].expenses += t.outcome;
+                        monthlyData[monthYear].netBalance += (t.income - t.outcome);
+                    });
 
-                const netBalanceData = lastSixMonths.map(month => monthlyData[month].netBalance);
-                const incomeData = lastSixMonths.map(month => monthlyData[month].income);
-                const expensesData = lastSixMonths.map(month => monthlyData[month].expenses);
+                    const sortedMonths = Object.keys(monthlyData).sort();
+                    const lastSixMonths = sortedMonths.slice(-6); // Get data for last 6 months
 
-                // Calculate percentage change for current month vs previous month
-                const currentMonthIndex = netBalanceData.length - 1;
-                const previousMonthIndex = netBalanceData.length - 2;
+                    lastSixMonths.forEach(month => {
+                        dataForSparklines[month] = monthlyData[month];
+                    });
+                    labelsForSparklines = lastSixMonths;
+
+                    // Calculate current and previous period totals for yearly view
+                    if (sortedMonths.length >= 2) {
+                        const currentMonthKey = sortedMonths[sortedMonths.length - 1];
+                        const previousMonthKey = sortedMonths[sortedMonths.length - 2];
+                        currentPeriodTotal = monthlyData[currentMonthKey];
+                        previousPeriodTotal = monthlyData[previousMonthKey];
+                    }
+                }
+
+                const netBalanceData = labelsForSparklines.map(label => dataForSparklines[label]?.netBalance || 0);
+                const incomeData = labelsForSparklines.map(label => dataForSparklines[label]?.income || 0);
+                const expensesData = labelsForSparklines.map(label => dataForSparklines[label]?.expenses || 0);
 
                 function calculateChange(current, previous) {
                     if (previous === 0) return current > 0 ? 100 : (current < 0 ? -100 : 0);
                     return ((current - previous) / previous) * 100;
                 }
 
-                if (currentMonthIndex >= 0 && previousMonthIndex >= 0) {
-                    const netBalanceChange = calculateChange(netBalanceData[currentMonthIndex], netBalanceData[previousMonthIndex]);
-                    const incomeChange = calculateChange(incomeData[currentMonthIndex], incomeData[previousMonthIndex]);
-                    const expensesChange = calculateChange(expensesData[currentMonthIndex], expensesData[previousMonthIndex]);
+                // Use currentPeriodTotal and previousPeriodTotal for change calculation
+                if (Object.keys(currentPeriodTotal).length > 0 && Object.keys(previousPeriodTotal).length > 0) {
+                    const netBalanceChange = calculateChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
+                    const incomeChange = calculateChange(currentPeriodTotal.income, previousPeriodTotal.income);
+                    const expensesChange = calculateChange(currentPeriodTotal.expenses, previousPeriodTotal.expenses);
 
                     updateChangeText(netBalanceChangeEl, netBalanceChange);
                     updateChangeText(incomeChangeEl, incomeChange);
@@ -882,19 +967,19 @@
 
                 netBalanceSparklineChart = new Chart(document.getElementById('netBalanceSparkline').getContext('2d'), {
                     type: 'line',
-                    data: { labels: lastSixMonths, datasets: [{ data: netBalanceData, borderColor: '#8b5cf6', borderWidth: 1 }] },
+                    data: { labels: labelsForSparklines, datasets: [{ data: netBalanceData, borderColor: '#8b5cf6', borderWidth: 1 }] },
                     options: sparklineOptions
                 });
 
                 incomeSparklineChart = new Chart(document.getElementById('incomeSparkline').getContext('2d'), {
                     type: 'line',
-                    data: { labels: lastSixMonths, datasets: [{ data: incomeData, borderColor: '#22c55e', borderWidth: 1 }] },
+                    data: { labels: labelsForSparklines, datasets: [{ data: incomeData, borderColor: '#22c55e', borderWidth: 1 }] },
                     options: sparklineOptions
                 });
 
                 expensesSparklineChart = new Chart(document.getElementById('expensesSparkline').getContext('2d'), {
                     type: 'line',
-                    data: { labels: lastSixMonths, datasets: [{ data: expensesData, borderColor: '#ef4444', borderWidth: 1 }] },
+                    data: { labels: labelsForSparklines, datasets: [{ data: expensesData, borderColor: '#ef4444', borderWidth: 1 }] },
                     options: sparklineOptions
                 });
             }
@@ -943,6 +1028,7 @@
                 if (expensesChart) expensesChart.destroy();
                 if (storesChart) storesChart.destroy();
                 if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
+                if (expensesToIncomeChart) expensesToIncomeChart.destroy(); // Destroy existing chart
 
                 const ctxCategory = document.getElementById('expensesChart').getContext('2d');
                 expensesChart = new Chart(ctxCategory, {
@@ -994,6 +1080,47 @@
                         }
                     }
                 });
+            }
+
+            function renderExpensesToIncomeChart(totalExpenses, totalIncome) {
+                const expensesPercentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
+                const remainingPercentage = 100 - expensesPercentage;
+
+                const ctx = document.getElementById('expensesToIncomeChart').getContext('2d');
+                expensesToIncomeChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Потрачено', 'Остаток'],
+                        datasets: [{
+                            data: [expensesPercentage, remainingPercentage],
+                            backgroundColor: ['#ef4444', '#22c55e'], // Red for expenses, Green for remaining
+                            borderColor: '#1f2937',
+                            borderWidth: 3,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.parsed.toFixed(1) + '%';
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                expensesToIncomeTextEl.textContent = `Потрачено ${expensesPercentage.toFixed(1)}% от дохода`;
             }
 
             function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
