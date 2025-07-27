@@ -15,7 +15,7 @@
 
     <div class="container mx-auto p-4 md:p-8"> <!-- Increased max-width -->
 
-        <!-- New Header -->
+        <!-- Секция заголовка -->
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
             <!-- Actions -->
             <div class="flex items-center gap-4">
@@ -24,7 +24,7 @@
             </div>
         </header>
 
-        <!-- Detailed Filters (Originally removed, now re-added) -->
+        <!-- Секция фильтров -->
         <div class="mb-8 md:mb-12">
              <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
                 <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -46,9 +46,9 @@
             </div>
         </div>
 
-        <!-- Top Metrics Section -->
+        <!-- Секция основных метрик -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
-            <!-- Main Balance Card -->
+            <!-- Карточка актуального баланса -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
                 <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
@@ -57,7 +57,7 @@
                     <div class="h-8 w-24"><canvas id="netBalanceSparkline"></canvas></div>
                 </div>
             </div>
-             <!-- Total Income Card -->
+             <!-- Карточка общего дохода -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
                 <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
@@ -66,7 +66,7 @@
                     <div class="h-8 w-24"><canvas id="incomeSparkline"></canvas></div>
                 </div>
             </div>
-            <!-- Total Expenses Card -->
+            <!-- Карточка общих расходов -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
                 <div>
@@ -78,7 +78,7 @@
                 </div>
                 <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
             </div>
-            <!-- Theoretical Savings Card -->
+            <!-- Карточка теоретических сбережений -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
                 <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
@@ -86,7 +86,7 @@
             </div>
         </section>
 
-        <!-- Spend vs. Income Chart Section -->
+        <!-- Секция графика "Траты vs. Доходы" -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
             <div class="h-96">
@@ -94,7 +94,7 @@
             </div>
         </section>
 
-        <!-- Anomalies Section -->
+        <!-- Секция аномалий -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
             <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
@@ -109,10 +109,10 @@
             </div>
         </section>
 
-        <!-- Breakdown Section with Tabs -->
+        <!-- Секция детализации с вкладками -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
             
-            <!-- Expenses Breakdown Card -->
+            <!-- Карточка детализации расходов -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <div class="mb-4 border-b border-gray-700">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
@@ -142,7 +142,7 @@
                 </div>
             </div>
 
-            <!-- Income Sources Card -->
+            <!-- Карточка источников дохода -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
                 <div class="space-y-4" id="incomeList">
@@ -152,16 +152,16 @@
 
         </section>
 
-    <!-- Interactive Elements Section -->
+    <!-- Секция интерактивных элементов -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12">
-        <!-- Forecast Chart -->
+        <!-- График прогноза баланса -->
         <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
             <h3 class="text-xl font-bold text-white mb-4">Прогноз баланса</h3>
             <div class="h-48">
                 <canvas id="forecastChart"></canvas>
             </div>
         </div>
-        <!-- Goal Progress -->
+        <!-- Прогресс по цели -->
         <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
             <h3 class="text-xl font-bold text-white mb-4">Прогресс по цели</h3>
             <p class="text-gray-400">Снизить траты на "Кафе и рестораны" на 15%</p>
@@ -175,7 +175,7 @@
         </div>
     </section>
 
-    <!-- Transactions Table Section -->
+    <!-- Секция таблицы транзакций -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
         <div class="overflow-x-auto">
@@ -202,7 +202,7 @@
     </section>
 
 
-    <!-- Deep Analysis Section -->
+    <!-- Секция глубокого анализа -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
         <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
@@ -229,7 +229,7 @@
         </div>
     </section>
 
-    <!-- Habits Analysis Section -->
+    <!-- Секция анализа привычек -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
         <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
@@ -241,7 +241,7 @@
         </div>
     </section>
 
-    <!-- Habit Details Modal -->
+    <!-- Модальное окно деталей привычки -->
     <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
             <h2 id="habitDetailTitle" class="text-2xl font-bold text-white mb-4">Подробности привычки</h2>
@@ -252,7 +252,7 @@
         </div>
     </div>
 
-    <!-- Data Input Section (Moved to the bottom) -->
+    <!-- Секция загрузки данных -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
         <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>

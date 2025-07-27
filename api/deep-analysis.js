@@ -1,26 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Основной обработчик запроса для глубокого анализа
+// Основной обработчик API-запроса для глубокого анализа финансовых транзакций
 export default async function handler(req, res) {
-    // Проверяем, что метод запроса - GET
+    // Разрешаем только GET-запросы
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Получаем параметры из запроса
+    // Извлекаем параметры (месяц, год, категория для сравнения, выбранная модель ИИ) из запроса
     const { month, year, category, model: selectedModel } = req.query;
 
-    // Проверяем наличие обязательных параметров
+    // Проверяем наличие обязательных параметров (месяц и год)
     if (!month || !year) {
         return res.status(400).json({ error: 'Month and year are required for deep analysis.' });
     }
 
-    // Преобразуем месяц и год в числа
+    // Преобразуем строковые значения месяца и года в числовой формат
     const currentMonth = parseInt(month);
     const currentYear = parseInt(year);
 
-    // Вычисляем предыдущий месяц и год для сравнения
+    // Вычисляем предыдущий месяц и год для сравнительного анализа
     let previousMonth = currentMonth - 1;
     let previousYear = currentYear;
 
@@ -29,16 +29,16 @@ export default async function handler(req, res) {
         previousYear -= 1;
     }
 
-    // Форматируем месяцы, добавляя ведущий ноль при необходимости
+    // Форматируем номера месяцев, добавляя ведущий ноль для корректного отображения и использования в датах
     const previousMonthPadded = String(previousMonth).padStart(2, '0');
     const currentMonthPadded = String(currentMonth).padStart(2, '0');
 
-    // Получаем ключи доступа из переменных окружения
+    // Получаем необходимые ключи доступа (Supabase URL, Supabase Anon Key, Gemini API Key) из переменных окружения
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     const geminiApiKey = process.env.GEMINI_API_KEY;
 
-    // Проверяем наличие ключей
+    // Проверяем, что все необходимые переменные окружения заданы
     if (!supabaseUrl || !supabaseKey) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
@@ -49,56 +49,56 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
 
-    // Инициализируем клиенты Supabase и Google Generative AI
+    // Инициализируем клиенты для взаимодействия с Supabase и Google Generative AI
     const supabase = createClient(supabaseUrl, supabaseKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
 
     try {
-        // Определяем даты для запроса транзакций за текущий месяц
+        // Определяем начальную и конечную даты для выборки транзакций за текущий месяц
         const currentMonthStartDate = `${currentYear}-${currentMonthPadded}-01`;
         const currentMonthEndDate = `${currentYear}-${currentMonthPadded}-${new Date(currentYear, currentMonth, 0).getDate()}`;
         
-        // Получаем транзакции за текущий месяц
+        // Выполняем запрос к Supabase для получения всех транзакций за текущий месяц
         const { data: currentMonthTransactions, error: currentMonthFetchError } = await supabase
             .from('transactions')
             .select('*')
             .gte('date', currentMonthStartDate)
             .lte('date', currentMonthEndDate);
 
-        // Обрабатываем ошибку при запросе
+        // Обрабатываем возможные ошибки при получении транзакций за текущий месяц
         if (currentMonthFetchError) {
             console.error('Supabase fetch error for current month:', currentMonthFetchError);
             return res.status(500).json({ error: currentMonthFetchError.message });
         }
 
-        // Определяем даты для запроса транзакций за предыдущий месяц
+        // Определяем начальную и конечную даты для выборки транзакций за предыдущий месяц
         const previousMonthStartDate = `${previousYear}-${previousMonthPadded}-01`;
         const previousMonthEndDate = `${previousYear}-${previousMonthPadded}-${new Date(previousYear, previousMonth, 0).getDate()}`;
 
-        // Получаем транзакции за предыдущий месяц
+        // Выполняем запрос к Supabase для получения всех транзакций за предыдущий месяц
         const { data: previousMonthTransactions, error: previousMonthFetchError } = await supabase
             .from('transactions')
             .select('*')
             .gte('date', previousMonthStartDate)
             .lte('date', previousMonthEndDate);
 
-        // Обрабатываем ошибку при запросе
+        // Обрабатываем возможные ошибки при получении транзакций за предыдущий месяц
         if (previousMonthFetchError) {
             console.error('Supabase fetch error for previous month:', previousMonthFetchError);
             return res.status(500).json({ error: previousMonthFetchError.message });
         }
 
-        // Проверяем, есть ли транзакции для анализа
+        // Проверяем, были ли найдены транзакции за текущий месяц для проведения анализа
         if (!currentMonthTransactions || currentMonthTransactions.length === 0) {
             return res.status(200).json({ analysis: 'Нет транзакций за выбранный текущий месяц для анализа.' });
         }
 
-        // Преобразуем данные о транзакциях в JSON
+        // Преобразуем полученные данные о транзакциях в форматированный JSON-строки для передачи в модель ИИ
         const currentMonthTransactionsJson = JSON.stringify(currentMonthTransactions, null, 2);
         const previousMonthTransactionsJson = JSON.stringify(previousMonthTransactions, null, 2);
 
-        // Создаем промпт для языковой модели
+        // Формируем промпт для языковой модели, включая данные о транзакциях и конкретные вопросы для анализа
         const prompt = `Ты — персональный финансовый ассистент. Проанализируй следующие транзакции:
 
 **Транзакции за ${currentMonthPadded}.${currentYear} (текущий месяц) в формате JSON:**
@@ -119,16 +119,17 @@ ${previousMonthTransactionsJson}
 Предоставь анализ на русском языке.
 `;
 
-        // Генерируем контент с помощью модели
+        // Отправляем промпт в выбранную модель Gemini для генерации анализа
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        // Возвращаем сгенерированный анализ
+        // Отправляем сгенерированный текстовый анализ в ответе клиенту
         res.status(200).json({ analysis: text });
 
     } catch (error) {
-        console.error('Unhandled server error during deep analysis:', error);
-        res.status(500).json({ error: error.message || 'Internal Server Error' });
+        // Логируем необработанные ошибки сервера и отправляем сообщение об ошибке клиенту
+        console.error('Необработанная ошибка сервера во время глубокого анализа:', error);
+        res.status(500).json({ error: error.message || 'Внутренняя ошибка сервера' });
     }
 }
