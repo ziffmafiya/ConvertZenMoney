@@ -1111,7 +1111,16 @@
                         maintainAspectRatio: false,
                         scales: {
                             x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                            y: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                            y: { 
+                                beginAtZero: true, // Начинаем ось Y с нуля
+                                ticks: { 
+                                    color: '#9ca3af',
+                                    callback: function(value, index, values) {
+                                        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                                    }
+                                }, 
+                                grid: { color: '#374151' } 
+                            }
                         },
                         plugins: { 
                             legend: { 
