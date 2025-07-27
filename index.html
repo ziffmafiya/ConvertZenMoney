@@ -355,27 +355,30 @@
                 }
             };
 
-            // Стандартное распределение расходов в процентах
+            // Стандартное распределение расходов (в процентах от общего дохода)
             const STANDARD_EXPENSE_DISTRIBUTION = {
                 "Необходимые расходы": {
-                    "Платежи и комиссии": 0.225, // 20-25%
-                    "Продукты": 0.175, // 15-20%
-                    "Проезд": 0.05,
-                    "Забота о себе, здоровье и фитнес (базовая часть)": 0.05
+                    "Платежи, комиссии /Аренда": [0.15, 0.20],
+                    "Платежи, комиссии /Комуналка": [0.05, 0.05],
+                    "Платежи, комиссии /связь": [0.01, 0.02],
+                    "Платежи, комиссии / Почтовые услуги": [0.00, 0.01],
+                    "Продукты": [0.15, 0.20],
+                    "Проезд": [0.05, 0.05],
+                    "Забота о себе": [0.01, 0.02],
+                    "Здоровье и фитнес": [0.03, 0.04]
                 },
                 "Желания": {
-                    "Кафе и рестораны": 0.06, // 5-7%
-                    "Кофе": 0.015, // 1-2%
-                    "Отдых и развлечения": 0.06, // 5-7%
-                    "Бар": 0.025, // 2-3%
-                    "Покупки одежды и техники": 0.06, // 5-7%
-                    "Подарки": 0.025, // 2-3%
-                    "Хотелки": 0.025, // 2-3%
-                    "Забота о себе, здоровье и фитнес": 0.0 // оставшаяся часть, если есть
+                    "Кафе и рестораны": [0.05, 0.07],
+                    "Кафе и рестораны / Кофе": [0.01, 0.02],
+                    "Отдых и развлечения": [0.05, 0.07],
+                    "Бар": [0.02, 0.03],
+                    "Покупки: одежда, техника": [0.05, 0.07],
+                    "Подарки": [0.02, 0.03],
+                    "Хотелки": [0.02, 0.03]
                 },
                 "Сбережения и долги": {
-                    "Образование": 0.075, // 5-10%
-                    "Сбережения и погашение кредитов/долгов": 0.125 // 10-15%
+                    "Образование": [0.05, 0.10],
+                    "Остальное — сбережения и погашение кредитов/долгов": [0.10, 0.15]
                 }
             };
             
@@ -1171,7 +1174,7 @@
             function getStandardPercentage(categoryName) {
                 for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
                     if (STANDARD_EXPENSE_DISTRIBUTION[group][categoryName] !== undefined) {
-                        return STANDARD_EXPENSE_DISTRIBUTION[group][categoryName];
+                        return STANDARD_EXPENSE_DISTRIBUTION[group][categoryName]; // Возвращаем массив [min, max]
                     }
                 }
                 return null; // Категория не найдена в стандартном распределении
@@ -1192,34 +1195,32 @@
                     sortedCategories.forEach(category => {
                         const { label, value, color } = category;
                         const actualPercentage = actualExpensePercentages[label] !== undefined ? actualExpensePercentages[label] * 100 : 0;
-                        const standardPercentage = getStandardPercentage(label) !== null ? getStandardPercentage(label) * 100 : null;
+                        const standardRange = getStandardPercentage(label); // Получаем диапазон [min, max]
                         
                         let progressBarColor = 'bg-gray-500'; // Default for no standard or exact match
                         let tooltipText = `Факт: ${actualPercentage.toFixed(1)}%`;
                         let barWidth = actualPercentage; // По умолчанию ширина бара равна фактическому проценту
 
-                        if (standardPercentage !== null) {
-                            const diff = actualPercentage - standardPercentage;
-                            tooltipText += ` | Стандарт: ${standardPercentage.toFixed(1)}%`;
+                        if (standardRange !== null) {
+                            const [minStandard, maxStandard] = standardRange.map(p => p * 100);
+                            tooltipText += ` | Стандарт: ${minStandard.toFixed(1)}% - ${maxStandard.toFixed(1)}%`;
 
-                            if (diff > 0.5) { // Перерасход
+                            if (actualPercentage > maxStandard + 0.5) { // Перерасход (с небольшим допуском)
                                 progressBarColor = 'bg-red-500';
-                                tooltipText += ` (Перерасход на ${diff.toFixed(1)}%)`;
-                            } else if (diff < -0.5) { // Экономия
+                                tooltipText += ` (Перерасход на ${(actualPercentage - maxStandard).toFixed(1)}%)`;
+                            } else if (actualPercentage < minStandard - 0.5) { // Экономия (с небольшим допуском)
                                 progressBarColor = 'bg-green-500';
-                                tooltipText += ` (Экономия на ${Math.abs(diff).toFixed(1)}%)`;
+                                tooltipText += ` (Экономия на ${Math.abs(actualPercentage - minStandard).toFixed(1)}%)`;
                             } else { // В пределах нормы
                                 progressBarColor = 'bg-blue-500';
                                 tooltipText += ` (В пределах нормы)`;
                             }
-                            // Для визуализации, если фактический процент сильно отличается,
-                            // можно масштабировать бар, чтобы он не выходил за 100%
-                            barWidth = Math.min(100, (actualPercentage / standardPercentage) * 100);
-                            if (standardPercentage === 0 && actualPercentage > 0) {
-                                barWidth = 100; // Если стандарт 0, а факт > 0, показываем полный бар
-                            } else if (standardPercentage === 0 && actualPercentage === 0) {
-                                barWidth = 0;
-                            }
+                            
+                            // Для визуализации прогресс-бара относительно максимального стандартного значения
+                            // Если фактический процент сильно отличается, можно масштабировать бар, чтобы он не выходил за 100%
+                            const referenceValue = Math.max(maxStandard, actualPercentage); // Используем большее из двух для масштаба
+                            barWidth = (actualPercentage / (referenceValue > 0 ? referenceValue : 1)) * 100;
+                            barWidth = Math.min(100, barWidth); // Ограничиваем 100%
                         }
 
                         const percentageComparisonHtml = `
@@ -1290,7 +1291,6 @@
                     });
                 }
             }
-            
             // --- Tab Logic ---
             const tabs = document.querySelectorAll('.tab-button');
             tabs.forEach(tab => {
