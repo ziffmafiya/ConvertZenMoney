@@ -69,15 +69,12 @@
             <!-- Total Expenses Card -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span id="expensesChange" class="text-sm font-semibold"></span>
-                            <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
-                        </div>
+                <div>
+                    <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span id="expensesChange" class="text-sm font-semibold"></span>
+                        <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
                     </div>
-                    <div class="h-24 w-24"><canvas id="expensesToIncomeChart"></canvas></div>
                 </div>
                 <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
             </div>
@@ -318,7 +315,7 @@
             let netBalanceSparklineChart;
             let incomeSparklineChart;
             let expensesSparklineChart;
-            let expensesToIncomeChart; // New chart for expenses to income ratio
+            // Removed expensesToIncomeChart
 
             // --- Переменные для хранения экземпляров графиков Chart.js ---
             let expensesChart;
@@ -648,8 +645,9 @@
                 updateGoalProgress(transactions);
                 renderForecastChart(transactions);
                 renderSparklines(transactions);
-                renderExpensesToIncomeChart(totalExpenses, totalIncome); // Render new chart
+                // Removed renderExpensesToIncomeChart call
                 theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
             }
 
             // Функция для отображения аномалий с пагинацией
@@ -1030,7 +1028,8 @@
                 if (expensesChart) expensesChart.destroy();
                 if (storesChart) storesChart.destroy();
                 if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
-                if (expensesToIncomeChart) expensesToIncomeChart.destroy(); // Destroy existing chart
+                // Removed expensesToIncomeChart destroy
+                if (expensesToIncomeChart) expensesToIncomeChart.destroy();
 
                 const ctxCategory = document.getElementById('expensesChart').getContext('2d');
                 expensesChart = new Chart(ctxCategory, {
@@ -1084,60 +1083,7 @@
                 });
             }
 
-            function renderExpensesToIncomeChart(totalExpenses, totalIncome) {
-                const expensesPercentage = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-                const remainingPercentage = 100 - expensesPercentage;
-
-                const ctx = document.getElementById('expensesToIncomeChart').getContext('2d');
-                expensesToIncomeChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['', 'Остаток'],
-                        datasets: [{
-                            data: [expensesPercentage, remainingPercentage],
-                            backgroundColor: ['#ef4444', '#22c55e'], // Red for expenses, Green for remaining
-                            borderColor: '#1f2937',
-                            borderWidth: 3,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        label += context.parsed.toFixed(1) + '%';
-                                        return label;
-                                    }
-                                }
-                            },
-                            datalabels: {
-                                color: '#c9d1d9',
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
-                                },
-                                formatter: (value, context) => {
-                                    if (context.dataIndex === 0) { // Only show value for "Потрачено" slice
-                                        return `${expensesPercentage.toFixed(1)}%`;
-                                    }
-                                    return '';
-                                }
-                            }
-                        }
-                    },
-                    plugins: [ChartDataLabels] // Register the plugin
-                });
-                expensesToIncomeTextEl.textContent = `Потрачено ${expensesPercentage.toFixed(1)}% от дохода`;
-            }
+            // Removed renderExpensesToIncomeChart function
 
             function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions) {
                 expensesLegendContainer.innerHTML = '';
