@@ -67,7 +67,8 @@ export default async (req, res) => {
                 savingsPercentage = reduction; // Фактический процент экономии
                 // Прогресс для бара остаётся прежним - процент достижения цели
                 if (goal.value > 0) {
-                    progress = (reduction / goal.value) * 100;
+                    //progress = (reduction / goal.value) * 100;// Здесь не нужно пересчитывать прогресс, так как это уже процент экономии
+                    progress = reduction; // Прогресс - это процент экономии от предыдущего месяца
                 }
             } else if (currentMonthExpenses > 0) {
                 progress = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
