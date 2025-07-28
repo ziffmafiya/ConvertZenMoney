@@ -32,16 +32,16 @@ export default async (req, res) => {
 
         const currentMonthExpenses = currentTransactions.reduce((sum, t) => sum + t.outcome, 0);
 
-        let progress = 0;
+        let progress1 = 0;
         let status = 'On Track';
         let comparisonMonth = null;
-        let savingsPercentage = null; // Добавлено для фактического процента экономии
+        let progress2 = null; // Фактический процент экономии для текста
 
         if (goal.type === 'limit') {
             if (goal.value > 0) {
-                progress = (currentMonthExpenses / goal.value) * 100;
+                progress1 = (currentMonthExpenses / goal.value) * 100;
             }
-            if (progress > 100) {
+            if (progress1 > 100) {
                 status = 'Over Limit';
             }
         } else if (goal.type === 'reduce') {
@@ -64,22 +64,22 @@ export default async (req, res) => {
 
             if (previousMonthExpenses > 0) {
                 const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
-                savingsPercentage = reduction; // Фактический процент экономии
+                progress2 = reduction; // Фактический процент экономии
                 // Прогресс для бара остаётся прежним - процент достижения цели
                 if (goal.value > 0) {
-                    //progress = (reduction / goal.value) * 100;// Здесь не нужно пересчитывать прогресс, так как это уже процент экономии
-                    progress = reduction; // Прогресс - это процент экономии от предыдущего месяца
+                    progress1 = (reduction / goal.value) * 100;
+                    progress2 = reduction; // Фактический процент экономии для текста
                 }
             } else if (currentMonthExpenses > 0) {
-                progress = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
-                savingsPercentage = -Infinity; // Показывает перерасход, когда экономию посчитать нельзя
+                progress1 = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
+                progress2 = -Infinity; // Показывает перерасход, когда экономию посчитать нельзя
             } else {
-                progress = 100; // Если трат не было ни в одном из месяцев - цель достигнута
-                savingsPercentage = 100;
+                progress1 = 100; // Если трат не было ни в одном из месяцев - цель достигнута
+                progress2 = 100;
             }
             
             // Статус определяется относительно 100% достижения цели
-            if (progress < 100) {
+            if (progress1 < 100) {
                 status = 'Behind';
             } else {
                 status = 'On Track';
@@ -87,11 +87,11 @@ export default async (req, res) => {
         }
 
         // Don't show negative progress for reduction goals
-        const displayProgress = Math.max(0, progress);
+        const displayProgress = Math.max(0, progress1);
         
         res.status(200).json({
-            progress: displayProgress,
-            savingsPercentage,
+            progress1: displayProgress,
+            progress2: progress2,
             currentValue: currentMonthExpenses,
             targetValue: goal.value,
             status,

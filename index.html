@@ -1033,13 +1033,13 @@
                         throw new Error(err.error || 'Failed to get goal progress');
                     }
 
-                    const { progress, comparisonMonth } = await response.json();
-                    
-                    // Ограничиваем прогресс 100% для отображения
-                    const displayProgress = Math.min(100, Math.max(0, progress));
-                    
-                    goalProgressBar.style.width = `${displayProgress}%`;
-                    goalProgressText.textContent = `${progress.toFixed(0)}%`;
+                const { progress1, progress2, comparisonMonth } = await response.json();
+                
+                // Don't show negative progress for reduction goals
+                const displayProgress = Math.min(100, Math.max(0, progress1));
+                
+                goalProgressBar.style.width = `${displayProgress}%`;
+                goalProgressText.textContent = `${progress2 !== null ? progress2.toFixed(0) : progress1.toFixed(0)}%`;
 
                     if (comparisonMonth) {
                         comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
