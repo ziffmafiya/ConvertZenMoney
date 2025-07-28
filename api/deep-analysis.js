@@ -55,21 +55,10 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
 
     try {
-        // Get the authenticated user's ID
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-            console.error('Authentication error:', userError);
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-
-        const userId = user.id;
-
         // Fetch user's work schedule
         const { data: workSchedule, error: scheduleError } = await supabase
             .from('user_work_schedule')
-            .select('*')
-            .eq('user_id', userId);
+            .select('*');
 
         if (scheduleError) {
             console.error('Error fetching work schedule:', scheduleError);

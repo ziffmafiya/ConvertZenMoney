@@ -23,21 +23,10 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        // Get the authenticated user's ID
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-            console.error('Authentication error:', userError);
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-
-        const userId = user.id;
-
-        // Check if a record for this job_name and user already exists
+        // Check if a record for this job_name already exists
         const { data: existingSchedule, error: fetchError } = await supabase
             .from('user_work_schedule')
             .select('id')
-            .eq('user_id', userId)
             .eq('job_name', job_name)
             .single();
 
@@ -47,7 +36,6 @@ export default async function handler(req, res) {
         }
 
         let dataToSave = {
-            user_id: userId,
             job_name,
             hours_per_month: hours_per_month || null,
             hours_per_day_shift: hours_per_day_shift || null,
