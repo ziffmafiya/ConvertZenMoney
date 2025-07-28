@@ -281,6 +281,11 @@
         <div id="habitsLoading" class="hidden mt-4 text-center text-blue-400">
             <p>Анализ привычек, пожалуйста, подождите...</p>
         </div>
+        <div id="habitsPagination" class="flex justify-center items-center mt-4 space-x-2">
+            <button id="prevHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="habitPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        </div>
     </section>
 
     <!-- Модальное окно деталей привычки -->
@@ -402,6 +407,9 @@
             const prevTransactionPageBtn = document.getElementById('prevTransactionPage');
             const nextTransactionPageBtn = document.getElementById('nextTransactionPage');
             const transactionPageInfoEl = document.getElementById('transactionPageInfo');
+            const prevHabitPageBtn = document.getElementById('prevHabitPage');
+            const nextHabitPageBtn = document.getElementById('nextHabitPage');
+            const habitPageInfoEl = document.getElementById('habitPageInfo');
 
             const netBalanceChangeEl = document.getElementById('netBalanceChange');
             const incomeChangeEl = document.getElementById('incomeChange');
@@ -428,6 +436,11 @@
             const transactionsPerPage = 8;
             let currentTransactionPage = 1;
             let allTransactions = [];
+
+            // Переменные для пагинации привычек
+            const habitsPerPage = 4; // Например, 4 привычки на страницу
+            let currentHabitPage = 1;
+            let allHabits = [];
 
             // Цветовая палитра для графиков
             const COLORS = [
@@ -604,7 +617,8 @@
                         throw new Error(err.error || 'Failed to fetch habits');
                     }
                     const { habits } = await response.json();
-                    renderHabits(habits); // Отображаем полученные привычки
+                    allHabits = Object.values(habits); // Сохраняем все привычки как массив
+                    renderHabits(allHabits); // Отображаем первую страницу привычек
                 } catch (error) {
                     console.error('Error fetching habits:', error);
                     alert(`Не удалось загрузить привычки: ${error.message}`);
@@ -613,13 +627,23 @@
                 }
             }
 
-            // Функция для отображения карточек привычек
+            // Функция для отображения карточек привычек с пагинацией
             function renderHabits(habits) {
                 habitsResultDiv.innerHTML = '';
-                if (Object.keys(habits).length === 0) {
+                if (habits.length === 0) {
                     habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Привычки не найдены для выбранного периода.</p>';
+                    habitPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevHabitPageBtn.disabled = true;
+                    nextHabitPageBtn.disabled = true;
                     return;
                 }
+
+                const totalPages = Math.ceil(habits.length / habitsPerPage);
+                currentHabitPage = Math.min(Math.max(1, currentHabitPage), totalPages); // Убедимся, что страница в пределах допустимого
+
+                const startIndex = (currentHabitPage - 1) * habitsPerPage;
+                const endIndex = startIndex + habitsPerPage;
+                const habitsToDisplay = habits.slice(startIndex, endIndex);
 
                 // Иконки для разных категорий привычек
                 const categoryIcons = {
@@ -631,8 +655,7 @@
                     'default': '💰'
                 };
 
-                for (const payee in habits) {
-                    const habit = habits[payee];
+                habitsToDisplay.forEach(habit => {
                     const trendColor = habit.trend > 0 ? 'text-red-400' : 'text-green-400';
                     const trendArrow = habit.trend > 0 ? '↑' : '↓';
                     const icon = categoryIcons[habit.category] || categoryIcons['default'];
@@ -642,7 +665,7 @@
                     habitCard.innerHTML = `
                         <div class="flex-grow">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-semibold text-gray-300">${payee}</h3>
+                                <h3 class="text-lg font-semibold text-gray-300">${habit.payee}</h3>
                                 <span class="text-2xl">${icon}</span>
                             </div>
                             <p class="text-gray-400 text-sm">Всего потрачено</p>
@@ -653,10 +676,14 @@
                             </div>
                             <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
                         </div>
-                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${payee}" data-habit='${JSON.stringify(habit)}'>Подробнее</button>
+                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${habit.payee}" data-habit='${JSON.stringify(habit)}'>Подробнее</button>
                     `;
                     habitsResultDiv.appendChild(habitCard);
-                }
+                });
+
+                habitPageInfoEl.textContent = `Страница ${currentHabitPage} из ${totalPages}`;
+                prevHabitPageBtn.disabled = currentHabitPage === 1;
+                nextHabitPageBtn.disabled = currentHabitPage === totalPages;
             }
 
             // Асинхронная функция для выполнения глубокого анализа трат с помощью ИИ
@@ -1578,6 +1605,21 @@
                 if (currentAnomalyPage < totalPages) {
                     currentAnomalyPage++;
                     renderAnomalies(allAnomalies);
+                }
+            });
+
+            prevHabitPageBtn.addEventListener('click', () => {
+                if (currentHabitPage > 1) {
+                    currentHabitPage--;
+                    renderHabits(allHabits);
+                }
+            });
+
+            nextHabitPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allHabits.length / habitsPerPage);
+                if (currentHabitPage < totalPages) {
+                    currentHabitPage++;
+                    renderHabits(allHabits);
                 }
             });
 
