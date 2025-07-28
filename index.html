@@ -1039,7 +1039,15 @@
                 const displayProgress = Math.min(100, Math.max(0, progress1));
                 
                 goalProgressBar.style.width = `${displayProgress}%`;
-                goalProgressText.textContent = `${progress2 !== null ? progress2.toFixed(0) : progress1.toFixed(0)}%`;
+                let progressText;
+                if (progress2 === -Infinity) {
+                    progressText = 'Перерасход';
+                } else if (progress2 !== null) {
+                    progressText = progress2.toFixed(0) + '%';
+                } else {
+                    progressText = progress1.toFixed(0) + '%';
+                }
+                goalProgressText.textContent = progressText;
 
                     if (comparisonMonth) {
                         comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
