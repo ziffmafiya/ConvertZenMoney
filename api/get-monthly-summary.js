@@ -11,13 +11,14 @@ function getPreviousMonth(year, month) {
 }
 
 // Функция для получения транзакций за определенный месяц и год
-async function getTransactionsForMonth(supabase, year, month) {
+async function getTransactionsForMonth(supabase, year, month, userId) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
     const { data, error } = await supabase
         .from('transactions')
         .select('outcome, income')
+        .eq('user_id', userId) // Добавляем фильтрацию по user_id
         .gte('date', startDate)
         .lte('date', endDate);
 
@@ -48,11 +49,30 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Извлекаем JWT из заголовка Authorization
+    const token = req.headers.authorization?.split(' ')[1];
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+        global: {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        },
+    });
 
     try {
+        // Получаем сессию пользователя
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Authentication error:', userError?.message || 'User not authenticated');
+            return res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+        }
+
+        const userId = user.id;
+
         // Получаем транзакции за текущий месяц
-        const currentMonthTransactions = await getTransactionsForMonth(supabase, year, month);
+        const currentMonthTransactions = await getTransactionsForMonth(supabase, year, month, userId);
 
         let currentMonthOutcome = currentMonthTransactions.reduce((sum, t) => sum + (t.outcome || 0), 0);
         let currentMonthIncome = currentMonthTransactions.reduce((sum, t) => sum + (t.income || 0), 0);
