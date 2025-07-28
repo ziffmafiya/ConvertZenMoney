@@ -1033,13 +1033,20 @@
                         throw new Error(err.error || 'Failed to get goal progress');
                     }
 
-                    const { progress, comparisonMonth } = await response.json();
+                    const { progress1, progress2, comparisonMonth, currentValue, targetValue, status } = await response.json();
                     
-                    // Ограничиваем прогресс 100% для отображения
-                    const displayProgress = Math.min(100, Math.max(0, progress));
+                    // Ограничиваем progress1 100% для отображения на прогресс-баре
+                    const displayProgress1 = Math.min(100, Math.max(0, progress1));
                     
-                    goalProgressBar.style.width = `${displayProgress}%`;
-                    goalProgressText.textContent = `${progress.toFixed(0)}%`;
+                    goalProgressBar.style.width = `${displayProgress1}%`;
+                    
+                    if (goal.type === 'limit') {
+                        goalProgressText.textContent = `${currentValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                        goalTargetText.textContent = `Цель: ${targetValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                    } else if (goal.type === 'reduce') {
+                        goalProgressText.textContent = `${progress2.toFixed(1)}%`;
+                        goalTargetText.textContent = `Цель: ${targetValue}%`;
+                    }
 
                     if (comparisonMonth) {
                         comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
@@ -1047,7 +1054,7 @@
                         comparisonMonthTextEl.textContent = '';
                     }
 
-                    if (progress > 100) {
+                    if (status === 'Over Limit' || (goal.type === 'reduce' && progress1 < 100)) {
                         goalProgressBar.classList.remove('bg-blue-500');
                         goalProgressBar.classList.add('bg-red-500');
                     } else {
