@@ -7,11 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/i18next/i18next.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
     <style>
         .font-tektur {
             font-family: 'Tektur', sans-serif;
@@ -30,68 +29,43 @@
 
         <!-- Секция заголовка -->
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
-            <h1 class="text-3xl md:text-4xl font-bold text-white" data-i18n="title"></h1>
             <!-- Actions -->
             <div class="flex items-center gap-4">
-                <!-- Theme Toggle -->
-                <button id="themeToggle" class="p-2 rounded-full bg-[#161b22] border border-[#30363d] text-white hover:bg-[#30363d] transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M3 12h1m15.325-7.757l-.707-.707M4.343 19.071l-.707.707m14.324-.707l.707.707M4.343 4.343l.707.707"/>
-                    </svg>
-                </button>
-                <!-- Language Switcher -->
-                <select id="languageSwitcher" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                </select>
                 <div class="flex items-center gap-2" id="quickFilters">
                 </div>
             </div>
+            <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                Настройки
+            </button>
         </header>
 
-        <!-- Секция настроек и загрузки файла -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h2 class="text-2xl font-bold text-white mb-4" data-i18n="display_settings">Настройки отображения</h2>
-            <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
+        <!-- Секция фильтров -->
+        <div class="mb-8 md:mb-12">
+             <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
                 <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <option value="" data-i18n="all_year"></option>
-                    <option value="01" data-i18n="january"></option>
-                    <option value="02" data-i18n="february"></option>
-                    <option value="03" data-i18n="march"></option>
-                    <option value="04" data-i18n="april"></option>
-                    <option value="05" data-i18n="may"></option>
-                    <option value="06" data-i18n="june"></option>
-                    <option value="07" data-i18n="july"></option>
-                    <option value="08" data-i18n="august"></option>
-                    <option value="09" data-i18n="september"></option>
-                    <option value="10" data-i18n="october"></option>
-                    <option value="11" data-i18n="november"></option>
-                    <option value="12" data-i18n="december"></option>
+                    <option value="">Весь год</option>
+                    <option value="01">Январь</option>
+                    <option value="02">Февраль</option>
+                    <option value="03">Март</option>
+                    <option value="04">Апрель</option>
+                    <option value="05">Май</option>
+                    <option value="06">Июнь</option>
+                    <option value="07">Июль</option>
+                    <option value="08">Август</option>
+                    <option value="09">Сентябрь</option>
+                    <option value="10">Октябрь</option>
+                    <option value="11">Ноябрь</option>
+                    <option value="12">Декабрь</option>
                 </select>
-                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" data-i18n-placeholder="year">
+                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
             </div>
-            <!-- Moved "Update data from file" card here -->
-            <div class="mt-8">
-                <h2 class="text-2xl font-bold text-white mb-4" data-i18n="update_data_from_file"></h2>
-                <p class="text-gray-400 mb-4" data-i18n="upload_csv_transactions"></p>
-                <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
-                    <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                    <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300" data-i18n="exclude_debts_on_upload"></label>
-                </div>
-                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
-                    <input id="skipEmbeddingOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                    <label for="skipEmbeddingOnUpload" class="ml-3 text-lg font-medium text-gray-300" data-i18n="skip_embedding_on_upload"></label>
-                </div>
-                <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg" data-i18n="upload_to_database"></button>
-            </div>
-        </section>
+        </div>
 
         <!-- Секция основных метрик -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Карточка актуального баланса -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2" data-i18n="current_balance"></h3>
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
                 <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
                 <div class="flex items-center gap-2 mt-2">
                     <span id="netBalanceChange" class="text-sm font-semibold"></span>
@@ -100,7 +74,7 @@
             </div>
              <!-- Карточка общего дохода -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2" data-i18n="total_income"></h3>
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
                 <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
                 <div class="flex items-center gap-2 mt-2">
                     <span id="incomeChange" class="text-sm font-semibold"></span>
@@ -109,7 +83,7 @@
             </div>
             <!-- Карточка общих расходов -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2" data-i18n="total_expenses"></h3>
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
                 <div>
                     <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
                     <div class="flex items-center gap-2 mt-2">
@@ -121,15 +95,15 @@
             </div>
             <!-- Карточка теоретических сбережений -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2" data-i18n="theoretical_savings"></h3>
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
                 <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
-                <p class="text-gray-400 text-sm mt-2" data-i18n="percent_of_total_income"></p>
+                <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
             </div>
         </section>
 
         <!-- Секция графика "Траты vs. Доходы" -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-4" data-i18n="expenses_vs_income"></h3>
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
             <div class="h-96">
                 <canvas id="spendIncomeTrendChart"></canvas>
             </div>
@@ -137,16 +111,16 @@
 
         <!-- Секция аномалий -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-2" data-i18n="anomalies"></h3>
-            <p class="text-gray-400 text-sm mb-4" data-i18n="atypical_large_expenses"></p>
+            <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
+            <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
             <div id="anomaliesList" class="space-y-3">
                 <!-- Anomalies will be listed here -->
-                <p class="text-gray-500" data-i18n="no_anomalies_found"></p>
+                <p class="text-gray-500">Аномалий не найдено.</p>
             </div>
             <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
-                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous"></button>
-                <span id="anomalyPageInfo" class="text-gray-400" data-i18n="page_of" data-i18n-options='{"current": 1, "total": 1}'></span>
-                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next"></button>
+                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
             </div>
         </section>
 
@@ -158,24 +132,24 @@
                 <div class="mb-4 border-b border-gray-700">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
                         <li role="presentation">
-                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" id="category-tab" data-tab-target="#category-content" type="button" role="tab" data-i18n="by_categories"></button>
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" id="category-tab" data-tab-target="#category-content" type="button" role="tab">По категориям</button>
                         </li>
                         <li role="presentation">
-                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-gray-700 hover:bg-gray-700 hover:border-gray-600" id="store-tab" data-tab-target="#store-content" type="button" role="tab" data-i18n="by_stores"></button>
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-gray-700 hover:bg-gray-700 hover:border-gray-600" id="store-tab" data-tab-target="#store-content" type="button" role="tab">По магазинам</button>
                         </li>
                     </ul>
                 </div>
                 <div id="expensesTabContent">
                     <div class="tab-content" id="category-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white" data-i18n="expenses_structure"></h3>
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
                         <div class="relative h-[35vh] w-full max-w-[450px] mx-auto">
                             <canvas id="expensesChart"></canvas>
                         </div>
                         <div id="expensesLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
-                        <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4" data-i18n="find_anomalies"></button>
+                        <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Найти аномалии в данных</button>
                     </div>
                     <div class="tab-content hidden" id="store-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white" data-i18n="top_10_expenses_by_stores"></h3>
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
                         <div class="relative h-[45vh] w-full">
                             <canvas id="storesChart"></canvas>
                         </div>
@@ -187,7 +161,7 @@
             <div class="flex flex-col gap-8 md:gap-12">
                 <!-- Карточка источников дохода -->
                 <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
-                    <h3 class="text-2xl font-bold text-center mb-6 text-white" data-i18n="income_sources"></h3>
+                    <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
                     <div class="space-y-4" id="incomeList">
                         <!-- Income bars will be generated by JS -->
                     </div>
@@ -196,16 +170,16 @@
                 <!-- Прогресс по цели -->
                 <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white" data-i18n="goal_progress"></h3>
-                        <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm" data-i18n="configure"></button>
+                        <h3 class="text-xl font-bold text-white">Прогресс по цели</h3>
+                        <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Настроить</button>
                     </div>
-                    <p id="goalDescription" class="text-gray-400" data-i18n="goal_not_set"></p>
+                    <p id="goalDescription" class="text-gray-400">Цель не задана</p>
                     <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
                         <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
                     </div>
                 <div class="flex justify-between text-sm font-semibold mt-2">
                         <span id="goalProgressText" class="text-white">0%</span>
-                        <span id="goalTargetText" class="text-gray-400" data-i18n="goal" data-i18n-options='{"value": "-"}'></span>
+                        <span id="goalTargetText" class="text-gray-400">Цель: -</span>
                     </div>
                     <p id="comparisonMonthText" class="text-sm text-gray-400 mt-1"></p>
                 </div>
@@ -214,16 +188,16 @@
 
     <!-- Секция таблицы транзакций -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4" data-i18n="latest_transactions"></h2>
+        <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
         <div class="overflow-x-auto">
             <table class="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400" data-i18n="date"></th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400" data-i18n="category"></th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400" data-i18n="payee"></th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400" data-i18n="amount"></th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400" data-i18n="account"></th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Дата</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Категория</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
                     </tr>
                 </thead>
                 <tbody id="transactionsTableBody">
@@ -232,62 +206,62 @@
             </table>
         </div>
         <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
-            <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous"></button>
-            <span id="transactionPageInfo" class="text-gray-400" data-i18n="page_of" data-i18n-options='{"current": 1, "total": 1}'></span>
-                <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next"></button>
+            <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
         </div>
     </section>
 
 
     <!-- Секция глубокого анализа -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4" data-i18n="deep_analysis_of_expenses"></h2>
-        <p class="text-gray-400 mb-2" data-i18n="detailed_analysis_ai"></p>
-        <p class="text-gray-500 text-sm mb-4" data-i18n="analysis_period_settings"></p>
+        <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
+        <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+        <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
         <div class="flex flex-wrap gap-4 mb-4">
-            <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg" data-i18n="perform_deep_analysis"></button>
-            <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg" data-i18n="configure_analysis"></button>
+            <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
+            <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Настроить анализ</button>
         </div>
         <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
             <!-- Analysis results will be displayed here -->
         </div>
         <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
-            <p data-i18n="analysis_in_progress"></p>
+            <p>Анализ выполняется, пожалуйста, подождите...</p>
         </div>
     </section>
 
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
-            <h2 class="text-2xl font-bold text-white mb-4" data-i18n="deep_analysis_settings"></h2>
+            <h2 class="text-2xl font-bold text-white mb-4">Настройки глубокого анализа</h2>
             <div class="space-y-4">
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-300" data-i18n="analysis_period"></label>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">Период анализа</label>
                     <div class="flex gap-2">
                         <select id="deepAnalysisMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                            <option value="" data-i18n="all_year"></option>
-                            <option value="01" data-i18n="january"></option>
-                            <option value="02" data-i18n="february"></option>
-                            <option value="03" data-i18n="march"></option>
-                            <option value="04" data-i18n="april"></option>
-                            <option value="05" data-i18n="may"></option>
-                            <option value="06" data-i18n="june"></option>
-                            <option value="07" data-i18n="july"></option>
-                            <option value="08" data-i18n="august"></option>
-                            <option value="09" data-i18n="september"></option>
-                            <option value="10" data-i18n="october"></option>
-                            <option value="11" data-i18n="november"></option>
-                            <option value="12" data-i18n="december"></option>
+                            <option value="">Весь год</option>
+                            <option value="01">Январь</option>
+                            <option value="02">Февраль</option>
+                            <option value="03">Март</option>
+                            <option value="04">Апрель</option>
+                            <option value="05">Май</option>
+                            <option value="06">Июнь</option>
+                            <option value="07">Июль</option>
+                            <option value="08">Август</option>
+                            <option value="09">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
                         </select>
-                        <input type="number" id="deepAnalysisYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" data-i18n-placeholder="year">
+                        <input type="number" id="deepAnalysisYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                     </div>
                 </div>
                 <div>
-                    <label for="deepAnalysisCategory" class="block mb-2 text-sm font-medium text-gray-300" data-i18n="category_for_comparison"></label>
-                    <input type="text" id="deepAnalysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" data-i18n-placeholder="example_cafe_restaurants">
+                    <label for="deepAnalysisCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
+                    <input type="text" id="deepAnalysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                 </div>
                 <div>
-                    <label for="deepAnalysisModel" class="block mb-2 text-sm font-medium text-gray-300" data-i18n="ai_model_for_analysis"></label>
+                    <label for="deepAnalysisModel" class="block mb-2 text-sm font-medium text-gray-300">Модель ИИ для анализа</label>
                     <select id="deepAnalysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                         <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
@@ -295,51 +269,51 @@
                 </div>
             </div>
             <div class="flex justify-end gap-4 mt-6">
-                <button id="closeDeepAnalysisSettingsButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" data-i18n="cancel"></button>
-                <button id="saveDeepAnalysisSettingsButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-i18n="save"></button>
+                <button id="closeDeepAnalysisSettingsButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
+                <button id="saveDeepAnalysisSettingsButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
             </div>
         </div>
     </div>
 
     <!-- Секция анализа привычек -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4" data-i18n="habit_analysis"></h2>
-        <p class="text-gray-400 mb-4" data-i18n="regular_expenses_habits"></p>
+        <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
+        <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
         <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             <!-- Habit cards will be displayed here -->
         </div>
         <div id="habitsLoading" class="hidden mt-4 text-center text-blue-400">
-            <p data-i18n="habits_analysis_in_progress"></p>
+            <p>Анализ привычек, пожалуйста, подождите...</p>
         </div>
         <div id="habitsPagination" class="flex justify-center items-center mt-4 space-x-2">
-            <button id="prevHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="previous"></button>
-            <span id="habitPageInfo" class="text-gray-400" data-i18n="page_of" data-i18n-options='{"current": 1, "total": 1}'></span>
-            <button id="nextHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="next"></button>
+            <button id="prevHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="habitPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
         </div>
     </section>
 
     <!-- Модальное окно деталей привычки -->
     <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
-            <h2 id="habitDetailTitle" class="text-2xl font-bold text-white mb-4" data-i18n="habit_details"></h2>
+            <h2 id="habitDetailTitle" class="text-2xl font-bold text-white mb-4">Подробности привычки</h2>
             <div class="chart-container" style="height: 40vh;">
                 <canvas id="habitTrendChart"></canvas>
             </div>
-            <button id="closeHabitDetailModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-i18n="close"></button>
+            <button id="closeHabitDetailModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
         </div>
     </div>
 
     <!-- Модальное окно настройки цели -->
     <div id="goalSetupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
-            <h2 class="text-2xl font-bold text-white mb-4" data-i18n="goal_setup"></h2>
+            <h2 class="text-2xl font-bold text-white mb-4">Настройка цели</h2>
             <div class="mb-4 border-b border-gray-700">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="goalTab" role="tablist">
                     <li role="presentation">
-                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" data-tab-target="#manualGoalSetup" data-i18n="set_manually"></button>
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" data-tab-target="#manualGoalSetup">Задать вручную</button>
                     </li>
                     <li role="presentation">
-                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-300" data-tab-target="#recommendedGoalSetup" data-i18n="get_recommendation"></button>
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-300" data-tab-target="#recommendedGoalSetup">Получить рекомендацию</button>
                     </li>
                 </ul>
             </div>
@@ -347,397 +321,87 @@
                 <div class="goal-tab-content" id="manualGoalSetup">
                     <div class="space-y-4">
                         <div>
-                            <label for="goalCategory" class="block mb-2 text-sm font-medium text-gray-300" data-i18n="expense_category"></label>
+                            <label for="goalCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория расходов</label>
                             <select id="goalCategory" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                 <!-- Options will be populated by JS -->
                             </select>
                         </div>
                         <div>
-                            <label for="goalType" class="block mb-2 text-sm font-medium text-gray-300" data-i18n="goal_type"></label>
+                            <label for="goalType" class="block mb-2 text-sm font-medium text-gray-300">Тип цели</label>
                             <select id="goalType" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                <option value="reduce" data-i18n="reduce_expenses_by_percent"></option>
-                                <option value="limit" data-i18n="spend_no_more_than_uah"></option>
+                                <option value="reduce">Сократить расходы на (в %)</option>
+                                <option value="limit">Потратить не более (в грн)</option>
                             </select>
                         </div>
                         <div>
-                            <label for="goalValue" class="block mb-2 text-sm font-medium text-gray-300" data-i18n="value"></label>
-                            <input type="number" id="goalValue" placeholder="Например: 15" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" data-i18n-placeholder="example_15">
+                            <label for="goalValue" class="block mb-2 text-sm font-medium text-gray-300">Значение</label>
+                            <input type="number" id="goalValue" placeholder="Например: 15" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                         </div>
                     </div>
                 </div>
                 <div class="goal-tab-content hidden" id="recommendedGoalSetup">
-                    <p class="text-gray-400 mb-4" data-i18n="get_recommendation_based_on_analysis"></p>
-                    <button id="getGoalRecommendationButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-i18n="get_recommendation"></button>
+                    <p class="text-gray-400 mb-4">Нажмите кнопку, чтобы получить рекомендацию по цели на основе вашего анализа трат.</p>
+                    <button id="getGoalRecommendationButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">Получить рекомендацию</button>
                     <div id="recommendationResult" class="mt-4 p-4 bg-gray-800 rounded-lg hidden">
                         <!-- Recommendation will be displayed here -->
                     </div>
                 </div>
             </div>
             <div class="flex justify-end gap-4 mt-6">
-                <button id="closeGoalModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" data-i18n="close"></button>
-                <button id="saveGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" data-i18n="save"></button>
+                <button id="closeGoalModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+                <button id="saveGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
             </div>
         </div>
     </div>
 
+    <!-- Секция загрузки данных -->
+    
+
     </div>
+
+    <!-- Модальное окно настроек -->
+<div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+        <h2 class="text-2xl font-bold text-white mb-4">Настройки</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300">Тема</label>
+                <div class="flex gap-2">
+                    <button id="lightThemeButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Светлая</button>
+                    <button id="darkThemeButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Темная</button>
+                </div>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300">Язык</label>
+                <div class="flex gap-2">
+                    <button id="ruLangButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Русский</button>
+                    <button id="enLangButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">English</button>
+                </div>
+            </div>
+            <div id="file-upload-section">
+                <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
+                <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
+                <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+                    <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
+                </div>
+                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+                    <input id="skipEmbeddingOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="skipEmbeddingOnUpload" class="ml-3 text-lg font-medium text-gray-300">Не генерировать эмбеддинги при загрузке (для экономии квоты)</label>
+                </div>
+                <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-6">
+            <button id="closeSettingsModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+        </div>
+    </div>
+</div>
 
     <script>
         // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
         document.addEventListener('DOMContentLoaded', function () {
-            // --- i18next Initialization ---
-            i18next
-                .use(i18nextBrowserLanguageDetector)
-                .init({
-                    fallbackLng: 'ru',
-                    debug: true,
-                    resources: {
-                        ru: {
-                            translation: {
-                                "title": "Универсальный Финансовый Отчет",
-                                "all_year": "Весь год",
-                                "january": "Январь",
-                                "february": "Февраль",
-                                "march": "Март",
-                                "april": "Апрель",
-                                "may": "Май",
-                                "june": "Июнь",
-                                "july": "Июль",
-                                "august": "Август",
-                                "september": "Сентябрь",
-                                "october": "Октябрь",
-                                "november": "Ноябрь",
-                                "december": "Декабрь",
-                                "year": "Год",
-                                "current_balance": "Актуальный баланс",
-                                "total_income": "Общий доход",
-                                "total_expenses": "Общие расходы",
-                                "theoretical_savings": "Теоретические сбережения (20%)",
-                                "percent_of_total_income": "20% от общего дохода",
-                                "expenses_vs_income": "Траты vs. Доходы",
-                                "anomalies": "Аномалии",
-                                "atypical_large_expenses": "Нетипичные или крупные траты",
-                                "no_anomalies_found": "Аномалий не найдено.",
-                                "previous": "Предыдущая",
-                                "next": "Следующая",
-                                "page_of": "Страница {{current}} из {{total}}",
-                                "expenses_details": "Детализация расходов",
-                                "by_categories": "По категориям",
-                                "by_stores": "По магазинам",
-                                "expenses_structure": "Структура расходов",
-                                "find_anomalies": "Найти аномалии в данных",
-                                "top_10_expenses_by_stores": "Топ-10 трат по магазинам и сервисам",
-                                "income_sources": "Источники дохода",
-                                "goal_progress": "Прогресс по цели",
-                                "configure": "Настроить",
-                                "goal_not_set": "Цель не задана",
-                                "goal": "Цель",
-                                "comparison_with": "Сравнение с {{month}}",
-                                "latest_transactions": "Последние транзакции",
-                                "date": "Дата",
-                                "category": "Категория",
-                                "payee": "Контрагент",
-                                "amount": "Сумма",
-                                "account": "Счет",
-                                "no_transactions_to_display": "Нет транзакций для отображения.",
-                                "deep_analysis_of_expenses": "Глубокий анализ трат",
-                                "detailed_analysis_ai": "Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.",
-                                "analysis_period_settings": "Анализ будет проведен для месяца и года, выбранных в разделе \"Настройки отображения\" выше.",
-                                "perform_deep_analysis": "Провести глубокий анализ",
-                                "configure_analysis": "Настроить анализ",
-                                "analysis_in_progress": "Анализ выполняется, пожалуйста, подождите...",
-                                "deep_analysis_settings": "Настройки глубокого анализа",
-                                "analysis_period": "Период анализа",
-                                "category_for_comparison": "Категория для сравнительного анализа (опционально)",
-                                "example_cafe_restaurants": "Например: Кафе и рестораны",
-                                "ai_model_for_analysis": "Модель ИИ для анализа",
-                                "cancel": "Отмена",
-                                "save": "Сохранить",
-                                "habit_analysis": "Анализ привычек",
-                                "regular_expenses_habits": "Здесь отображаются ваши регулярные траты, которые могут считаться привычками.",
-                                "habits_analysis_in_progress": "Анализ привычек, пожалуйста, подождите...",
-                                "no_habits_found": "Привычки не найдены для выбранного периода.",
-                                "habit_details": "Подробности привычки",
-                                "close": "Закрыть",
-                                "goal_setup": "Настройка цели",
-                                "set_manually": "Задать вручную",
-                                "get_recommendation": "Получить рекомендацию",
-                                "expense_category": "Категория расходов",
-                                "goal_type": "Тип цели",
-                                "reduce_expenses_by_percent": "Сократить расходы на (в %)",
-                                "spend_no_more_than_uah": "Потратить не более (в грн)",
-                                "value": "Значение",
-                                "example_15": "Например: 15",
-                                "get_recommendation_based_on_analysis": "Нажмите кнопку, чтобы получить рекомендацию по цели на основе вашего анализа трат.",
-                                "analyzing": "Анализируем...",
-                                "loading": "Загрузка...",
-                                "apply_this_goal": "Применить эту цель",
-                                "not_enough_data_for_recommendation": "Недостаточно данных для рекомендации за выбранный период.",
-                                "error_getting_recommendation": "Ошибка при получении рекомендации",
-                                "update_data_from_file": "Обновить данные из файла",
-                                "upload_csv_transactions": "Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.",
-                                "exclude_debts_on_upload": "Исключить категорию \"Долги\" при загрузке",
-                                "skip_embedding_on_upload": "Не генерировать эмбеддинги при загрузке (для экономии квоты)",
-                                "upload_to_database": "Загрузить в базу данных",
-                                "no_data": "Нет данных",
-                                "error": "Ошибка",
-                                "page": "Страница",
-                                "of": "из",
-                                "total_spent": "Всего потрачено",
-                                "times_per_month": "раз за месяц",
-                                "category_label": "Категория",
-                                "details": "Подробнее",
-                                "trend_of_spending": "Динамика трат",
-                                "amount_spent": "Сумма траты",
-                                "analysis_completed": "Поиск аномалий завершен. Найдено: {{anomalies_found}}. Данные на странице будут обновлены.",
-                                "error_detecting_anomalies": "Ошибка при поиске аномалий",
-                                "searching_anomalies": "Идет поиск аномалий, это может занять некоторое время...",
-                                "failed_to_load_transactions": "Не удалось загрузить транзакции",
-                                "failed_to_load_monthly_summary": "Не удалось загрузить сводку по месяцам",
-                                "failed_to_load_habits": "Не удалось загрузить привычки",
-                                "please_select_year_month_for_habits": "Пожалуйста, выберите год и месяц для анализа привычек.",
-                                "failed_to_perform_deep_analysis": "Ошибка при выполнении глубокого анализа",
-                                "please_select_month_year_for_deep_analysis": "Пожалуйста, выберите месяц и год для глубокого анализа.",
-                                "no_suitable_transactions_found": "В файле не найдено подходящих транзакций для загрузки.",
-                                "error_reading_file": "Ошибка при чтении файла.",
-                                "transactions_uploaded_successfully": "Транзакции успешно загружены в Supabase!",
-                                "error_uploading_transactions": "Ошибка при загрузке транзакций",
-                                "network_server_error_upload": "Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.",
-                                "no_transactions_found": "Нет транзакций для отображения.",
-                                "you_saved": "Вы сэкономили",
-                                "you_spent_more": "Вы потратили на {{percent}}% больше",
-                                "no_changes": "Без изменений",
-                                "over_limit": "Перерасход",
-                                "in_norm": "В норме",
-                                "economy": "Экономия",
-                                "overspending": "Перерасход",
-                                "fact": "Факт",
-                                "norm": "Норма",
-                                "display_settings": "Настройки отображения"
-                            }
-                        },
-                        en: {
-                            translation: {
-                                "title": "Universal Financial Report",
-                                "all_year": "All Year",
-                                "january": "January",
-                                "february": "February",
-                                "march": "March",
-                                "april": "April",
-                                "may": "May",
-                                "june": "June",
-                                "july": "July",
-                                "august": "August",
-                                "september": "September",
-                                "october": "October",
-                                "november": "November",
-                                "december": "December",
-                                "year": "Year",
-                                "current_balance": "Current Balance",
-                                "total_income": "Total Income",
-                                "total_expenses": "Total Expenses",
-                                "theoretical_savings": "Theoretical Savings (20%)",
-                                "percent_of_total_income": "20% of total income",
-                                "expenses_vs_income": "Expenses vs. Income",
-                                "anomalies": "Anomalies",
-                                "atypical_large_expenses": "Atypical or large expenses",
-                                "no_anomalies_found": "No anomalies found.",
-                                "previous": "Previous",
-                                "next": "Next",
-                                "page_of": "Page {{current}} of {{total}}",
-                                "expenses_details": "Expense Details",
-                                "by_categories": "By Categories",
-                                "by_stores": "By Stores",
-                                "expenses_structure": "Expense Structure",
-                                "find_anomalies": "Find anomalies in data",
-                                "top_10_expenses_by_stores": "Top 10 expenses by stores and services",
-                                "income_sources": "Income Sources",
-                                "goal_progress": "Goal Progress",
-                                "configure": "Configure",
-                                "goal_not_set": "Goal not set",
-                                "goal": "Goal",
-                                "comparison_with": "Comparison with {{month}}",
-                                "latest_transactions": "Latest Transactions",
-                                "date": "Date",
-                                "category": "Category",
-                                "payee": "Payee",
-                                "amount": "Amount",
-                                "account": "Account",
-                                "no_transactions_to_display": "No transactions to display.",
-                                "deep_analysis_of_expenses": "Deep Analysis of Expenses",
-                                "detailed_analysis_ai": "Get a detailed analysis of your expenses for the selected month using AI.",
-                                "analysis_period_settings": "Analysis will be performed for the month and year selected in the \"Display Settings\" section above.",
-                                "perform_deep_analysis": "Perform Deep Analysis",
-                                "configure_analysis": "Configure Analysis",
-                                "analysis_in_progress": "Analysis in progress, please wait...",
-                                "deep_analysis_settings": "Deep Analysis Settings",
-                                "analysis_period": "Analysis Period",
-                                "category_for_comparison": "Category for comparative analysis (optional)",
-                                "example_cafe_restaurants": "E.g.: Cafes and Restaurants",
-                                "ai_model_for_analysis": "AI Model for Analysis",
-                                "cancel": "Cancel",
-                                "save": "Save",
-                                "habit_analysis": "Habit Analysis",
-                                "regular_expenses_habits": "This section displays your regular expenses that can be considered habits.",
-                                "habits_analysis_in_progress": "Habit analysis in progress, please wait...",
-                                "no_habits_found": "No habits found for the selected period.",
-                                "habit_details": "Habit Details",
-                                "close": "Close",
-                                "goal_setup": "Goal Setup",
-                                "set_manually": "Set Manually",
-                                "get_recommendation": "Get Recommendation",
-                                "expense_category": "Expense Category",
-                                "goal_type": "Goal Type",
-                                "reduce_expenses_by_percent": "Reduce expenses by (%)",
-                                "spend_no_more_than_uah": "Spend no more than (UAH)",
-                                "value": "Value",
-                                "example_15": "E.g.: 15",
-                                "get_recommendation_based_on_analysis": "Click the button to get a goal recommendation based on your expense analysis.",
-                                "analyzing": "Analyzing...",
-                                "loading": "Loading...",
-                                "apply_this_goal": "Apply this goal",
-                                "not_enough_data_for_recommendation": "Not enough data for recommendation for the selected period.",
-                                "error_getting_recommendation": "Error getting recommendation",
-                                "update_data_from_file": "Update data from file",
-                                "upload_csv_transactions": "Upload a CSV file to add new transactions to the database. Existing transactions will be ignored.",
-                                "exclude_debts_on_upload": "Exclude \"Debts\" category on upload",
-                                "skip_embedding_on_upload": "Do not generate embeddings on upload (to save quota)",
-                                "upload_to_database": "Upload to database",
-                                "no_data": "No data",
-                                "error": "Error",
-                                "page": "Page",
-                                "of": "of",
-                                "total_spent": "Total spent",
-                                "times_per_month": "times per month",
-                                "category_label": "Category",
-                                "details": "Details",
-                                "trend_of_spending": "Spending Trend",
-                                "amount_spent": "Amount spent",
-                                "analysis_completed": "Anomaly search completed. Found: {{anomalies_found}}. Data on the page will be updated.",
-                                "error_detecting_anomalies": "Error detecting anomalies",
-                                "searching_anomalies": "Searching for anomalies, this may take some time...",
-                                "failed_to_load_transactions": "Failed to load transactions",
-                                "failed_to_load_monthly_summary": "Failed to load monthly summary",
-                                "failed_to_load_habits": "Failed to load habits",
-                                "please_select_year_month_for_habits": "Please select year and month for habit analysis.",
-                                "failed_to_perform_deep_analysis": "Failed to perform deep analysis",
-                                "please_select_month_year_for_deep_analysis": "Please select month and year for deep analysis.",
-                                "no_suitable_transactions_found": "No suitable transactions found in the file for upload.",
-                                "error_reading_file": "Error reading file.",
-                                "transactions_uploaded_successfully": "Transactions successfully uploaded to Supabase!",
-                                "error_uploading_transactions": "Error uploading transactions",
-                                "network_server_error_upload": "An error occurred during transaction upload. Check console for details.",
-                                "no_transactions_found": "No transactions to display.",
-                                "you_saved": "You saved",
-                                "you_spent_more": "You spent {{percent}}% more",
-                                "no_changes": "No changes",
-                                "over_limit": "Over Limit",
-                                "in_norm": "In Norm",
-                                "economy": "Economy",
-                                "overspending": "Overspending",
-                                "fact": "Fact",
-                                "norm": "Norm",
-                                "display_settings": "Display Settings"
-                            }
-                        }
-                    },
-                    detection: {
-                        order: ['localStorage', 'navigator'],
-                        caches: ['localStorage']
-                    }
-                }, function(err, t) {
-                    if (err) return console.log('something went wrong loading', err);
-                    updateContent();
-                });
-
-            function updateContent() {
-                document.querySelectorAll('[data-i18n]').forEach(element => {
-                    const key = element.getAttribute('data-i18n');
-                    element.textContent = i18next.t(key);
-                });
-                document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-                    const key = element.getAttribute('data-i18n-placeholder');
-                    element.placeholder = i18next.t(key);
-                });
-                // Update specific elements that are not just textContent
-                document.title = i18next.t('title');
-                // Update month options
-                const monthOptions = [
-                    { value: "", key: "all_year" },
-                    { value: "01", key: "january" }, { value: "02", key: "february" }, { value: "03", key: "march" },
-                    { value: "04", key: "april" }, { value: "05", key: "may" }, { value: "06", key: "june" },
-                    { value: "07", key: "july" }, { value: "08", key: "august" }, { value: "09", key: "september" },
-                    { value: "10", key: "october" }, { value: "11", key: "november" }, { value: "12", key: "december" }
-                ];
-                filterMonthSelect.innerHTML = monthOptions.map(opt => `<option value="${opt.value}" data-i18n="${opt.key}">${i18next.t(opt.key)}</option>`).join('');
-                deepAnalysisMonthSelect.innerHTML = monthOptions.map(opt => `<option value="${opt.value}" data-i18n="${opt.key}">${i18next.t(opt.key)}</option>`).join('');
-
-                // Re-render dynamic content that uses translations
-                renderAnomalies(allAnomalies);
-                renderHabits(allHabits);
-                renderTransactionsTable(allTransactions);
-                updateGoalProgress();
-                // Re-render legends and lists to update translated texts
-                // This might require re-fetching data or passing current data to re-render functions
-                // For simplicity, we'll re-fetch transactions which will trigger full re-render
-                fetchAndRenderTransactions();
-            }
-
-            const languageSwitcher = document.getElementById('languageSwitcher');
-            languageSwitcher.addEventListener('change', function() {
-                i18next.changeLanguage(this.value, (err, t) => {
-                    if (err) return console.log('something went wrong changing language', err);
-                    updateContent();
-                    localStorage.setItem('language', this.value); // Save selected language
-                });
-            });
-
-            // Set initial language from localStorage or detected
-            const savedLanguage = localStorage.getItem('language');
-            if (savedLanguage) {
-                languageSwitcher.value = savedLanguage;
-                i18next.changeLanguage(savedLanguage, (err, t) => {
-                    if (err) return console.log('something went wrong setting initial language', err);
-                    updateContent();
-                });
-            } else {
-                // If no saved language, let detector decide and then update content
-                updateContent();
-            }
-
-            // Theme Toggle Logic
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-
-            function applyTheme(theme) {
-                if (theme === 'light') {
-                    body.classList.add('light-theme');
-                    themeToggle.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9 9 0 008.354-5.646z" />
-                        </svg>
-                    `; // Moon icon for dark theme
-                } else {
-                    body.classList.remove('light-theme');
-                    themeToggle.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M3 12h1m15.325-7.757l-.707-.707M4.343 19.071l-.707.707m14.324-.707l.707.707M4.343 4.343l.707.707"/>
-                        </svg>
-                    `; // Sun icon for light theme
-                }
-                localStorage.setItem('theme', theme);
-            }
-
-            // Apply saved theme on load
-            const savedTheme = localStorage.getItem('theme') || 'dark'; // Default to dark
-            applyTheme(savedTheme);
-
-            themeToggle.addEventListener('click', () => {
-                const currentTheme = body.classList.contains('light-theme') ? 'light' : 'dark';
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                applyTheme(newTheme);
-            });
-
             // --- Ссылки на DOM-элементы ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
@@ -897,7 +561,7 @@
                     const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
-                        throw new Error(err.error || i18next.t('failed_to_load_transactions'));
+                        throw new Error(err.error || 'Failed to fetch transactions');
                     }
                     const { transactions } = await response.json();
                     
@@ -908,7 +572,7 @@
 
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
-                    alert(`${i18next.t('failed_to_load_transactions')}: ${error.message}`);
+                    alert(`Не удалось загрузить транзакции: ${error.message}`);
                 }
             }
 
@@ -919,8 +583,8 @@
 
                 if (!selectedYear || !selectedMonth) {
                     // Очищаем поля, если нет выбранного месяца/года
-                    incomeChangeEl.textContent = i18next.t('no_data');
-                    expensesChangeEl.textContent = i18next.t('no_data');
+                    incomeChangeEl.textContent = 'Нет данных';
+                    expensesChangeEl.textContent = 'Нет данных';
                     return;
                 }
 
@@ -957,9 +621,9 @@
 
                 } catch (error) {
                     console.error('Error fetching monthly summary:', error);
-                    alert(`${i18next.t('failed_to_load_monthly_summary')}: ${error.message}`);
-                    incomeChangeEl.textContent = i18next.t('error');
-                    expensesChangeEl.textContent = i18next.t('error');
+                    alert(`Не удалось загрузить сводку по месяцам: ${error.message}`);
+                    incomeChangeEl.textContent = 'Ошибка';
+                    expensesChangeEl.textContent = 'Ошибка';
                 }
             }
 
@@ -969,12 +633,11 @@
                 const selectedYear = filterYearInput.value;
 
                 if (!selectedYear || !selectedMonth) {
-                    habitsResultDiv.innerHTML = `<p class="text-gray-400 col-span-full">${i18next.t('please_select_year_month_for_habits')}</p>`;
+                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Пожалуйста, выберите год и месяц для анализа привычек.</p>';
                     return;
                 }
 
                 habitsLoadingDiv.classList.remove('hidden'); // Показываем индикатор загрузки
-                habitsLoadingDiv.querySelector('p').textContent = i18next.t('habits_analysis_in_progress');
                 const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
                 try {
@@ -989,7 +652,7 @@
                     renderHabits(allHabits); // Отображаем первую страницу привычек
                 } catch (error) {
                     console.error('Error fetching habits:', error);
-                    alert(`${i18next.t('failed_to_load_habits')}: ${error.message}`);
+                    alert(`Не удалось загрузить привычки: ${error.message}`);
                 } finally {
                     habitsLoadingDiv.classList.add('hidden'); // Скрываем индикатор загрузки
                 }
@@ -999,8 +662,8 @@
             function renderHabits(habits) {
                 habitsResultDiv.innerHTML = '';
                 if (habits.length === 0) {
-                    habitsResultDiv.innerHTML = `<p class="text-gray-400 col-span-full">${i18next.t('no_habits_found')}</p>`;
-                    habitPageInfoEl.textContent = `${i18next.t('page')} 0 ${i18next.t('of')} 0`;
+                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Привычки не найдены для выбранного периода.</p>';
+                    habitPageInfoEl.textContent = 'Страница 0 из 0';
                     prevHabitPageBtn.disabled = true;
                     nextHabitPageBtn.disabled = true;
                     return;
@@ -1036,20 +699,20 @@
                                 <h3 class="text-lg font-semibold text-gray-300">${habit.payee}</h3>
                                 <span class="text-2xl">${icon}</span>
                             </div>
-                            <p class="text-gray-400 text-sm" data-i18n="total_spent">${i18next.t('total_spent')}</p>
+                            <p class="text-gray-400 text-sm">Всего потрачено</p>
                             <p class="text-2xl font-bold text-blue-400">${parseFloat(habit.totalSpent).toLocaleString('ru-RU')} грн</p>
                             <div class="flex justify-between items-center text-sm text-gray-400 mt-1">
-                                <span data-i18n="times_per_month" data-i18n-options='{"count": ${habit.count}}'>${i18next.t('times_per_month', { count: habit.count })}</span>
+                                <span>${habit.count} раз за месяц</span>
                                 <span class="${trendColor}">${trendArrow} ${Math.abs(habit.trend)}%</span>
                             </div>
-                            <p class="text-sm text-gray-500 mt-1" data-i18n="category_label" data-i18n-options='{"category": "${habit.category}"}'>${i18next.t('category_label', { category: habit.category })}</p>
+                            <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
                         </div>
-                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${habit.payee}" data-habit='${JSON.stringify(habit)}' data-i18n="details">${i18next.t('details')}</button>
+                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${habit.payee}" data-habit='${JSON.stringify(habit)}'>Подробнее</button>
                     `;
                     habitsResultDiv.appendChild(habitCard);
                 });
 
-                habitPageInfoEl.textContent = `${i18next.t('page')} ${currentHabitPage} ${i18next.t('of')} ${totalPages}`;
+                habitPageInfoEl.textContent = `Страница ${currentHabitPage} из ${totalPages}`;
                 prevHabitPageBtn.disabled = currentHabitPage === 1;
                 nextHabitPageBtn.disabled = currentHabitPage === totalPages;
             }
@@ -1063,13 +726,12 @@
                 const analysisModel = deepAnalysisModelSelect.value;
 
                 if (!selectedMonth || !selectedYear) {
-                    alert(i18next.t('please_select_month_year_for_deep_analysis'));
+                    alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
                     return;
                 }
 
                 analysisResultDiv.textContent = '';
                 analysisLoadingDiv.classList.remove('hidden');
-                analysisLoadingDiv.querySelector('p').textContent = i18next.t('analysis_in_progress');
 
                 const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
                 if (analysisCategory) {
@@ -1086,10 +748,9 @@
                     analysisResultDiv.textContent = analysis;
                 } catch (error) {
                     console.error('Error performing deep analysis:', error);
-                    analysisResultDiv.textContent = `${i18next.t('failed_to_perform_deep_analysis')}: ${error.message}`;
+                    analysisResultDiv.textContent = `Ошибка при выполнении глубокого анализа: ${error.message}`;
                 } finally {
                     analysisLoadingDiv.classList.add('hidden');
-                    analysisLoadingDiv.querySelector('p').textContent = i18next.t('analysis_in_progress'); // Сбрасываем текст
                 }
             }
 
@@ -1097,7 +758,7 @@
             async function detectAnomalies() {
                 analysisResultDiv.textContent = '';
                 analysisLoadingDiv.classList.remove('hidden');
-                analysisLoadingDiv.querySelector('p').textContent = i18next.t('searching_anomalies');
+                analysisLoadingDiv.querySelector('p').textContent = 'Идет поиск аномалий, это может занять некоторое время...';
 
                 try {
                     // Отправляем запрос на сервер для обнаружения аномалий
@@ -1107,14 +768,14 @@
                         throw new Error(err.error || 'Failed to detect anomalies');
                     }
                     const result = await response.json();
-                    alert(i18next.t('analysis_completed', { anomalies_found: result.anomalies_found }));
+                    alert(`Поиск аномалий завершен. Найдено: ${result.anomalies_found}. Данные на странице будут обновлены.`);
                     fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать аномалии
                 } catch (error) {
                     console.error('Error detecting anomalies:', error);
-                    alert(`${i18next.t('error_detecting_anomalies')}: ${error.message}`);
+                    alert(`Ошибка при поиске аномалий: ${error.message}`);
                 } finally {
                     analysisLoadingDiv.classList.add('hidden');
-                    analysisLoadingDiv.querySelector('p').textContent = i18next.t('analysis_in_progress'); // Сбрасываем текст
+                    analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Сбрасываем текст
                 }
             }
 
@@ -1192,7 +853,7 @@
                 const expenseDataByStoreChart = {
                     labels: sortedExpensesByPayee.map(([payee]) => payee),
                     datasets: [{
-                        label: i18next.t('total_expenses'),
+                        label: 'Расходы',
                         data: sortedExpensesByPayee.map(([, amount]) => amount),
                         backgroundColor: COLORS.slice(0, sortedExpensesByPayee.length),
                         borderColor: '#1f2937',
@@ -1202,10 +863,10 @@
                 
                 const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
                 const trendData = {
-                    labels: sortedDates.map(date => new Date(date).toLocaleDateString(i18next.language, { day: 'numeric', month: 'short' })),
+                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })),
                     datasets: [
                         {
-                            label: i18next.t('total_income'),
+                            label: 'Доходы',
                             data: sortedDates.map(date => dailyData[date].income),
                             borderColor: '#22c55e', // green-500
                             backgroundColor: 'rgba(34, 197, 94, 0.2)',
@@ -1213,7 +874,7 @@
                             tension: 0.4
                         },
                         {
-                            label: i18next.t('total_expenses'),
+                            label: 'Расходы',
                             data: sortedDates.map(date => dailyData[date].expenses),
                             borderColor: '#ef4444', // red-500
                             backgroundColor: 'rgba(239, 68, 68, 0.2)',
@@ -1236,16 +897,16 @@
                 updateGoalProgress(); // Теперь вызывается здесь, когда allTransactions точно определены
                 // renderForecastChart(transactions); // Removed
                 renderSparklines(transactions);
-                theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString(i18next.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% ${i18next.t('percent_of_total_income')}`;
+                theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
             }
 
             // Функция для отображения аномалий с пагинацией
             function renderAnomalies(anomalies) {
                 anomaliesListEl.innerHTML = '';
                 if (anomalies.length === 0) {
-                    anomaliesListEl.innerHTML = `<p class="text-gray-500">${i18next.t('no_anomalies_found')}</p>`;
-                    anomalyPageInfoEl.textContent = `${i18next.t('page')} 0 ${i18next.t('of')} 0`;
+                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
+                    anomalyPageInfoEl.textContent = 'Страница 0 из 0';
                     prevAnomalyPageBtn.disabled = true;
                     nextAnomalyPageBtn.disabled = true;
                     return;
@@ -1264,14 +925,14 @@
                     anomalyEl.innerHTML = `
                         <div class="flex justify-between items-center">
                             <span class="font-semibold text-white">${anomaly.payee}</span>
-                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString(i18next.language)} грн</span>
+                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
                         </div>
                         <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
                     `;
                     anomaliesListEl.appendChild(anomalyEl);
                 });
 
-                anomalyPageInfoEl.textContent = `${i18next.t('page')} ${currentAnomalyPage} ${i18next.t('of')} ${totalPages}`;
+                anomalyPageInfoEl.textContent = `Страница ${currentAnomalyPage} из ${totalPages}`;
                 prevAnomalyPageBtn.disabled = currentAnomalyPage === 1;
                 nextAnomalyPageBtn.disabled = currentAnomalyPage === totalPages;
             }
@@ -1279,7 +940,7 @@
             // --- Обработка файла и фильтрация ---
             function handleFileProcessing() {
                 if (csvFile.files.length === 0) {
-                    alert(i18next.t('please_select_csv_file'));
+                    alert('Пожалуйста, выберите CSV файл.');
                     return;
                 }
 
@@ -1326,7 +987,7 @@
                     }));
 
                     if (transactionData.length === 0) {
-                        alert(i18next.t('no_suitable_transactions_found'));
+                        alert('В файле не найдено подходящих транзакций для загрузки.');
                         return;
                     }
                     
@@ -1335,7 +996,7 @@
                 };
 
                 reader.onerror = () => {
-                    alert(i18next.t('error_reading_file'));
+                    alert('Ошибка при чтении файла.');
                 };
 
                 reader.readAsText(file, 'UTF-8');
@@ -1345,8 +1006,8 @@
                 const tableBody = document.getElementById('transactionsTableBody');
                 tableBody.innerHTML = '';
                 if (transactions.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">${i18next.t('no_transactions_to_display')}</td></tr>`;
-                    transactionPageInfoEl.textContent = `${i18next.t('page')} 0 ${i18next.t('of')} 0`;
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Нет транзакций для отображения.</td></tr>`;
+                    transactionPageInfoEl.textContent = 'Страница 0 из 0';
                     prevTransactionPageBtn.disabled = true;
                     nextTransactionPageBtn.disabled = true;
                     return;
@@ -1366,10 +1027,10 @@
                     const sign = t.income > 0 ? '+' : '-';
 
                     row.innerHTML = `
-                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${new Date(t.date).toLocaleDateString(i18next.language)}</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${new Date(t.date).toLocaleDateString('ru-RU')}</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.categoryName}</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.payee || 'N/A'}</td>
-                        <td class="p-3 md:p-4 border-b border-gray-700 text-left ${amountClass} font-semibold">${sign}${amount.toLocaleString(i18next.language)} грн</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left ${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
                     `;
                     tableBody.appendChild(row);
@@ -1380,7 +1041,7 @@
                     row.classList.add('hover:bg-gray-700');
                 });
 
-                transactionPageInfoEl.textContent = `${i18next.t('page')} ${currentTransactionPage} ${i18next.t('of')} ${totalPages}`;
+                transactionPageInfoEl.textContent = `Страница ${currentTransactionPage} из ${totalPages}`;
                 prevTransactionPageBtn.disabled = currentTransactionPage === 1;
                 nextTransactionPageBtn.disabled = currentTransactionPage === totalPages;
             }
@@ -1394,21 +1055,21 @@
                 const comparisonMonthTextEl = document.getElementById('comparisonMonthText');
 
                 if (!goal) {
-                    goalDescriptionEl.textContent = i18next.t('goal_not_set');
+                    goalDescriptionEl.textContent = 'Цель не задана';
                     goalProgressBar.style.width = '0%';
                     goalProgressText.textContent = '0%';
-                    goalTargetText.textContent = `${i18next.t('goal')}: -`;
+                    goalTargetText.textContent = 'Цель: -';
                     comparisonMonthTextEl.textContent = '';
                     return;
                 }
 
                 // Update UI with goal details
                 if (goal.type === 'reduce') {
-                    goalDescriptionEl.textContent = `${i18next.t('reduce_expenses_by_percent')} "${goal.category}" на ${goal.value}%`;
-                    goalTargetText.textContent = `${i18next.t('goal')}: ${goal.value}%`;
+                    goalDescriptionEl.textContent = `Снизить траты в категории "${goal.category}" на ${goal.value}%`;
+                    goalTargetText.textContent = `Цель: ${goal.value}%`;
                 } else {
-                    goalDescriptionEl.textContent = `${i18next.t('spend_no_more_than_uah')} ${goal.value} грн в категории "${goal.category}"`;
-                    goalTargetText.textContent = `${i18next.t('goal')}: ${goal.value} грн`;
+                    goalDescriptionEl.textContent = `Потратить не более ${goal.value} грн в категории "${goal.category}"`;
+                    goalTargetText.textContent = `Цель: ${goal.value} грн`;
                 }
 
                 const selectedMonth = filterMonthSelect.value;
@@ -1438,23 +1099,23 @@
                     goalProgressBar.style.width = `${displayProgress1}%`;
                     
                     if (goal.type === 'limit') {
-                        goalProgressText.textContent = `${currentValue.toLocaleString(i18next.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                        goalTargetText.textContent = `${i18next.t('goal')}: ${targetValue.toLocaleString(i18next.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                        goalProgressText.textContent = `${currentValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                        goalTargetText.textContent = `Цель: ${targetValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                     } else if (goal.type === 'reduce') {
                         let progressText = '';
                         if (progress2 > 0) {
-                            progressText = `${i18next.t('you_saved')} ${progress2.toFixed(1)}%`;
+                            progressText = `Вы сэкономили ${progress2.toFixed(1)}%`;
                         } else if (progress2 < 0) {
-                            progressText = `${i18next.t('you_spent_more', { percent: Math.abs(progress2).toFixed(1) })}%`;
+                            progressText = `Вы потратили на ${Math.abs(progress2).toFixed(1)}% больше`;
                         } else {
-                            progressText = i18next.t('no_changes');
+                            progressText = `Без изменений`;
                         }
                         goalProgressText.textContent = progressText;
-                        goalTargetText.textContent = `${i18next.t('goal')}: ${targetValue}%`;
+                        goalTargetText.textContent = `Цель: ${targetValue}%`;
                     }
 
                     if (comparisonMonth) {
-                        comparisonMonthTextEl.textContent = `${i18next.t('comparison_with', { month: comparisonMonth })}`;
+                        comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
                     } else {
                         comparisonMonthTextEl.textContent = '';
                     }
@@ -1469,7 +1130,7 @@
 
                 } catch (error) {
                     console.error('Error fetching goal progress:', error);
-                    goalProgressText.textContent = i18next.t('error');
+                    goalProgressText.textContent = 'Ошибка';
                     comparisonMonthTextEl.textContent = '';
                 }
             }
@@ -1586,7 +1247,7 @@
                 function updateNetBalanceChangeText(element, change) {
                     if (isNaN(change) || !isFinite(change)) {
                         element.className = 'text-sm font-semibold text-gray-400';
-                        element.textContent = i18next.t('no_data');
+                        element.textContent = 'Нет данных';
                     } else if (change > 0) {
                         element.className = 'text-sm font-semibold text-green-400';
                         element.textContent = `+${change.toFixed(1)}%`;
@@ -1603,7 +1264,7 @@
                     const netBalanceChange = calculateNetBalanceChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
                     updateNetBalanceChangeText(netBalanceChangeEl, netBalanceChange);
                 } else {
-                    netBalanceChangeEl.textContent = i18next.t('no_data');
+                    netBalanceChangeEl.textContent = 'Нет данных';
                 }
 
                 const sparklineOptions = {
@@ -1630,6 +1291,72 @@
                     type: 'line',
                     data: { labels: labelsForSparklines, datasets: [{ data: expensesData, borderColor: '#ef4444', borderWidth: 1 }] },
                     options: sparklineOptions
+                });
+            }
+
+            // --- Функции рендеринга ---
+            function renderCharts(expenseDataByCategory, expenseDataByStore, trendData) {
+                if (expensesChart) expensesChart.destroy();
+                if (storesChart) storesChart.destroy();
+                if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
+                const ctxCategory = document.getElementById('expensesChart').getContext('2d');
+                expensesChart = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: expenseDataByCategory,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxStore = document.getElementById('storesChart').getContext('2d');
+                storesChart = new Chart(ctxStore, {
+                    type: 'bar',
+                    data: expenseDataByStore,
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                        },
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxTrend = document.getElementById('spendIncomeTrendChart').getContext('2d');
+                spendIncomeTrendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: trendData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { 
+                                beginAtZero: true, // Начинаем ось Y с нуля
+                                ticks: { 
+                                    color: '#9ca3af',
+                                    callback: function(value, index, values) {
+                                        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                                    }
+                                }, 
+                                grid: { color: '#374151' } 
+                            }
+                        },
+                        plugins: { 
+                            legend: { 
+                                position: 'top',
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                             }, 
+                            tooltip: tooltipPlugin 
+                        }
+                    }
                 });
             }
 
@@ -1662,22 +1389,22 @@
                         const standardRange = getStandardPercentage(label);
 
                         let progressBarColor = 'bg-gray-500';
-                        let comparisonText = `${i18next.t('fact')}: ${actualPercentage.toFixed(1)}%`;
+                        let comparisonText = `Факт: ${actualPercentage.toFixed(1)}%`;
                         let barWidth = actualPercentage;
 
                         if (standardRange !== null) {
                             const [minStandard, maxStandard] = standardRange.map(p => p * 100);
-                            comparisonText += ` | ${i18next.t('norm')}: ${minStandard.toFixed(1)}% - ${maxStandard.toFixed(1)}%`;
+                            comparisonText += ` | Норма: ${minStandard.toFixed(1)}% - ${maxStandard.toFixed(1)}%`;
 
                             if (actualPercentage > maxStandard + 0.5) {
                                 progressBarColor = 'bg-red-500';
-                                comparisonText += ` (${i18next.t('overspending')})`;
+                                comparisonText += ` (Перерасход)`;
                             } else if (actualPercentage < minStandard - 0.5) {
                                 progressBarColor = 'bg-green-500';
-                                comparisonText += ` (${i18next.t('economy')})`;
+                                comparisonText += ` (Экономия)`;
                             } else {
                                 progressBarColor = 'bg-blue-500';
-                                comparisonText += ` (${i18next.t('in_norm')})`;
+                                comparisonText += ` (В норме)`;
                             }
                             
                             const referenceValue = Math.max(maxStandard, actualPercentage);
@@ -1694,7 +1421,7 @@
                         // Build the combined tooltip content
                         let combinedTooltipHtml = `<div class="font-semibold mb-1">${comparisonText}</div>`;
                         if (isCategoryAnomalous) {
-                            combinedTooltipHtml += `<div class="mt-2 pt-2 border-t border-slate-500"><h4 class="font-bold text-orange-400 mb-1">${i18next.t('anomalies')}:</h4>${anomalyReason}</div>`;
+                            combinedTooltipHtml += `<div class="mt-2 pt-2 border-t border-slate-500"><h4 class="font-bold text-orange-400 mb-1">Аномалии:</h4>${anomalyReason}</div>`;
                         }
 
                         const legendItem = document.createElement('div');
@@ -1706,7 +1433,7 @@
                                 <div class="flex-grow min-w-0">
                                     <div class="flex justify-between items-center">
                                         <span class="text-gray-300 mr-2 truncate">${label}</span>
-                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString(i18next.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
+                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
                                     </div>
                                     <div class="w-full bg-gray-700 rounded-full h-4 mt-1 relative">
                                         <div class="${progressBarColor} h-4 rounded-full flex items-center justify-center" style="width: ${barWidth}%">
@@ -1736,7 +1463,7 @@
                     incomeData.forEach(item => {
                         const percentage = (item.amount / totalIncomeForList) * 100;
                         const incomeElement = document.createElement('div');
-                        incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString(i18next.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
+                        incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
                         incomeListContainer.appendChild(incomeElement);
                     });
                 }
@@ -1786,7 +1513,7 @@
                 };
 
                 if (!goal.category || !goal.type || isNaN(goal.value)) {
-                    alert(i18next.t('please_fill_all_fields_correctly'));
+                    alert('Пожалуйста, заполните все поля корректно.');
                     return;
                 }
 
@@ -1800,15 +1527,15 @@
                 const selectedYear = filterYearInput.value;
 
                 if (!selectedYear || !selectedMonth) {
-                    alert(i18next.t('please_select_year_month_for_recommendation'));
+                    alert('Пожалуйста, выберите год и месяц для получения рекомендации.');
                     return;
                 }
                 
                 console.log(`Requesting recommendation for ${selectedMonth}/${selectedYear}...`);
-                getGoalRecommendationButton.textContent = i18next.t('analyzing');
+                getGoalRecommendationButton.textContent = 'Анализируем...';
                 getGoalRecommendationButton.disabled = true;
                 recommendationResultDiv.classList.remove('hidden');
-                recommendationResultDiv.innerHTML = `<p class="text-gray-400">${i18next.t('loading')}</p>`;
+                recommendationResultDiv.innerHTML = `<p class="text-gray-400">Загрузка...</p>`;
 
                 try {
                     const response = await fetch(`/api/recommend-goal?year=${selectedYear}&month=${selectedMonth}`);
@@ -1825,7 +1552,7 @@
                         console.log('Displaying recommendation:', recommendation);
                         recommendationResultDiv.innerHTML = `
                             <p class="text-gray-300">${recommendation.reason}</p>
-                            <button id="applyRecommendationButton" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-i18n="apply_this_goal">${i18next.t('apply_this_goal')}</button>
+                            <button id="applyRecommendationButton" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Применить эту цель</button>
                         `;
                         document.getElementById('applyRecommendationButton').addEventListener('click', () => {
                             const goalToStore = {
@@ -1839,14 +1566,14 @@
                         });
                     } else {
                         console.log('No recommendation available.');
-                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">${i18next.t('not_enough_data_for_recommendation')}</p>`;
+                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">Недостаточно данных для рекомендации за выбранный период.</p>`;
                     }
 
                 } catch (error) {
                     console.error('Error getting recommendation:', error);
-                    recommendationResultDiv.innerHTML = `<p class="text-red-400">${i18next.t('error_getting_recommendation')}: ${error.message}</p>`;
+                    recommendationResultDiv.innerHTML = `<p class="text-red-400">Ошибка при получении рекомендации: ${error.message}</p>`;
                 } finally {
-                    getGoalRecommendationButton.textContent = i18next.t('get_recommendation');
+                    getGoalRecommendationButton.textContent = 'Получить рекомендацию';
                     getGoalRecommendationButton.disabled = false;
                 }
             });
@@ -1871,6 +1598,103 @@
 
             // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
+
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettingsModalButton = document.getElementById('closeSettingsModalButton');
+            const lightThemeButton = document.getElementById('lightThemeButton');
+            const darkThemeButton = document.getElementById('darkThemeButton');
+            const ruLangButton = document.getElementById('ruLangButton');
+            const enLangButton = document.getElementById('enLangButton');
+
+            settingsButton.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+                settingsModal.classList.add('flex');
+            });
+
+            closeSettingsModalButton.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+                settingsModal.classList.remove('flex');
+            });
+
+            lightThemeButton.addEventListener('click', () => {
+                document.body.classList.remove('bg-[#0D1117]', 'text-[#c9d1d9]');
+                document.body.classList.add('bg-white', 'text-black');
+            });
+
+            darkThemeButton.addEventListener('click', () => {
+                document.body.classList.remove('bg-white', 'text-black');
+                document.body.classList.add('bg-[#0D1117]', 'text-[#c9d1d9]');
+            });
+
+            i18next.init({
+                lng: 'ru',
+                debug: true,
+                resources: {
+                    en: {
+                        translation: {
+                            "settings": "Settings",
+                            "theme": "Theme",
+                            "light": "Light",
+                            "dark": "Dark",
+                            "language": "Language",
+                            "russian": "Русский",
+                            "english": "English",
+                            "update_data": "Update data from file",
+                            "upload_csv": "Upload a CSV file to add new transactions to the database. Existing transactions will be ignored.",
+                            "exclude_debts": "Exclude 'Debts' category on upload",
+                            "skip_embedding": "Do not generate embeddings on upload (to save quota)",
+                            "upload_to_db": "Upload to database",
+                            "close": "Close"
+                        }
+                    },
+                    ru: {
+                        translation: {
+                            "settings": "Настройки",
+                            "theme": "Тема",
+                            "light": "Светлая",
+                            "dark": "Темная",
+                            "language": "Язык",
+                            "russian": "Русский",
+                            "english": "English",
+                            "update_data": "Обновить данные из файла",
+                            "upload_csv": "Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.",
+                            "exclude_debts": "Исключить категорию \"Долги\" при загрузке",
+                            "skip_embedding": "Не генерировать эмбеддинги при загрузке (для экономии квоты)",
+                            "upload_to_db": "Загрузить в базу данных",
+                            "close": "Закрыть"
+                        }
+                    }
+                }
+            }, function(err, t) {
+                updateContent();
+            });
+
+            function updateContent() {
+                document.getElementById('settingsButton').innerHTML = i18next.t('settings');
+                document.querySelector('#settingsModal h2').innerHTML = i18next.t('settings');
+                document.querySelector('#settingsModal label:nth-child(1)').innerHTML = i18next.t('theme');
+                document.getElementById('lightThemeButton').innerHTML = i18next.t('light');
+                document.getElementById('darkThemeButton').innerHTML = i18next.t('dark');
+                document.querySelector('#settingsModal label:nth-child(2)').innerHTML = i18next.t('language');
+                document.getElementById('ruLangButton').innerHTML = i18next.t('russian');
+                document.getElementById('enLangButton').innerHTML = i18next.t('english');
+                document.querySelector('#file-upload-section h2').innerHTML = i18next.t('update_data');
+                document.querySelector('#file-upload-section p').innerHTML = i18next.t('upload_csv');
+                document.querySelector('label[for="excludeDebtsOnUpload"]').innerHTML = i18next.t('exclude_debts');
+                document.querySelector('label[for="skipEmbeddingOnUpload"]').innerHTML = i18next.t('skip_embedding');
+                document.getElementById('processDataButton').innerHTML = i18next.t('upload_to_db');
+                document.getElementById('closeSettingsModalButton').innerHTML = i18next.t('close');
+            }
+
+            ruLangButton.addEventListener('click', () => {
+                i18next.changeLanguage('ru', updateContent);
+            });
+
+            enLangButton.addEventListener('click', () => {
+                i18next.changeLanguage('en', updateContent);
+            });
+
             filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
@@ -1971,12 +1795,12 @@
                     const habitData = JSON.parse(e.target.dataset.habit);
                     const payee = e.target.dataset.payee;
                     
-                    habitDetailTitle.textContent = `${i18next.t('trend_of_spending')}: ${payee}`;
+                    habitDetailTitle.textContent = `Динамика трат: ${payee}`;
                     
                     const chartData = {
-                        labels: habitData.transactions.map(t => new Date(t.date).toLocaleDateString(i18next.language)),
+                        labels: habitData.transactions.map(t => new Date(t.date).toLocaleDateString('ru-RU')),
                         datasets: [{
-                            label: i18next.t('amount_spent'),
+                            label: 'Сумма траты',
                             data: habitData.transactions.map(t => t.amount),
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.2)',
@@ -2031,15 +1855,15 @@
 
                     if (response.ok) {
                         console.log('Transactions uploaded successfully:', result);
-                        alert(result.message || i18next.t('transactions_uploaded_successfully'));
+                        alert(result.message || 'Транзакции успешно загружены в Supabase!');
                         fetchAndRenderTransactions(); // Обновляем данные из БД
                     } else {
                         console.error('Error uploading transactions:', result.error);
-                        alert(`${i18next.t('error_uploading_transactions')}: ${result.error}`);
+                        alert(`Ошибка при загрузке транзакций: ${result.error}`);
                     }
                 } catch (error) {
                     console.error('Network or server error during upload:', error);
-                    alert(i18next.t('network_server_error_upload'));
+                    alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
                 }
             }
 
@@ -2048,7 +1872,7 @@
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
         });
-</script>
+    </script>
 
 </body>
 </html>
