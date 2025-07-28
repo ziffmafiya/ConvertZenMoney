@@ -214,19 +214,9 @@
         <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
         <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
         <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-            <button id="deepAnalysisButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
-        </div>
-        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
-            <label for="analysisCategory" class="block mb-2 text-lg font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
-            <input type="text" id="analysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-        </div>
-        <div class="mt-4 p-4 bg-gray-800 rounded-lg">
-            <label for="analysisModel" class="block mb-2 text-lg font-medium text-gray-300">Модель ИИ для анализа</label>
-            <select id="analysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            </select>
+        <div class="flex flex-wrap gap-4 mb-4">
+            <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
+            <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Настроить анализ</button>
         </div>
         <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
             <!-- Analysis results will be displayed here -->
@@ -235,6 +225,51 @@
             <p>Анализ выполняется, пожалуйста, подождите...</p>
         </div>
     </section>
+
+    <!-- Модальное окно настроек глубокого анализа -->
+    <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+            <h2 class="text-2xl font-bold text-white mb-4">Настройки глубокого анализа</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">Период анализа</label>
+                    <div class="flex gap-2">
+                        <select id="deepAnalysisMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="">Весь год</option>
+                            <option value="01">Январь</option>
+                            <option value="02">Февраль</option>
+                            <option value="03">Март</option>
+                            <option value="04">Апрель</option>
+                            <option value="05">Май</option>
+                            <option value="06">Июнь</option>
+                            <option value="07">Июль</option>
+                            <option value="08">Август</option>
+                            <option value="09">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
+                        </select>
+                        <input type="number" id="deepAnalysisYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    </div>
+                </div>
+                <div>
+                    <label for="deepAnalysisCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
+                    <input type="text" id="deepAnalysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="deepAnalysisModel" class="block mb-2 text-sm font-medium text-gray-300">Модель ИИ для анализа</label>
+                    <select id="deepAnalysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeDeepAnalysisSettingsButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
+                <button id="saveDeepAnalysisSettingsButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Секция анализа привычек -->
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
@@ -623,10 +658,11 @@
 
             // Асинхронная функция для выполнения глубокого анализа трат с помощью ИИ
             async function performDeepAnalysis() {
-                const selectedMonth = filterMonthSelect.value;
-                const selectedYear = filterYearInput.value;
-                const analysisCategory = analysisCategoryInput.value.trim(); // Получаем значение категории
-                const analysisModel = analysisModelSelect.value; // Получаем выбранную модель
+                // Используем настройки из модального окна
+                const selectedMonth = deepAnalysisMonthSelect.value;
+                const selectedYear = deepAnalysisYearInput.value;
+                const analysisCategory = deepAnalysisCategoryInput.value.trim();
+                const analysisModel = deepAnalysisModelSelect.value;
 
                 if (!selectedMonth || !selectedYear) {
                     alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
@@ -638,11 +674,10 @@
 
                 const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
                 if (analysisCategory) {
-                    params.append('category', analysisCategory); // Добавляем категорию в параметры, если она указана
+                    params.append('category', analysisCategory);
                 }
 
                 try {
-                    // Отправляем запрос на сервер для глубокого анализа
                     const response = await fetch(`/api/deep-analysis?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
