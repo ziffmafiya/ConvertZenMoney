@@ -68,21 +68,21 @@ export default async (req, res) => {
                 // Прогресс для бара остаётся прежним - процент достижения цели
                 if (goal.value > 0) {
                     progress1 = (reduction / goal.value) * 100;
-                    progress2 = reduction; // Фактический процент экономии для текста
                 }
-            } else if (currentMonthExpenses > 0) {
-                progress1 = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
-                progress2 = -Infinity; // Показывает перерасход, когда экономию посчитать нельзя
             } else {
-                progress1 = 100; // Если трат не было ни в одном из месяцев - цель достигнута
-                progress2 = 100;
+                // Если в предыдущем месяце трат не было, считаем базой текущий месяц
+                progress1 = currentMonthExpenses > 0 ? 0 : 100;
+                progress2 = null; // Не рассчитываем процент
+                status = currentMonthExpenses > 0 ? 'No Comparison Data' : 'On Track';
             }
             
             // Статус определяется относительно 100% достижения цели
-            if (progress1 < 100) {
-                status = 'Behind';
-            } else {
+            if (progress1 >= 100) {
                 status = 'On Track';
+            } else if (progress1 >= 50) {
+                status = 'Moderate Progress';
+            } else {
+                status = 'Behind';
             }
         }
 
