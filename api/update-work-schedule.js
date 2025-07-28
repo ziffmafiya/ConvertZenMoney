@@ -20,7 +20,16 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Извлекаем JWT из заголовка Authorization
+    const token = req.headers.authorization?.split(' ')[1];
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+        global: {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        },
+    });
 
     try {
         // Get the authenticated user's ID

@@ -24,8 +24,17 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Получаем сессию пользователя
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Authentication error:', userError?.message || 'User not authenticated');
+            return res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+        }
+
         // Начинаем строить запрос к таблице 'transactions'
-        let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
+        // Добавляем фильтрацию по user_id
+        let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason').eq('user_id', user.id);
 
         // Применяем фильтры по дате, если они указаны
         if (year) {

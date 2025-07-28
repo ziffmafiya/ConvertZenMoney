@@ -17,14 +17,34 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
+    // Извлекаем JWT из заголовка Authorization
+    const token = req.headers.authorization?.split(' ')[1];
+
     // Создаем клиент Supabase.
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+        global: {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        },
+    });
 
     try {
-        // Шаг 1: Получаем все транзакции с расходами.
+        // Получаем сессию пользователя
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Authentication error:', userError?.message || 'User not authenticated');
+            return res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+        }
+
+        const userId = user.id;
+
+        // Шаг 1: Получаем все транзакции с расходами для текущего пользователя.
         const { data: transactions, error: fetchError } = await supabase
             .from('transactions')
             .select('*') // Выбираем все поля, чтобы избежать ошибок с ограничениями NOT NULL.
+            .eq('user_id', userId) // Фильтруем по user_id
             .not('outcome', 'is', null)
             .gt('outcome', 0);
 
