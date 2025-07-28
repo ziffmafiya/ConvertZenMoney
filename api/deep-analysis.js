@@ -55,6 +55,28 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
 
     try {
+        // Get the authenticated user's ID
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Authentication error:', userError);
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const userId = user.id;
+
+        // Fetch user's work schedule
+        const { data: workSchedule, error: scheduleError } = await supabase
+            .from('user_work_schedule')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (scheduleError) {
+            console.error('Error fetching work schedule:', scheduleError);
+            // Continue without work schedule if there's an error, or return an error
+            // For now, we'll just log and proceed without schedule data
+        }
+
         // Определяем начальную и конечную даты для выборки транзакций за текущий месяц
         const currentMonthStartDate = `${currentYear}-${currentMonthPadded}-01`;
         const currentMonthEndDate = `${currentYear}-${currentMonthPadded}-${new Date(currentYear, currentMonth, 0).getDate()}`;
@@ -97,6 +119,7 @@ export default async function handler(req, res) {
         // Преобразуем полученные данные о транзакциях в форматированный JSON-строки для передачи в модель ИИ
         const currentMonthTransactionsJson = JSON.stringify(currentMonthTransactions, null, 2);
         const previousMonthTransactionsJson = JSON.stringify(previousMonthTransactions, null, 2);
+        const workScheduleJson = JSON.stringify(workSchedule, null, 2);
 
         // Формируем промпт для языковой модели, включая данные о транзакциях и конкретные вопросы для анализа
         const prompt = `Ты — персональный финансовый ассистент. Проанализируй следующие транзакции:
@@ -107,6 +130,9 @@ ${currentMonthTransactionsJson}
 **Транзакции за ${previousMonthPadded}.${previousYear} (прошлый месяц) в формате JSON:**
 ${previousMonthTransactionsJson}
 
+**Мой рабочий график (если доступен) в формате JSON:**
+${workScheduleJson}
+
 На основе этих данных:
 1.  Напиши краткую сводку (2-3 предложения) об общих тратах за ${currentMonthPadded}.${currentYear}.
 2.  Выдели 3 основные категории трат за ${currentMonthPadded}.${currentYear}. Сравни их с тратами в этих же категориях за ${previousMonthPadded}.${previousYear}. В каких категориях произошли значительные изменения (рост или падение) и каковы могут быть причины?
@@ -114,7 +140,7 @@ ${previousMonthTransactionsJson}
 4.  Дай 3 конкретных и выполнимых совета по экономии на следующий месяц, основываясь на самых больших, аномальных или нерегулярных тратах в ${currentMonthPadded}.${currentYear}.
 5.  Проведи сравнительный анализ по категории '${category || 'Кафе и рестораны'}': "Сравни мои траты в категории '${category || 'Кафе и рестораны'}' за ${currentMonthPadded}.${currentYear} и ${previousMonthPadded}.${previousYear}. В каких заведениях я стал тратить больше и почему, как ты думаешь?" (Если в 'comment' или 'payee' есть названия заведений, используй их).
 6.  Поиск причинно-следственных связей: "Какой основной драйвер роста моих общих расходов в ${currentMonthPadded}.${currentYear} по сравнению с ${previousMonthPadded}.${previousYear}? Связано ли это с одной категорией или несколькими?
-7.  Анализ привычек: "Проанализируй мои траты в будние и выходные дни в ${currentMonthPadded}.${currentYear}. Какие паттерны ты видишь? Дай совет, как оптимизировать траты на выходных."
+7.  Анализ привычек: "Проанализируй мои траты в будние и выходные дни в ${currentMonthPadded}.${currentYear}. Какие паттерны ты видишь? Учитывай мой рабочий график, если он предоставлен. Дай совет, как оптимизировать траты на выходных."
 
 Предоставь анализ на русском языке.
 `;

@@ -49,6 +49,28 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Get the authenticated user's ID
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Authentication error:', userError);
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const userId = user.id;
+
+        // Fetch user's work schedule
+        const { data: workSchedule, error: scheduleError } = await supabase
+            .from('user_work_schedule')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (scheduleError) {
+            console.error('Error fetching work schedule:', scheduleError);
+            // Continue without work schedule if there's an error, or return an error
+            // For now, we'll just log and proceed without schedule data
+        }
+
         // Определяем диапазон дат для текущего месяца
         const startDate = `${year}-${month.padStart(2, '0')}-01`;
         const endDate = `${year}-${month.padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
@@ -67,8 +89,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: currentError.message });
         }
 
-        // Выполняем анализ привычек на основе векторных эмбеддингов
-        const habits = await analyzeHabitsWithEmbeddings(currentTransactions, supabase);
+        // Выполняем анализ привычек на основе векторных эмбеддингов, передавая расписание работы
+        const habits = await analyzeHabitsWithEmbeddings(currentTransactions, supabase, workSchedule);
 
         // Отправляем найденные привычки в ответе
         res.status(200).json({ habits });
@@ -79,7 +101,7 @@ export default async function handler(req, res) {
 }
 
 // Асинхронная функция для анализа привычек на основе векторных эмбеддингов
-async function analyzeHabitsWithEmbeddings(transactions, supabase) {
+async function analyzeHabitsWithEmbeddings(transactions, supabase, workSchedule) {
     const habits = {};
     // Множество для отслеживания уже обработанных транзакций, чтобы избежать дублирования
     let processedTransactionIds = new Set(); 
@@ -126,6 +148,13 @@ async function analyzeHabitsWithEmbeddings(transactions, supabase) {
                     trend: 0 // Заглушка для тренда; для реального расчета нужен анализ предыдущих периодов
                 };
 
+                // Добавляем информацию о рабочем дне/выходном
+                const firstTransactionDate = habitTransactions[0].date;
+                const dayType = isWorkDay(firstTransactionDate, workSchedule);
+                if (dayType) {
+                    habits[habitName].dayType = dayType;
+                }
+
                 // Добавляем ID всех транзакций, включенных в эту привычку, в множество обработанных
                 habitTransactions.forEach(t => processedTransactionIds.add(t.id));
             }
@@ -133,4 +162,38 @@ async function analyzeHabitsWithEmbeddings(transactions, supabase) {
     }
 
     return habits;
+}
+
+// Вспомогательная функция для определения, является ли день рабочим или выходным
+function isWorkDay(dateString, workSchedule) {
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+
+    if (!workSchedule || workSchedule.length === 0) {
+        return null; // Cannot determine without schedule
+    }
+
+    let isWorkday = false;
+    let isWeekendWork = false;
+
+    for (const schedule of workSchedule) {
+        if (schedule.work_days_week === 'буднии') {
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Monday to Friday
+                isWorkday = true;
+            }
+        } else if (schedule.work_days_week === 'выходные' || schedule.work_days_week === 'суббота') {
+            if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+                isWeekendWork = true;
+            }
+        }
+    }
+
+    if (isWorkday && !isWeekendWork) {
+        return 'workday';
+    } else if (isWeekendWork && !isWorkday) {
+        return 'weekend';
+    } else if (isWorkday && isWeekendWork) {
+        return 'mixed'; // If user works both weekdays and weekends
+    }
+    return null; // If no matching schedule or day type
 }
