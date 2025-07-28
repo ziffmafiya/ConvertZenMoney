@@ -1044,7 +1044,15 @@
                         goalProgressText.textContent = `${currentValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                         goalTargetText.textContent = `Цель: ${targetValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                     } else if (goal.type === 'reduce') {
-                        goalProgressText.textContent = `${progress2.toFixed(1)}%`;
+                        let progressText = '';
+                        if (progress2 > 0) {
+                            progressText = `Вы сэкономили ${progress2.toFixed(1)}%`;
+                        } else if (progress2 < 0) {
+                            progressText = `Вы потратили на ${Math.abs(progress2).toFixed(1)}% больше`;
+                        } else {
+                            progressText = `Без изменений`;
+                        }
+                        goalProgressText.textContent = progressText;
                         goalTargetText.textContent = `Цель: ${targetValue}%`;
                     }
 
