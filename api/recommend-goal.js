@@ -8,16 +8,7 @@ export default async (req, res) => {
         return res.status(500).json({ error: 'Server configuration error: Supabase environment variables are not set.' });
     }
 
-    // Извлекаем JWT из заголовка Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        global: {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const { year, month } = req.query;
 
     if (!year || !month) {
@@ -28,20 +19,9 @@ export default async (req, res) => {
     const endDate = new Date(year, month, 0);
 
     try {
-        // Получаем сессию пользователя
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-            console.error('Authentication error:', userError?.message || 'User not authenticated');
-            return res.status(401).json({ error: 'Unauthorized: User not authenticated' });
-        }
-
-        const userId = user.id;
-
         const { data: transactions, error } = await supabase
             .from('transactions')
             .select('category_name, outcome')
-            .eq('user_id', userId) // Фильтруем по user_id
             .gte('date', startDate.toISOString())
             .lte('date', endDate.toISOString())
             .gt('outcome', 0);

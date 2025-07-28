@@ -8,16 +8,7 @@ export default async (req, res) => {
         return res.status(500).json({ error: 'Server configuration error: Supabase environment variables are not set.' });
     }
     
-    // Извлекаем JWT из заголовка Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        global: {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const { year, month, goal } = req.body;
 
     if (!year || !month || !goal) {

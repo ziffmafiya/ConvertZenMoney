@@ -49,22 +49,13 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
     }
 
-    // Извлекаем JWT из заголовка Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-
     // Инициализируем клиенты для взаимодействия с Supabase и Google Generative AI
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        global: {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
 
     try {
-        // Получаем сессию пользователя
+        // Get the authenticated user's ID
         const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError || !user) {

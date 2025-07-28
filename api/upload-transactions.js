@@ -73,17 +73,8 @@ export default async function handler(req, res) {
     }
     console.log('Supabase client initialized.');
 
-    // Извлекаем JWT из заголовка Authorization
-    const token = req.headers.authorization?.split(' ')[1];
-
     // Инициализируем клиент Supabase.
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        global: {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     /**
      * Нормализует строку: удаляет неразрывные пробелы, обрезает пробелы по краям и приводит к нижнему регистру.
