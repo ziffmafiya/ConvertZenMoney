@@ -374,8 +374,11 @@
             const filterMonthSelect = document.getElementById('filterMonth');
             const filterYearInput = document.getElementById('filterYear');
             const deepAnalysisButton = document.getElementById('deepAnalysisButton');
-            const analysisCategoryInput = document.getElementById('analysisCategory'); // Ссылка на инпут категории для анализа
-            const analysisModelSelect = document.getElementById('analysisModel'); // Ссылка на селект модели ИИ
+            // Элементы для глубокого анализа (настройки в модальном окне)
+            const deepAnalysisMonthSelect = document.getElementById('deepAnalysisMonth');
+            const deepAnalysisYearInput = document.getElementById('deepAnalysisYear');
+            const deepAnalysisCategoryInput = document.getElementById('deepAnalysisCategory');
+            const deepAnalysisModelSelect = document.getElementById('deepAnalysisModel');
             const analysisResultDiv = document.getElementById('analysisResult');
             const analysisLoadingDiv = document.getElementById('analysisLoading');
             const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
@@ -1526,6 +1529,26 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            
+            // Обработчики для модального окна настроек глубокого анализа
+            const deepAnalysisSettingsButton = document.getElementById('deepAnalysisSettingsButton');
+            const deepAnalysisSettingsModal = document.getElementById('deepAnalysisSettingsModal');
+            const closeDeepAnalysisSettingsButton = document.getElementById('closeDeepAnalysisSettingsButton');
+            const saveDeepAnalysisSettingsButton = document.getElementById('saveDeepAnalysisSettingsButton');
+            
+            deepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisMonthSelect.value = filterMonthSelect.value;
+                deepAnalysisYearInput.value = filterYearInput.value;
+                deepAnalysisSettingsModal.classList.remove('hidden');
+            });
+            
+            closeDeepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisSettingsModal.classList.add('hidden');
+            });
+            
+            saveDeepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisSettingsModal.classList.add('hidden');
+            });
             closeHabitDetailModal.addEventListener('click', () => habitDetailModal.classList.add('hidden'));
 
             prevAnomalyPageBtn.addEventListener('click', () => {
