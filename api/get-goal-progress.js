@@ -35,6 +35,7 @@ export default async (req, res) => {
         let progress = 0;
         let status = 'On Track';
         let comparisonMonth = null;
+        let savingsPercentage = null; // Добавлено для фактического процента экономии
 
         if (goal.type === 'limit') {
             if (goal.value > 0) {
@@ -63,12 +64,17 @@ export default async (req, res) => {
 
             if (previousMonthExpenses > 0) {
                 const reduction = ((previousMonthExpenses - currentMonthExpenses) / previousMonthExpenses) * 100;
-                // Возвращаем процент достижения цели
-                progress = (reduction / goal.value) * 100;
+                savingsPercentage = reduction; // Фактический процент экономии
+                // Прогресс для бара остаётся прежним - процент достижения цели
+                if (goal.value > 0) {
+                    progress = (reduction / goal.value) * 100;
+                }
             } else if (currentMonthExpenses > 0) {
                 progress = 0; // Если в предыдущем месяце трат не было, а в текущем есть - прогресс 0%
+                savingsPercentage = -Infinity; // Показывает перерасход, когда экономию посчитать нельзя
             } else {
                 progress = 100; // Если трат не было ни в одном из месяцев - цель достигнута
+                savingsPercentage = 100;
             }
             
             // Статус определяется относительно 100% достижения цели
@@ -84,6 +90,7 @@ export default async (req, res) => {
         
         res.status(200).json({
             progress: displayProgress,
+            savingsPercentage,
             currentValue: currentMonthExpenses,
             targetValue: goal.value,
             status,
