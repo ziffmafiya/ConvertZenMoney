@@ -9,11 +9,16 @@ export const config = {
     runtime: 'edge',
 };
 
-export default async function handler(req, res) {
-    const { year, month } = req.query;
+export default async function handler(req) {
+    const { searchParams } = new URL(req.url);
+    const year = searchParams.get('year');
+    const month = searchParams.get('month');
 
     if (!year || !month) {
-        return res.status(400).json({ error: 'Year and month are required' });
+        return new Response(JSON.stringify({ error: 'Year and month are required' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     try {
@@ -42,9 +47,15 @@ export default async function handler(req, res) {
             heatmapData[dayOfWeek][hour] += t.outcome;
         });
 
-        res.status(200).json({ heatmapData });
+        return new Response(JSON.stringify({ heatmapData }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
     } catch (error) {
         console.error('Error fetching heatmap data:', error);
-        res.status(500).json({ error: 'Failed to fetch heatmap data', details: error.message });
+        return new Response(JSON.stringify({ error: 'Failed to fetch heatmap data', details: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 }
