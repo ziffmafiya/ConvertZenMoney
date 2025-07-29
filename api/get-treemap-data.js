@@ -5,6 +5,10 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+export const config = {
+    runtime: 'edge',
+};
+
 export default async function handler(req, res) {
     const { year, month } = req.query;
 
