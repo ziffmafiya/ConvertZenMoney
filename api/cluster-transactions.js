@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { runClustering } from '../lib/clustering';
+import { runClustering } from './lib/clustering';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
