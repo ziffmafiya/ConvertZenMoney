@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Добавляем библиотеки для heatmap и tree map -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,6 +23,20 @@
         }
         h1, h2, h3, h4, h5, h6, button, .tab-button, .font-semibold {
             font-family: 'Tektur', sans-serif;
+        }
+        /* Стили для heatmap */
+        .heatmap-cell {
+            transition: opacity 0.3s ease;
+        }
+        .heatmap-cell:hover {
+            opacity: 0.8;
+        }
+        /* Стили для tree map */
+        .treemap-node {
+            transition: all 0.2s ease;
+        }
+        .treemap-node:hover {
+            filter: brightness(1.1);
         }
     </style>
 </head>
@@ -106,6 +123,41 @@
             <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
             <div class="h-96">
                 <canvas id="spendIncomeTrendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Новая секция: Heatmap и Tree Map -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 mb-8 md:mb-12">
+            <!-- Heatmap трат по дням недели и времени -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-xl font-semibold text-gray-300 mb-4">Heatmap трат по дням недели</h3>
+                <p class="text-gray-400 text-sm mb-4">Интенсивность трат по дням недели и времени суток</p>
+                <div id="heatmapContainer" class="w-full h-80 flex items-center justify-center">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+                <div id="heatmapLegend" class="flex justify-center items-center gap-2 mt-4">
+                    <span class="text-xs text-gray-400">Меньше</span>
+                    <div class="flex gap-1">
+                        <div class="w-4 h-4 bg-blue-900"></div>
+                        <div class="w-4 h-4 bg-blue-700"></div>
+                        <div class="w-4 h-4 bg-blue-500"></div>
+                        <div class="w-4 h-4 bg-blue-300"></div>
+                        <div class="w-4 h-4 bg-blue-100"></div>
+                    </div>
+                    <span class="text-xs text-gray-400">Больше</span>
+                </div>
+            </div>
+
+            <!-- Tree Map категорий трат -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-xl font-semibold text-gray-300 mb-4">Tree Map категорий трат</h3>
+                <p class="text-gray-400 text-sm mb-4">Размер блока соответствует сумме трат в категории</p>
+                <div id="treemapContainer" class="w-full h-80 flex items-center justify-center">
+                    <canvas id="treemapChart"></canvas>
+                </div>
+                <div class="text-center text-xs text-gray-400 mt-2">
+                    Нажмите на блок для детализации
+                </div>
             </div>
         </section>
 
@@ -456,6 +508,8 @@
             let expensesChart;
             let storesChart;
             let spendIncomeTrendChart;
+            let heatmapChart;
+            let treemapChart;
             // let forecastChart; // Removed
 
             // Переменные для пагинации аномалий
@@ -890,6 +944,8 @@
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
                 renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions, actualExpensePercentages);
+                renderHeatmap(transactions); // Добавляем heatmap
+                renderTreemap(transactions); // Добавляем tree map
                 allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
                 renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
                 allTransactions = transactions; // Сохраняем все транзакции
@@ -1361,6 +1417,380 @@
             }
 
             // Функция renderExpensesToIncomeChart удалена
+
+            // Функция для создания heatmap трат по дням недели
+            function renderHeatmap(transactions) {
+                // Очищаем контейнер
+                const container = document.getElementById('heatmapContainer');
+                container.innerHTML = '<canvas id="heatmapChart"></canvas>';
+
+                // Группируем траты по дням недели и часам
+                const heatmapData = {};
+                const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                const hours = Array.from({length: 24}, (_, i) => i);
+
+                // Инициализируем структуру данных
+                daysOfWeek.forEach(day => {
+                    heatmapData[day] = {};
+                    hours.forEach(hour => {
+                        heatmapData[day][hour] = 0;
+                    });
+                });
+
+                // Заполняем данные
+                transactions.forEach(t => {
+                    if (t.outcome > 0) {
+                        const date = new Date(t.date);
+                        const dayOfWeek = daysOfWeek[date.getDay()];
+                        const hour = date.getHours();
+                        heatmapData[dayOfWeek][hour] += t.outcome;
+                    }
+                });
+
+                // Подготавливаем данные для D3 heatmap
+                const data = [];
+                let maxValue = 0;
+                
+                daysOfWeek.forEach((day, dayIndex) => {
+                    hours.forEach((hour, hourIndex) => {
+                        const value = heatmapData[day][hour];
+                        maxValue = Math.max(maxValue, value);
+                        data.push({
+                            day: dayIndex,
+                            hour: hourIndex,
+                            value: value,
+                            dayName: day,
+                            hourName: `${hour}:00`
+                        });
+                    });
+                });
+
+                // Создаем SVG
+                const margin = {top: 30, right: 30, bottom: 50, left: 60};
+                const width = container.clientWidth - margin.left - margin.right;
+                const height = 300 - margin.top - margin.bottom;
+
+                const svg = d3.select('#heatmapContainer')
+                    .append('svg')
+                    .attr('width', width + margin.right + margin.left)
+                    .attr('height', height + margin.top + margin.bottom)
+                    .append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                // Шкалы
+                const x = d3.scaleBand()
+                    .range([0, width])
+                    .domain(hours)
+                    .padding(0.01);
+
+                const y = d3.scaleBand()
+                    .range([height, 0])
+                    .domain(daysOfWeek)
+                    .padding(0.01);
+
+                // Цветовая шкала
+                const colorScale = d3.scaleSequential()
+                    .interpolator(d3.interpolateBlues)
+                    .domain([0, maxValue]);
+
+                // Добавляем ячейки
+                svg.selectAll()
+                    .data(data, d => d.day + ':' + d.hour)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => x(d.hour))
+                    .attr('y', d => y(d.dayName))
+                    .attr('width', x.bandwidth())
+                    .attr('height', y.bandwidth())
+                    .style('fill', d => colorScale(d.value))
+                    .style('stroke', '#374151')
+                    .style('stroke-width', 0.5)
+                    .classed('heatmap-cell', true)
+                    .on('mouseover', function(event, d) {
+                        d3.select(this).style('opacity', 0.8);
+                        
+                        // Показываем tooltip
+                        const tooltip = d3.select('body').append('div')
+                            .attr('class', 'tooltip')
+                            .style('position', 'absolute')
+                            .style('background', '#1f2937')
+                            .style('color', '#d1d5db')
+                            .style('padding', '8px')
+                            .style('border-radius', '4px')
+                            .style('font-size', '12px')
+                            .style('pointer-events', 'none')
+                            .style('z-index', '1000')
+                            .style('border', '1px solid #374151');
+
+                        tooltip.html(`
+                            <strong>${d.dayName}</strong><br/>
+                            Время: ${d.hourName}<br/>
+                            Сумма: ${d.value.toLocaleString('ru-RU')} грн
+                        `)
+                        .style('left', (event.pageX + 10) + 'px')
+                        .style('top', (event.pageY - 10) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).style('opacity', 1);
+                        d3.selectAll('.tooltip').remove();
+                    });
+
+                // Добавляем оси
+                svg.append('g')
+                    .attr('transform', `translate(0,${height})`)
+                    .call(d3.axisBottom(x).tickFormat(d => `${d}:00`))
+                    .style('color', '#9ca3af')
+                    .selectAll('text')
+                    .style('font-size', '10px');
+
+                svg.append('g')
+                    .call(d3.axisLeft(y))
+                    .style('color', '#9ca3af')
+                    .selectAll('text')
+                    .style('font-size', '11px');
+
+                // Добавляем заголовки осей
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height + margin.bottom - 5)
+                    .style('text-anchor', 'middle')
+                    .style('fill', '#9ca3af')
+                    .style('font-size', '12px')
+                    .text('Время суток');
+
+                svg.append('text')
+                    .attr('transform', 'rotate(-90)')
+                    .attr('y', 0 - margin.left)
+                    .attr('x', 0 - (height / 2))
+                    .attr('dy', '1em')
+                    .style('text-anchor', 'middle')
+                    .style('fill', '#9ca3af')
+                    .style('font-size', '12px')
+                    .text('Дни недели');
+
+                // Обновляем легенду
+                const legendContainer = document.getElementById('heatmapLegend');
+                legendContainer.innerHTML = `
+                    <span class="text-xs text-gray-400">Меньше</span>
+                    <div class="flex gap-1">
+                        ${Array.from({length: 5}, (_, i) => {
+                            const value = (maxValue / 4) * i;
+                            const color = d3.interpolateBlues(i / 4);
+                            return `<div class="w-4 h-4" style="background-color: ${color}"></div>`;
+                        }).join('')}
+                    </div>
+                    <span class="text-xs text-gray-400">Больше (${maxValue.toLocaleString('ru-RU')} грн)</span>
+                `;
+            }
+
+            // Функция для создания tree map категорий трат
+            function renderTreemap(transactions) {
+                // Очищаем контейнер
+                const container = document.getElementById('treemapContainer');
+                container.innerHTML = '<canvas id="treemapChart"></canvas>';
+
+                // Группируем траты по категориям и подкатегориям
+                const categoryData = {};
+                const subcategoryData = {};
+                
+                transactions.forEach(t => {
+                    if (t.outcome > 0) {
+                        const category = t.categoryName;
+                        const subcategory = category.split('/')[1] || category;
+                        
+                        // Основная категория
+                        if (!categoryData[category]) {
+                            categoryData[category] = {
+                                value: 0,
+                                count: 0,
+                                transactions: [],
+                                subcategories: {}
+                            };
+                        }
+                        categoryData[category].value += t.outcome;
+                        categoryData[category].count += 1;
+                        categoryData[category].transactions.push(t);
+                        
+                        // Подкатегория
+                        if (!categoryData[category].subcategories[subcategory]) {
+                            categoryData[category].subcategories[subcategory] = {
+                                value: 0,
+                                count: 0,
+                                transactions: []
+                            };
+                        }
+                        categoryData[category].subcategories[subcategory].value += t.outcome;
+                        categoryData[category].subcategories[subcategory].count += 1;
+                        categoryData[category].subcategories[subcategory].transactions.push(t);
+                    }
+                });
+
+                // Сортируем по убыванию и берем топ-12 категорий
+                const sortedCategories = Object.entries(categoryData)
+                    .sort(([, a], [, b]) => b.value - a.value)
+                    .slice(0, 12);
+
+                // Подготавливаем данные для tree map с иерархией
+                const treemapData = sortedCategories.map(([category, data], index) => {
+                    const mainColor = COLORS[index % COLORS.length];
+                    const subcategories = Object.entries(data.subcategories)
+                        .sort(([, a], [, b]) => b.value - a.value)
+                        .slice(0, 5) // Максимум 5 подкатегорий
+                        .map(([subcat, subData], subIndex) => ({
+                            label: subcat,
+                            value: subData.value,
+                            count: subData.count,
+                            color: d3.color(mainColor).brighter(0.3 + subIndex * 0.1).toString(),
+                            transactions: subData.transactions,
+                            parent: category
+                        }));
+
+                    return {
+                        label: category,
+                        value: data.value,
+                        count: data.count,
+                        color: mainColor,
+                        transactions: data.transactions,
+                        children: subcategories
+                    };
+                });
+
+                const ctx = document.getElementById('treemapChart').getContext('2d');
+                treemapChart = new Chart(ctx, {
+                    type: 'treemap',
+                    data: {
+                        datasets: [{
+                            tree: treemapData,
+                            key: 'value',
+                            groups: ['label'],
+                            spacing: 1,
+                            backgroundColor: function(ctx) {
+                                if (ctx.type !== 'data') return 'transparent';
+                                return ctx.raw.color;
+                            },
+                            labels: {
+                                display: true,
+                                formatter: function(ctx) {
+                                    const value = ctx.raw.value;
+                                    const count = ctx.raw.count;
+                                    const label = ctx.raw.label;
+                                    
+                                    // Ограничиваем длину названия
+                                    const shortLabel = label.length > 15 ? label.substring(0, 12) + '...' : label;
+                                    
+                                    return [
+                                        shortLabel,
+                                        `${value.toLocaleString('ru-RU')} грн`,
+                                        `${count} транз.`
+                                    ];
+                                },
+                                color: '#ffffff',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            borderWidth: 1,
+                            borderColor: '#374151'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleColor: '#d1d5db',
+                                bodyColor: '#9ca3af',
+                                borderColor: '#374151',
+                                borderWidth: 1,
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].raw.label;
+                                    },
+                                    label: function(context) {
+                                        const data = context.raw;
+                                        const percentage = ((data.value / transactions.reduce((sum, t) => sum + (t.outcome || 0), 0)) * 100).toFixed(1);
+                                        return [
+                                            `Сумма: ${data.value.toLocaleString('ru-RU')} грн`,
+                                            `Количество: ${data.count} транзакций`,
+                                            `Доля: ${percentage}% от общих трат`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        onClick: function(event, elements) {
+                            if (elements.length > 0) {
+                                const element = elements[0];
+                                const data = element.raw;
+                                
+                                // Показываем детальную информацию в модальном окне
+                                showTreemapDetails(data);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Функция для показа деталей tree map
+            function showTreemapDetails(data) {
+                // Создаем модальное окно
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-2xl w-full mx-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-white">${data.label}</h2>
+                            <button class="text-gray-400 hover:text-white text-2xl" onclick="this.closest('.fixed').remove()">&times;</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold text-white mb-2">Общая статистика</h3>
+                                <p class="text-gray-300">Сумма: <span class="text-blue-400 font-bold">${data.value.toLocaleString('ru-RU')} грн</span></p>
+                                <p class="text-gray-300">Количество: <span class="text-green-400 font-bold">${data.count} транзакций</span></p>
+                                <p class="text-gray-300">Средняя трата: <span class="text-yellow-400 font-bold">${(data.value / data.count).toLocaleString('ru-RU')} грн</span></p>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold text-white mb-2">Топ транзакции</h3>
+                                <div class="space-y-2 max-h-32 overflow-y-auto">
+                                    ${data.transactions
+                                        .sort((a, b) => b.outcome - a.outcome)
+                                        .slice(0, 5)
+                                        .map(t => `
+                                            <div class="flex justify-between items-center text-sm">
+                                                <span class="text-gray-300 truncate">${t.payee}</span>
+                                                <span class="text-red-400 font-semibold">${t.outcome.toLocaleString('ru-RU')} грн</span>
+                                            </div>
+                                        `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        ${data.children ? `
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold text-white mb-2">Подкатегории</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    ${data.children.map(child => `
+                                        <div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                                            <span class="text-gray-300 text-sm">${child.label}</span>
+                                            <span class="text-blue-400 font-semibold text-sm">${child.value.toLocaleString('ru-RU')} грн</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Закрытие по клику вне модального окна
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            }
 
             function getStandardPercentage(categoryName) {
                 for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
