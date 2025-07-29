@@ -11,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .font-tektur {
             font-family: 'Tektur', sans-serif;
@@ -26,11 +25,7 @@
 </head>
 <body class="antialiased bg-[#0D1117] text-[#c9d1d9]">
 
-    <div id="auth-container" class="fixed inset-0 bg-[#0D1117] flex items-center justify-center z-50 hidden">
-        <!-- Auth form will be loaded here -->
-    </div>
-
-    <div id="app-content" class="container mx-auto p-4 md:p-8 hidden"> <!-- Increased max-width -->
+    <div class="container mx-auto p-4 md:p-8"> <!-- Increased max-width -->
 
         <!-- Секция заголовка -->
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
@@ -39,14 +34,9 @@
                 <div class="flex items-center gap-2" id="quickFilters">
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                    Настройки
-                </button>
-                <button id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg hidden">
-                    Выйти
-                </button>
-            </div>
+            <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                Настройки
+            </button>
         </header>
 
         <!-- Секция фильтров -->
@@ -409,43 +399,10 @@
     </div>
 </div>
 
-    <script type="module">
-        import { supabase } from './supabaseClient.js';
-
-        // Проверяем сессию при загрузке страницы
-        async function checkAuthAndRenderContent() {
-            const { data: { session } } = await supabase.auth.getSession();
-            const appContent = document.getElementById('app-content');
-            const authContainer = document.getElementById('auth-container');
-            const logoutButton = document.getElementById('logoutButton');
-
-            if (session) {
-                // Пользователь авторизован, показываем контент
-                appContent.classList.remove('hidden');
-                authContainer.classList.add('hidden');
-                logoutButton.classList.remove('hidden');
-                // Запускаем основную логику приложения
-                initializeApp();
-            } else {
-                // Пользователь не авторизован, показываем форму авторизации
-                appContent.classList.add('hidden');
-                authContainer.classList.remove('hidden');
-                logoutButton.classList.add('hidden');
-                // Загружаем auth.html в auth-container
-                fetch('auth.html')
-                    .then(response => response.text())
-                    .then(html => {
-                        authContainer.innerHTML = html;
-                    })
-                    .catch(error => console.error('Error loading auth.html:', error));
-            }
-        }
-
-        // Функция для инициализации основного приложения
-        function initializeApp() {
-            // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
-            document.addEventListener('DOMContentLoaded', function () {
-                // --- Ссылки на DOM-элементы ---
+    <script>
+        // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Ссылки на DOM-элементы ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
             const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
@@ -1915,34 +1872,6 @@
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
-        });
-        } // Closing brace for initializeApp
-
-        // Initial check when the page loads
-        checkAuthAndRenderContent();
-
-        // Listen for auth success message from auth.html
-        window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'authSuccess') {
-                checkAuthAndRenderContent(); // Re-check auth status and render content
-            }
-        });
-
-        // Logout functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutButton = document.getElementById('logoutButton');
-            if (logoutButton) {
-                logoutButton.addEventListener('click', async () => {
-                    const { error } = await supabase.auth.signOut();
-                    if (error) {
-                        console.error('Error logging out:', error.message);
-                        alert('Ошибка при выходе: ' + error.message);
-                    } else {
-                        // After logout, force re-check auth to show login form
-                        checkAuthAndRenderContent();
-                    }
-                });
-            }
         });
     </script>
 
