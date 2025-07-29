@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { runClustering } from '../lib/clustering.js';
+import { runClustering } from '../lib/clustering';
 
 // Глобальная инициализация клиента Google Generative AI.
 // Этот клиент используется для создания "эмбеддингов" (embeddings) -
