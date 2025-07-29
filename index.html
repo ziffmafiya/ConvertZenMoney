@@ -6,6 +6,8 @@
     <title>Универсальный Финансовый Отчет</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -292,6 +294,24 @@
         </div>
     </section>
 
+    <!-- Секция Heatmap и Treemap -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12">
+        <!-- Heatmap -->
+        <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Тепловая карта расходов</h3>
+            <div class="h-96">
+                <canvas id="heatmapChart"></canvas>
+            </div>
+        </div>
+        <!-- Treemap -->
+        <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Иерархия расходов (Treemap)</h3>
+            <div class="h-96">
+                <canvas id="treemapChart"></canvas>
+            </div>
+        </div>
+    </section>
+
     <!-- Модальное окно деталей привычки -->
     <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
@@ -456,6 +476,8 @@
             let expensesChart;
             let storesChart;
             let spendIncomeTrendChart;
+            let heatmapChart;
+            let treemapChart;
             // let forecastChart; // Removed
 
             // Переменные для пагинации аномалий
@@ -569,6 +591,8 @@
                     analyzeAndRender(transactions);
                     fetchAndRenderHabits();
                     fetchAndRenderMonthlySummary(); // Добавляем вызов нового API
+                    fetchAndRenderHeatmap();
+                    fetchAndRenderTreemap();
 
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
@@ -1866,6 +1890,174 @@
                     console.error('Network or server error during upload:', error);
                     alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
                 }
+            }
+
+            // --- Новые функции для Heatmap и Treemap ---
+
+            // Асинхронная функция для получения и отображения данных для Heatmap
+            async function fetchAndRenderHeatmap() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    if (heatmapChart) heatmapChart.destroy();
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+                try {
+                    const response = await fetch(`/api/get-heatmap-data?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to fetch heatmap data');
+                    const { heatmapData } = await response.json();
+                    renderHeatmapChart(heatmapData);
+                } catch (error) {
+                    console.error('Error fetching heatmap data:', error);
+                }
+            }
+
+            // Асинхронная функция для получения и отображения данных для Treemap
+            async function fetchAndRenderTreemap() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    if (treemapChart) treemapChart.destroy();
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+                try {
+                    const response = await fetch(`/api/get-treemap-data?${params.toString()}`);
+                    if (!response.ok) throw new Error('Failed to fetch treemap data');
+                    const { treemapData } = await response.json();
+                    renderTreemapChart(treemapData);
+                } catch (error) {
+                    console.error('Error fetching treemap data:', error);
+                }
+            }
+
+            function renderHeatmapChart(data) {
+                if (heatmapChart) {
+                    heatmapChart.destroy();
+                }
+                const ctx = document.getElementById('heatmapChart').getContext('2d');
+                heatmapChart = new Chart(ctx, {
+                    type: 'matrix',
+                    data: {
+                        datasets: [{
+                            label: 'Расходы по дням и часам',
+                            data: data.flatMap((row, y) => row.map((value, x) => ({ x, y, v: value }))),
+                            backgroundColor: (ctx) => {
+                                const value = ctx.dataset.data[ctx.dataIndex].v;
+                                if (value === 0) return 'rgba(80, 80, 80, 0.5)';
+                                const alpha = Math.min(1, 0.1 + Math.log(value + 1) / 10);
+                                return `rgba(239, 68, 68, ${alpha})`; // red-500 with alpha
+                            },
+                            borderColor: 'rgba(0, 0, 0, 0.5)',
+                            borderWidth: 1,
+                            width: ({chart}) => (chart.chartArea || {}).width / 24 - 1,
+                            height: ({chart}) => (chart.chartArea || {}).height / 7 - 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: () => '',
+                                    label: (ctx) => {
+                                        const item = ctx.dataset.data[ctx.dataIndex];
+                                        const day = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][item.y];
+                                        const hour = `${String(item.x).padStart(2, '0')}:00`;
+                                        return `${day}, ${hour}: ${item.v.toLocaleString('ru-RU')} грн`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'category',
+                                labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                                offset: true,
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af' }
+                            },
+                            x: {
+                                type: 'category',
+                                labels: Array.from({ length: 24 }, (_, i) => `${i}`),
+                                offset: true,
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af', stepSize: 2 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderTreemapChart(data) {
+                if (treemapChart) {
+                    treemapChart.destroy();
+                }
+
+                const tree = [];
+                let total = 0;
+                Object.keys(data).forEach(category => {
+                    Object.keys(data[category]).forEach(payee => {
+                        const value = data[category][payee];
+                        tree.push({
+                            category: category,
+                            payee: payee,
+                            value: value
+                        });
+                        total += value;
+                    });
+                });
+
+                const ctx = document.getElementById('treemapChart').getContext('2d');
+                treemapChart = new Chart(ctx, {
+                    type: 'treemap',
+                    data: {
+                        datasets: [{
+                            tree: tree,
+                            key: 'value',
+                            groups: ['category', 'payee'],
+                            backgroundColor: (ctx) => {
+                                if (ctx.type !== 'data') return 'transparent';
+                                const node = ctx.raw;
+                                const category = node.g || 'default';
+                                const colorIndex = Math.abs(category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % COLORS.length;
+                                return COLORS[colorIndex];
+                            },
+                            labels: {
+                                display: true,
+                                color: 'white',
+                                font: { size: 12, weight: 'bold' },
+                                formatter: (ctx) => {
+                                    if (ctx.type !== 'data') return;
+                                    const node = ctx.raw;
+                                    const percentage = (node.v / total) * 100;
+                                    if (percentage < 2) return null; // Не показывать метки для маленьких элементов
+                                    return [node.g, `${node.v.toLocaleString('ru-RU')} грн`];
+                                }
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => items[0].raw.g,
+                                    label: (item) => `${item.raw.s.payee}: ${item.raw.v.toLocaleString('ru-RU')} грн`
+                                }
+                            }
+                        }
+                    }
+                });
             }
 
             // --- Начальная загрузка ---
