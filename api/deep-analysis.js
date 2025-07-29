@@ -58,7 +58,8 @@ export default async function handler(req, res) {
         // Fetch user's work schedule
         const { data: workSchedule, error: scheduleError } = await supabase
             .from('user_work_schedule')
-            .select('*');
+            .select('*')
+            .eq('user_id', userId); // Filter by user_id
 
         if (scheduleError) {
             console.error('Error fetching work schedule:', scheduleError);
