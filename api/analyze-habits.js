@@ -17,7 +17,8 @@ async function generateHabitName(transactions) {
         return acc;
     }, {});
     const mostCommonPayee = Object.keys(payeeCounts).sort((a, b) => payeeCounts[b] - payeeCounts[a])[0];
-    return `Привычка: ${mostCommonPayee}`;
+    // Если наиболее частый получатель не найден, возвращаем общее название
+    return mostCommonPayee ? `Привычка: ${mostCommonPayee}` : 'Неизвестная привычка';
 }
 
 // Основной обработчик API-запроса для анализа привычек
