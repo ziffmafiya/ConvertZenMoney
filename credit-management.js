@@ -38,7 +38,16 @@ class CreditManager {
 
     // Загрузка кредитов
     async loadLoans() {
-        const response = await fetch(`/api/get-credit-loans?user_id=${this.userId}`);
+        const response = await fetch('/api/credit-management', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                action: 'get_loans',
+                userId: this.userId 
+            })
+        });
         if (response.ok) {
             const data = await response.json();
             this.loans = data.loans || [];
@@ -49,7 +58,16 @@ class CreditManager {
 
     // Загрузка кредитных карт
     async loadCreditCards() {
-        const response = await fetch(`/api/get-credit-cards?user_id=${this.userId}`);
+        const response = await fetch('/api/credit-management', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                action: 'get_credit_cards',
+                userId: this.userId 
+            })
+        });
         if (response.ok) {
             const data = await response.json();
             this.creditCards = data.cards || [];
@@ -60,7 +78,16 @@ class CreditManager {
 
     // Загрузка сводки
     async loadSummary() {
-        const response = await fetch(`/api/get-credit-summary?user_id=${this.userId}`);
+        const response = await fetch('/api/credit-management', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                action: 'get_credit_summary',
+                userId: this.userId 
+            })
+        });
         if (response.ok) {
             this.summary = await response.json();
         } else {
@@ -70,13 +97,14 @@ class CreditManager {
 
     // Добавление нового кредита
     async addLoan(loanData) {
-        const response = await fetch('/api/add-credit-loan', {
+        const response = await fetch('/api/credit-management', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                user_id: this.userId,
+                action: 'add_loan',
+                userId: this.userId,
                 ...loanData
             })
         });
@@ -91,12 +119,15 @@ class CreditManager {
 
     // Добавление платежа по кредиту
     async addLoanPayment(paymentData) {
-        const response = await fetch('/api/add-loan-payment', {
+        const response = await fetch('/api/credit-management', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(paymentData)
+            body: JSON.stringify({
+                action: 'add_loan_payment',
+                ...paymentData
+            })
         });
 
         if (response.ok) {
@@ -109,13 +140,14 @@ class CreditManager {
 
     // Добавление новой кредитной карты
     async addCreditCard(cardData) {
-        const response = await fetch('/api/add-credit-card', {
+        const response = await fetch('/api/credit-management', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                user_id: this.userId,
+                action: 'add_credit_card',
+                userId: this.userId,
                 ...cardData
             })
         });
@@ -130,12 +162,15 @@ class CreditManager {
 
     // Добавление транзакции по кредитной карте
     async addCardTransaction(transactionData) {
-        const response = await fetch('/api/add-card-transaction', {
+        const response = await fetch('/api/credit-management', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(transactionData)
+            body: JSON.stringify({
+                action: 'add_card_transaction',
+                ...transactionData
+            })
         });
 
         if (response.ok) {
@@ -148,12 +183,15 @@ class CreditManager {
 
     // Добавление платежа по кредитной карте
     async addCardPayment(paymentData) {
-        const response = await fetch('/api/add-card-payment', {
+        const response = await fetch('/api/credit-management', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(paymentData)
+            body: JSON.stringify({
+                action: 'add_card_payment',
+                ...paymentData
+            })
         });
 
         if (response.ok) {
