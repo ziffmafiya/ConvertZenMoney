@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import glpk from 'glpk.js';
+import GLPK from 'glpk.js';
+
+const glpk = GLPK();
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
