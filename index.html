@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .font-tektur {
             font-family: 'Tektur', sans-serif;
@@ -1920,6 +1921,13 @@
         // Initial check when the page loads
         checkAuthAndRenderContent();
 
+        // Listen for auth success message from auth.html
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'authSuccess') {
+                checkAuthAndRenderContent(); // Re-check auth status and render content
+            }
+        });
+
         // Logout functionality
         document.addEventListener('DOMContentLoaded', function() {
             const logoutButton = document.getElementById('logoutButton');
@@ -1930,7 +1938,8 @@
                         console.error('Error logging out:', error.message);
                         alert('Ошибка при выходе: ' + error.message);
                     } else {
-                        window.location.href = 'index.html'; // Перенаправляем на страницу авторизации
+                        // After logout, force re-check auth to show login form
+                        checkAuthAndRenderContent();
                     }
                 });
             }

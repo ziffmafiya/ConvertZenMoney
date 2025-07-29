@@ -70,12 +70,35 @@
     </div>
 
     <script type="module">
-        import { supabase } from './supabaseClient.js';
+        // No direct import needed, supabase will be available globally via index.html
+        // import { supabase } from './supabaseClient.js'; // Removed
 
         const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const errorMessage = document.getElementById('error-message');
+
+        // We need to ensure supabase is available before using it.
+        // Since auth.html is loaded dynamically into index.html,
+        // and index.html loads supabaseClient.js (which exports supabase),
+        // we can assume it will be available.
+        // However, for a standalone auth.html, you'd need to include supabaseClient.js directly.
+        // For this setup, we'll rely on the parent index.html to provide it.
+        // If issues persist, consider adding <script type="module" src="./supabaseClient.js"></script> here.
+        
+        // A small delay or check might be needed if supabaseClient.js isn't guaranteed to load first.
+        // For now, assuming it loads before this script executes.
+        
+        // Re-declare supabase if it's not globally available in this context
+        // (though it should be if index.html loads supabaseClient.js as a module)
+        let supabase;
+        if (window.supabase && window.supabase.auth) {
+            supabase = window.supabase;
+        } else {
+            // Fallback or error handling if supabase is not yet available
+            console.error('Supabase client not found on window object. Ensure supabaseClient.js is loaded correctly.');
+            // You might want to add a retry mechanism or display an error to the user.
+        }
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -83,6 +106,12 @@
             const password = passwordInput.value;
 
             errorMessage.classList.add('hidden'); // Скрываем предыдущие ошибки
+
+            if (!supabase) {
+                errorMessage.textContent = 'Ошибка: Supabase клиент не инициализирован.';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -112,7 +141,8 @@
                 } else {
                     // Успешный вход
                     console.log('User logged in:', data.user);
-                    window.location.href = 'index.html'; // Перенаправляем на главную страницу
+                    // Instead of direct redirect, notify parent to re-check auth
+                    window.parent.postMessage({ type: 'authSuccess' }, '*');
                 }
             } catch (err) {
                 errorMessage.textContent = `Неизвестная ошибка: ${err.message}`;
@@ -122,13 +152,24 @@
 
         // Проверяем сессию при загрузке страницы
         async function checkSession() {
+            if (!supabase) {
+                console.error('Supabase client not available for session check.');
+                return;
+            }
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                window.location.href = 'index.html'; // Если есть активная сессия, перенаправляем на главную
+                window.parent.postMessage({ type: 'authSuccess' }, '*'); // Notify parent
             }
         }
 
         checkSession();
+
+        // Listen for messages from the parent (index.html) if needed
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'checkAuth') {
+                checkSession();
+            }
+        });
     </script>
 </body>
 </html>
