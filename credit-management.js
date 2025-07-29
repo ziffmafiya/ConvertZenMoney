@@ -25,11 +25,17 @@ class CreditManager {
     // Загрузка всех данных о кредитах
     async loadCreditData() {
         try {
+            console.log('Loading credit data...');
             await Promise.all([
                 this.loadLoans(),
                 this.loadCreditCards(),
                 this.loadSummary()
             ]);
+            console.log('Credit data loaded:', {
+                loans: this.loans,
+                creditCards: this.creditCards,
+                summary: this.summary
+            });
             this.renderCreditDashboard();
         } catch (error) {
             console.error('Error loading credit data:', error);
@@ -38,60 +44,87 @@ class CreditManager {
 
     // Загрузка кредитов
     async loadLoans() {
-        const response = await fetch('/api/credit-management', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                action: 'get_loans',
-                userId: this.userId 
-            })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            this.loans = data.loans || [];
-        } else {
-            throw new Error('Failed to load loans');
+        try {
+            console.log('Loading loans for user:', this.userId);
+            const response = await fetch('/api/credit-management', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    action: 'get_loans',
+                    userId: this.userId 
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.loans = data.loans || [];
+                console.log('Loans loaded:', this.loans);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to load loans:', errorText);
+                throw new Error('Failed to load loans');
+            }
+        } catch (error) {
+            console.error('Error in loadLoans:', error);
+            this.loans = [];
         }
     }
 
     // Загрузка кредитных карт
     async loadCreditCards() {
-        const response = await fetch('/api/credit-management', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                action: 'get_credit_cards',
-                userId: this.userId 
-            })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            this.creditCards = data.cards || [];
-        } else {
-            throw new Error('Failed to load credit cards');
+        try {
+            console.log('Loading credit cards for user:', this.userId);
+            const response = await fetch('/api/credit-management', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    action: 'get_credit_cards',
+                    userId: this.userId 
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.creditCards = data.cards || [];
+                console.log('Credit cards loaded:', this.creditCards);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to load credit cards:', errorText);
+                throw new Error('Failed to load credit cards');
+            }
+        } catch (error) {
+            console.error('Error in loadCreditCards:', error);
+            this.creditCards = [];
         }
     }
 
     // Загрузка сводки
     async loadSummary() {
-        const response = await fetch('/api/credit-management', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                action: 'get_credit_summary',
-                userId: this.userId 
-            })
-        });
-        if (response.ok) {
-            this.summary = await response.json();
-        } else {
-            throw new Error('Failed to load summary');
+        try {
+            console.log('Loading summary for user:', this.userId);
+            const response = await fetch('/api/credit-management', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    action: 'get_credit_summary',
+                    userId: this.userId 
+                })
+            });
+            if (response.ok) {
+                this.summary = await response.json();
+                console.log('Summary loaded:', this.summary);
+            } else {
+                const errorText = await response.text();
+                console.error('Failed to load summary:', errorText);
+                throw new Error('Failed to load summary');
+            }
+        } catch (error) {
+            console.error('Error in loadSummary:', error);
+            this.summary = null;
         }
     }
 
@@ -223,28 +256,28 @@ class CreditManager {
                 <!-- Общий долг -->
                 <div class="bg-[#161b22] rounded-2xl p-6 border border-[#30363d]">
                     <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий долг</h3>
-                    <p class="text-3xl font-bold text-red-400">${this.formatCurrency(this.summary.overall.total_debt)}</p>
+                    <p class="text-3xl font-bold text-red-400">${this.formatCurrency(this.summary.total_debt || 0)}</p>
                     <p class="text-sm text-gray-500 mt-2">Кредиты + Карты</p>
                 </div>
 
                 <!-- Ежемесячные обязательства -->
                 <div class="bg-[#161b22] rounded-2xl p-6 border border-[#30363d]">
                     <h3 class="text-lg font-semibold text-gray-400 mb-2">Ежемесячные платежи</h3>
-                    <p class="text-3xl font-bold text-yellow-400">${this.formatCurrency(this.summary.overall.total_monthly_obligations)}</p>
+                    <p class="text-3xl font-bold text-yellow-400">${this.formatCurrency(this.summary.total_monthly_obligations || 0)}</p>
                     <p class="text-sm text-gray-500 mt-2">По кредитам</p>
                 </div>
 
                 <!-- Кредитный рейтинг -->
                 <div class="bg-[#161b22] rounded-2xl p-6 border border-[#30363d]">
                     <h3 class="text-lg font-semibold text-gray-400 mb-2">Кредитный рейтинг</h3>
-                    <p class="text-3xl font-bold ${this.getCreditScoreColor(this.summary.overall.credit_health_score)}">${this.summary.overall.credit_health_score}</p>
+                    <p class="text-3xl font-bold ${this.getCreditScoreColor(this.summary.credit_health_score || 0)}">${this.summary.credit_health_score || 0}</p>
                     <p class="text-sm text-gray-500 mt-2">из 100</p>
                 </div>
 
                 <!-- Утилизация кредита -->
                 <div class="bg-[#161b22] rounded-2xl p-6 border border-[#30363d]">
                     <h3 class="text-lg font-semibold text-gray-400 mb-2">Утилизация кредита</h3>
-                    <p class="text-3xl font-bold ${this.getUtilizationColor(this.summary.credit_cards.overall_utilization_ratio)}">${this.summary.credit_cards.overall_utilization_ratio.toFixed(1)}%</p>
+                    <p class="text-3xl font-bold ${this.getUtilizationColor(this.summary.utilization_ratio || 0)}">${(this.summary.utilization_ratio || 0).toFixed(1)}%</p>
                     <p class="text-sm text-gray-500 mt-2">Кредитные карты</p>
                 </div>
             </div>
@@ -371,7 +404,7 @@ class CreditManager {
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">Доступный кредит</p>
-                        <p class="text-lg font-semibold text-green-400">${this.formatCurrency(card.available_credit)}</p>
+                        <p class="text-lg font-semibold text-green-400">${this.formatCurrency(card.credit_limit - card.current_balance)}</p>
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm">Утилизация</p>
@@ -423,12 +456,37 @@ class CreditManager {
 
     // Рендеринг предстоящих платежей
     renderUpcomingPayments() {
-        if (!this.summary || !this.summary.upcoming_payments) return;
-
         const paymentsContainer = document.getElementById('upcoming-payments');
         if (!paymentsContainer) return;
 
-        if (this.summary.upcoming_payments.length === 0) {
+        // Создаем список предстоящих платежей из кредитов и карт
+        const upcomingPayments = [];
+        
+        // Добавляем платежи по кредитам
+        this.loans.forEach(loan => {
+            if (loan.status === 'active') {
+                upcomingPayments.push({
+                    name: loan.loan_name,
+                    type: 'loan',
+                    amount: loan.monthly_payment,
+                    days_until_due: 30 // Упрощенно - через 30 дней
+                });
+            }
+        });
+
+        // Добавляем платежи по кредитным картам
+        this.creditCards.forEach(card => {
+            if (card.days_until_payment_due > 0) {
+                upcomingPayments.push({
+                    name: card.card_name,
+                    type: 'card',
+                    amount: card.minimum_payment,
+                    days_until_due: card.days_until_payment_due
+                });
+            }
+        });
+
+        if (upcomingPayments.length === 0) {
             paymentsContainer.innerHTML = `
                 <div class="bg-[#161b22] rounded-2xl p-6 border border-[#30363d]">
                     <h3 class="text-lg font-semibold text-gray-400 mb-2">Предстоящие платежи</h3>
@@ -438,7 +496,7 @@ class CreditManager {
             return;
         }
 
-        const paymentsHTML = this.summary.upcoming_payments.map(payment => `
+        const paymentsHTML = upcomingPayments.map(payment => `
             <div class="flex justify-between items-center p-4 bg-gray-800 rounded-lg">
                 <div>
                     <p class="font-semibold text-white">${payment.name}</p>
@@ -465,17 +523,52 @@ class CreditManager {
 
     // Рендеринг предупреждений
     renderAlerts() {
-        if (!this.summary || !this.summary.alerts) return;
-
         const alertsContainer = document.getElementById('credit-alerts');
         if (!alertsContainer) return;
 
-        if (this.summary.alerts.length === 0) {
+        const alerts = [];
+
+        // Проверяем предупреждения из summary
+        if (this.summary && this.summary.alerts) {
+            alerts.push(...this.summary.alerts);
+        }
+
+        // Добавляем дополнительные предупреждения
+        this.creditCards.forEach(card => {
+            // Высокая утилизация
+            if (card.utilization_ratio > 80) {
+                alerts.push({
+                    type: 'high_utilization',
+                    severity: 'medium',
+                    message: `Высокая загрузка карты ${card.card_name} (${card.utilization_ratio.toFixed(1)}%)`
+                });
+            }
+
+            // Скоро платеж
+            if (card.days_until_payment_due <= 7 && card.days_until_payment_due > 0) {
+                alerts.push({
+                    type: 'upcoming_payment',
+                    severity: 'medium',
+                    message: `Скоро платеж по карте ${card.card_name} (через ${card.days_until_payment_due} дней)`
+                });
+            }
+
+            // Просрочен платеж
+            if (card.days_until_payment_due <= 0) {
+                alerts.push({
+                    type: 'overdue_payment',
+                    severity: 'high',
+                    message: `Просрочен платеж по карте ${card.card_name}`
+                });
+            }
+        });
+
+        if (alerts.length === 0) {
             alertsContainer.innerHTML = '';
             return;
         }
 
-        const alertsHTML = this.summary.alerts.map(alert => `
+        const alertsHTML = alerts.map(alert => `
             <div class="p-4 rounded-lg ${this.getAlertColor(alert.severity)}">
                 <p class="font-semibold">${alert.message}</p>
             </div>
@@ -563,10 +656,72 @@ class CreditManager {
     showLoanDetails(loanId) {
         alert('Функция просмотра деталей кредита будет реализована');
     }
+
+    // Функция для добавления демо-данных (для тестирования)
+    async addDemoData() {
+        try {
+            console.log('Adding demo data...');
+            
+            // Добавляем демо кредит
+            await this.addLoan({
+                loanName: 'Ипотечный кредит',
+                loanType: 'mortgage',
+                principalAmount: 2500000,
+                interestRate: 0.085,
+                loanTermMonths: 240,
+                startDate: '2023-01-15',
+                bankName: 'Сбербанк',
+                accountNumber: '1234567890',
+                notes: 'Кредит на покупку квартиры'
+            });
+
+            // Добавляем демо кредитную карту
+            await this.addCreditCard({
+                cardName: 'Visa Gold',
+                creditLimit: 50000,
+                currentBalance: 15000,
+                interestRate: 0.0299,
+                statementDate: '2024-02-15',
+                paymentDueDate: '2024-03-05',
+                gracePeriodDays: 21,
+                minimumPaymentPercentage: 3,
+                bankName: 'Монобанк',
+                cardNumber: '****1234',
+                notes: 'Основная кредитная карта'
+            });
+
+            console.log('Demo data added successfully');
+            alert('Демо-данные добавлены успешно!');
+        } catch (error) {
+            console.error('Error adding demo data:', error);
+            alert('Ошибка при добавлении демо-данных: ' + error.message);
+        }
+    }
+
+    // Функция для отладки (показать текущее состояние)
+    debugState() {
+        console.log('=== Credit Manager Debug State ===');
+        console.log('User ID:', this.userId);
+        console.log('Loans:', this.loans);
+        console.log('Credit Cards:', this.creditCards);
+        console.log('Summary:', this.summary);
+        console.log('=== End Debug State ===');
+    }
 }
 
 // Инициализация менеджера кредитов
 const creditManager = new CreditManager();
 
 // Экспорт для использования в других модулях
-window.creditManager = creditManager; 
+window.creditManager = creditManager;
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing credit manager...');
+    if (window.creditManager) {
+        console.log('Credit manager found, loading data...');
+        window.creditManager.loadCreditData();
+    } else {
+        console.error('Credit manager not found!');
+    }
+}); 

@@ -105,7 +105,17 @@
 
         <!-- Секция кредитов и кредитных карт -->
         <section class="mb-8 md:mb-12">
-            <h2 class="text-2xl font-bold text-white mb-6">Кредиты и кредитные карты</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Кредиты и кредитные карты</h2>
+                <div class="flex gap-2">
+                    <button onclick="creditManager.debugState()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+                        Отладка
+                    </button>
+                    <button onclick="creditManager.addDemoData()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+                        Добавить демо-данные
+                    </button>
+                </div>
+            </div>
             
             <!-- Сводные карточки -->
             <div id="credit-summary-cards"></div>
