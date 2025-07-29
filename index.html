@@ -400,23 +400,6 @@
 </div>
 
     <script>
-        // Initialize Supabase client (replace with your actual Supabase URL and Anon Key)
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // TODO: Replace with actual Supabase URL
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // TODO: Replace with actual Supabase Anon Key
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Helper function to get authorization headers
-        async function getAuthHeaders() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                return {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                };
-            }
-            return { 'Content-Type': 'application/json' };
-        }
-
         // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
         document.addEventListener('DOMContentLoaded', function () {
             // --- Ссылки на DOM-элементы ---
@@ -575,8 +558,7 @@
 
                 try {
                     // Отправляем запрос на сервер для получения транзакций
-                    const headers = await getAuthHeaders();
-                    const response = await fetch(`/api/get-transactions?${params.toString()}`, { headers });
+                    const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch transactions');
@@ -609,8 +591,7 @@
                 const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
                 try {
-                    const headers = await getAuthHeaders();
-                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`, { headers });
+                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch monthly summary');
@@ -661,8 +642,7 @@
 
                 try {
                     // Отправляем запрос на сервер для анализа привычек
-                    const headers = await getAuthHeaders();
-                    const response = await fetch(`/api/analyze-habits?${params.toString()}`, { headers });
+                    const response = await fetch(`/api/analyze-habits?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch habits');
@@ -759,8 +739,7 @@
                 }
 
                 try {
-                    const headers = await getAuthHeaders();
-                    const response = await fetch(`/api/deep-analysis?${params.toString()}`, { headers });
+                    const response = await fetch(`/api/deep-analysis?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to perform deep analysis');
@@ -783,8 +762,7 @@
 
                 try {
                     // Отправляем запрос на сервер для обнаружения аномалий
-                    const headers = await getAuthHeaders();
-                    const response = await fetch('/api/detect-anomalies', { headers });
+                    const response = await fetch('/api/detect-anomalies');
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to detect anomalies');
@@ -1102,10 +1080,9 @@
                 }
 
                 try {
-                    const baseHeaders = await getAuthHeaders();
                     const response = await fetch('/api/get-goal-progress', {
                         method: 'POST',
-                        headers: { ...baseHeaders, 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ year: selectedYear, month: selectedMonth, goal })
                     });
 
