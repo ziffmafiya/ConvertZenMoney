@@ -130,6 +130,7 @@ async function analyzeHabitsWithEmbeddings(transactions, supabase, workSchedule)
                 
                 // Формируем объект, описывающий привычку
                 habits[habitName] = {
+                    name: habitName, // Добавляем название привычки как свойство объекта
                     count: habitTransactions.length, // Количество транзакций, составляющих привычку
                     totalSpent: totalSpent.toFixed(2), // Общая сумма трат
                     avgSpent: (totalSpent / habitTransactions.length).toFixed(2), // Средняя сумма траты
