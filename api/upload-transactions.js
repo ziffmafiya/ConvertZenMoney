@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { runClustering } from './lib/clustering';
 
 // Глобальная инициализация клиента Google Generative AI.
 // Этот клиент используется для создания "эмбеддингов" (embeddings) -
@@ -44,80 +43,79 @@ async function getEmbedding(text) {
  * @param {object} res - Объект ответа для отправки результата клиенту.
  */
 export default async function handler(req, res) {
-    try {
-        // Принимаем только POST-запросы, так как этот эндпоинт предназначен для создания данных.
-        if (req.method !== 'POST') {
-            return res.status(405).json({ error: 'Method Not Allowed' });
-        }
+    // Принимаем только POST-запросы, так как этот эндпоинт предназначен для создания данных.
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
-        // Извлекаем данные из тела запроса: список транзакций и флаги для их обработки.
-        const { transactions, excludeDebts, skipEmbedding } = req.body;
-        console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts, 'Skip Embedding:', skipEmbedding);
+    // Извлекаем данные из тела запроса: список транзакций и флаги для их обработки.
+    const { transactions, excludeDebts, skipEmbedding } = req.body;
+    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts, 'Skip Embedding:', skipEmbedding);
 
-        // Валидация входных данных.
-        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-            console.error('Validation error: No transactions provided or invalid format.');
-            return res.status(400).json({ error: 'No transactions provided or invalid format' });
-        }
+    // Валидация входных данных.
+    if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+        console.error('Validation error: No transactions provided or invalid format.');
+        return res.status(400).json({ error: 'No transactions provided or invalid format' });
+    }
 
-        // Получаем URL и ключ для доступа к Supabase из переменных окружения.
-        const supabaseUrl = process.env.SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    // Получаем URL и ключ для доступа к Supabase из переменных окружения.
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-        // Проверяем, что ключи для Supabase и Gemini заданы.
-        if (!supabaseUrl || !supabaseKey) {
-            console.error('Configuration error: Supabase URL or Anon Key not configured.');
-            return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
-        }
-        if (!process.env.GEMINI_API_KEY) {
-            console.error('Configuration error: GEMINI_API_KEY not configured.');
-            return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
-        }
-        console.log('Supabase client initialized.');
+    // Проверяем, что ключи для Supabase и Gemini заданы.
+    if (!supabaseUrl || !supabaseKey) {
+        console.error('Configuration error: Supabase URL or Anon Key not configured.');
+        return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
+    }
+    if (!process.env.GEMINI_API_KEY) {
+        console.error('Configuration error: GEMINI_API_KEY not configured.');
+        return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+    }
+    console.log('Supabase client initialized.');
 
-        // Инициализируем клиент Supabase.
-        const supabase = createClient(supabaseUrl, supabaseKey);
+    // Инициализируем клиент Supabase.
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-        /**
-         * Нормализует строку: удаляет неразрывные пробелы, обрезает пробелы по краям и приводит к нижнему регистру.
-         * @param {string} str - Входная строка.
-         * @returns {string} - Нормализованная строка.
-         */
-        function normalize(str) {
-            return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
-        }
+    /**
+     * Нормализует строку: удаляет неразрывные пробелы, обрезает пробелы по краям и приводит к нижнему регистру.
+     * @param {string} str - Входная строка.
+     * @returns {string} - Нормализованная строка.
+     */
+    function normalize(str) {
+        return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+    }
 
-        // --- Логика дедупликации ---
-        /**
-         * Создает уникальный хэш для транзакции на основе ее ключевых полей.
-         * Это позволяет эффективно идентифицировать дубликаты.
-         * @param {object} t - Объект транзакции.
-         * @returns {string} - Уникальный строковый хэш.
-         */
-        const createUniqueHash = (t) => {
-            // Создает консистентную, уникальную строку из основных полей транзакции,
-            // безопасно обрабатывая null/undefined значения и обеспечивая согласованное форматирование чисел.
-            // Нормализуем дату в формат ГГГГ-ММ-ДД для консистентного хэширования.
-            let normalizedDate = '';
-            if (t.date) {
-                const parts = t.date.split('.');
-                if (parts.length === 3) {
-                    normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Предполагаем формат ДД.ММ.ГГГГ.
-                } else {
-                    normalizedDate = t.date; // Используем как есть, если формат не соответствует.
-                }
+    // --- Логика дедупликации ---
+    /**
+     * Создает уникальный хэш для транзакции на основе ее ключевых полей.
+     * Это позволяет эффективно идентифицировать дубликаты.
+     * @param {object} t - Объект транзакции.
+     * @returns {string} - Уникальный строковый хэш.
+     */
+    const createUniqueHash = (t) => {
+        // Создает консистентную, уникальную строку из основных полей транзакции,
+        // безопасно обрабатывая null/undefined значения и обеспечивая согласованное форматирование чисел.
+        // Нормализуем дату в формат ГГГГ-ММ-ДД для консистентного хэширования.
+        let normalizedDate = '';
+        if (t.date) {
+            const parts = t.date.split('.');
+            if (parts.length === 3) {
+                normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Предполагаем формат ДД.ММ.ГГГГ.
+            } else {
+                normalizedDate = t.date; // Используем как есть, если формат не соответствует.
             }
-            
-            const category = (t.categoryName || '').trim();
-            const payee = (t.payee || '').trim();
-            const comment = (t.comment || '').trim();
-            // Форматируем числа до 2 десятичных знаков, чтобы избежать неконсистентности из-за плавающей точки.
-            const outcome = (t.outcome || 0).toFixed(2);
-            const income = (t.income || 0).toFixed(2);
-            return `${normalizedDate}|${category}|${payee}|${comment}|${outcome}|${income}`;
-        };
-
+        }
         
+        const category = (t.categoryName || '').trim();
+        const payee = (t.payee || '').trim();
+        const comment = (t.comment || '').trim();
+        // Форматируем числа до 2 десятичных знаков, чтобы избежать неконсистентности из-за плавающей точки.
+        const outcome = (t.outcome || 0).toFixed(2);
+        const income = (t.income || 0).toFixed(2);
+        return `${normalizedDate}|${category}|${payee}|${comment}|${outcome}|${income}`;
+    };
+
+    try {
         // Шаг 1: Генерируем хэши для всех входящих транзакций.
         const transactionsWithHashes = transactions.map(t => ({
             ...t,
@@ -144,7 +142,7 @@ export default async function handler(req, res) {
             if (fetchError) {
                 // В случае ошибки при получении данных из Supabase, логируем ее и возвращаем ошибку клиенту.
                 console.error('Supabase fetch error during deduplication chunk processing:', fetchError);
-                throw new Error(`Failed to check for existing transactions. Supabase RPC Error: ${fetchError.message}`);
+                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error: ${fetchError.message}` });
             }
 
             if (existingTransactions) {
@@ -192,44 +190,29 @@ export default async function handler(req, res) {
         
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
-        // Шаг 4: Генерируем эмбеддинги и вставляем транзакции порциями, чтобы избежать тайм-аутов.
-        const EMBEDDING_CHUNK_SIZE = 50; // Обрабатываем по 50 транзакций за раз
-        let totalInsertedCount = 0;
-
-        for (let i = 0; i < transactionsToProcess.length; i += EMBEDDING_CHUNK_SIZE) {
-            const chunk = transactionsToProcess.slice(i, i + EMBEDDING_CHUNK_SIZE);
-            console.log(`Processing chunk ${i / EMBEDDING_CHUNK_SIZE + 1}...`);
-
-            let transactionsToInsert = await Promise.all(chunk.map(async (t) => {
-                let embedding = null;
-                if (!skipEmbedding) {
-                    const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
-                    embedding = await getEmbedding(description);
-                }
-                return {
-                    date: t.date,
-                    category_name: t.categoryName,
-                    payee: t.payee,
-                    comment: t.comment,
-                    outcome_account_name: t.outcomeAccountName,
-                    outcome: t.outcome,
-                    income_account_name: t.incomeAccountName,
-                    income: t.income,
-                    unique_hash: t.unique_hash,
-                    description_embedding: embedding
-                };
-            }));
-
-            const { data, error } = await supabase
-                .from('transactions')
-                .insert(transactionsToInsert);
-
-            if (error) {
-                console.error('Supabase insert error during chunk processing:', error);
-                throw new Error(`Supabase insert error: ${error.message}`);
+        // Шаг 4: Генерируем эмбеддинги для новых транзакций, если не указано пропустить этот шаг.
+        let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
+            let embedding = null;
+            if (!skipEmbedding) {
+                // Создаем текстовое описание для генерации эмбеддинга, включая все релевантные поля.
+                const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+                embedding = await getEmbedding(description); // Получаем эмбеддинг.
             }
-            totalInsertedCount += data ? data.length : 0;
-        }
+            
+            // Возвращаем объект транзакции, готовый к вставке в БД (с полями в snake_case).
+            return {
+                date: t.date,
+                category_name: t.categoryName,
+                payee: t.payee,
+                comment: t.comment,
+                outcome_account_name: t.outcomeAccountName,
+                outcome: t.outcome,
+                income_account_name: t.incomeAccountName,
+                income: t.income,
+                unique_hash: t.unique_hash, // Передаем хэш для вставки.
+                description_embedding: embedding // Добавляем эмбеддинг (может быть null).
+            };
+        }));
 
         console.log('DEBUG: Transactions to insert before final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
@@ -246,29 +229,24 @@ export default async function handler(req, res) {
         console.log('DEBUG: Transactions to insert after final check (first 5):', JSON.stringify(finalTransactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Final count of transactions to insert after all checks:', finalTransactionsToInsert.length);
 
-        // Отправляем успешный ответ с количеством вставленных транзакций.
-        console.log(`${totalInsertedCount} transactions uploaded successfully.`);
+        // Шаг 5: Вставляем новые, обогащенные эмбеддингами транзакции в базу данных.
+        const { data, error } = await supabase
+            .from('transactions')
+            .insert(finalTransactionsToInsert);
 
-        // Асинхронно запускаем кластеризацию после успешной загрузки
-        if (totalInsertedCount > 0) {
-            // Запускаем без await, чтобы не блокировать ответ клиенту
-            (async () => {
-                try {
-                    await runClustering(supabase);
-                } catch (e) {
-                    console.error("Error during background clustering execution:", e);
-                }
-            })();
+        if (error) {
+            // В случае ошибки при вставке, логируем ее и возвращаем ошибку клиенту.
+            console.error('Supabase insert error:', error);
+            return res.status(500).json({ error: error.message });
         }
 
-        res.status(200).json({ message: `${totalInsertedCount} new transactions uploaded successfully.` });
+        // Отправляем успешный ответ с количеством вставленных транзакций.
+        const insertedCount = data ? data.length : 0;
+        console.log(`${insertedCount} transactions uploaded successfully.`);
+        res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         // Обработка любых других непредвиденных ошибок.
-        console.error('FINAL CATCH: Unhandled server error during transaction upload:', error.message);
-        res.status(500).json({
-            error: 'An unexpected error occurred on the server.',
-            details: error.message,
-            stack: error.stack // Включаем стек только в режиме разработки
-        });
+        console.error('Unhandled server error during embedding or Supabase insert:', error);
+        res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
 }
