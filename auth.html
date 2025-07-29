@@ -8,21 +8,21 @@
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: #0D1117;
-            color: #c9d1d9;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            background-color: #0D1117;
+            color: #c9d1d9;
         }
         .auth-container {
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 0.75rem;
             padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .input-field {
             background-color: #0D1117;
@@ -35,9 +35,9 @@
         .btn {
             background-color: #22c55e;
             color: white;
-            font-weight: bold;
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
+            font-weight: bold;
             width: 100%;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -54,35 +54,35 @@
 </head>
 <body>
     <div class="auth-container">
-        <h2 class="text-2xl font-bold text-center mb-6">Вход</h2>
-        <form id="authForm" class="space-y-4">
+        <h2 class="text-2xl font-bold text-center mb-6">Вход / Регистрация</h2>
+        <form id="auth-form" class="space-y-4">
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Email</label>
                 <input type="email" id="email" class="input-field" placeholder="your@example.com" required>
             </div>
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Пароль</label>
+                <label for="password" class="block text-sm font-medium text-gray-400 mb-1">Пароль</label>
                 <input type="password" id="password" class="input-field" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn">Войти</button>
-            <p id="errorMessage" class="error-message text-center hidden"></p>
+            <button type="submit" class="btn">Войти / Зарегистрироваться</button>
+            <p id="error-message" class="error-message hidden text-center"></p>
         </form>
     </div>
 
     <script type="module">
         import { supabase } from './supabaseClient.js';
 
-        const authForm = document.getElementById('authForm');
+        const authForm = document.getElementById('auth-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const errorMessage = document.getElementById('errorMessage');
+        const errorMessage = document.getElementById('error-message');
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            errorMessage.classList.add('hidden');
-
             const email = emailInput.value;
             const password = passwordInput.value;
+
+            errorMessage.classList.add('hidden'); // Скрываем предыдущие ошибки
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -91,25 +91,44 @@
                 });
 
                 if (error) {
-                    throw error;
+                    if (error.message.includes('Email not confirmed')) {
+                        // Если пользователь не подтвердил почту, попробуем зарегистрировать
+                        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                            email: email,
+                            password: password,
+                        });
+
+                        if (signUpError) {
+                            errorMessage.textContent = `Ошибка регистрации: ${signUpError.message}`;
+                            errorMessage.classList.remove('hidden');
+                        } else {
+                            alert('На ваш email отправлено письмо для подтверждения. Пожалуйста, подтвердите свой аккаунт.');
+                            // Можно перенаправить пользователя или показать сообщение
+                        }
+                    } else {
+                        errorMessage.textContent = `Ошибка входа: ${error.message}`;
+                        errorMessage.classList.remove('hidden');
+                    }
+                } else {
+                    // Успешный вход
+                    console.log('User logged in:', data.user);
+                    window.location.href = 'index.html'; // Перенаправляем на главную страницу
                 }
-
-                console.log('User logged in:', data.user);
-                window.location.href = 'index.html'; // Redirect to main page on successful login
-
-            } catch (error) {
-                console.error('Authentication error:', error.message);
-                errorMessage.textContent = 'Ошибка входа: ' + error.message;
+            } catch (err) {
+                errorMessage.textContent = `Неизвестная ошибка: ${err.message}`;
                 errorMessage.classList.remove('hidden');
             }
         });
 
-        // Check if user is already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        // Проверяем сессию при загрузке страницы
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                window.location.href = 'index.html';
+                window.location.href = 'index.html'; // Если есть активная сессия, перенаправляем на главную
             }
-        });
+        }
+
+        checkSession();
     </script>
 </body>
 </html>
