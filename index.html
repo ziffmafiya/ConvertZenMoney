@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+    <script src="credit-management.js"></script>
+    <script src="demo-credit-data.js"></script>
     <style>
         .font-tektur {
             font-family: 'Tektur', sans-serif;
@@ -99,6 +101,26 @@
                 <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
                 <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
             </div>
+        </section>
+
+        <!-- Секция кредитов и кредитных карт -->
+        <section class="mb-8 md:mb-12">
+            <h2 class="text-2xl font-bold text-white mb-6">Кредиты и кредитные карты</h2>
+            
+            <!-- Сводные карточки -->
+            <div id="credit-summary-cards"></div>
+            
+            <!-- Предупреждения -->
+            <div id="credit-alerts"></div>
+            
+            <!-- Секция кредитов -->
+            <div id="loans-section"></div>
+            
+            <!-- Секция кредитных карт -->
+            <div id="credit-cards-section"></div>
+            
+            <!-- Предстоящие платежи -->
+            <div id="upcoming-payments"></div>
         </section>
 
         <!-- Секция графика "Траты vs. Доходы" -->
