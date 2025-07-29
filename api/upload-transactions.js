@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { runClustering } from '../../lib/clustering';
 
 // Глобальная инициализация клиента Google Generative AI.
 // Этот клиент используется для создания "эмбеддингов" (embeddings) -
@@ -243,6 +244,12 @@ export default async function handler(req, res) {
         // Отправляем успешный ответ с количеством вставленных транзакций.
         const insertedCount = data ? data.length : 0;
         console.log(`${insertedCount} transactions uploaded successfully.`);
+
+        // Асинхронно запускаем кластеризацию после успешной загрузки
+        if (insertedCount > 0) {
+            runClustering(supabase);
+        }
+
         res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         // Обработка любых других непредвиденных ошибок.
