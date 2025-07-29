@@ -17,7 +17,8 @@ async function generateHabitName(transactions) {
         return acc;
     }, {});
     const mostCommonPayee = Object.keys(payeeCounts).sort((a, b) => payeeCounts[b] - payeeCounts[a])[0];
-    return `Привычка: ${mostCommonPayee}`;
+    // Если наиболее частый получатель не найден, возвращаем общее название
+    return mostCommonPayee ? `Привычка: ${mostCommonPayee}` : 'Неизвестная привычка';
 }
 
 // Основной обработчик API-запроса для анализа привычек
@@ -129,6 +130,7 @@ async function analyzeHabitsWithEmbeddings(transactions, supabase, workSchedule)
                 
                 // Формируем объект, описывающий привычку
                 habits[habitName] = {
+                    name: habitName, // Добавляем название привычки как свойство объекта
                     count: habitTransactions.length, // Количество транзакций, составляющих привычку
                     totalSpent: totalSpent.toFixed(2), // Общая сумма трат
                     avgSpent: (totalSpent / habitTransactions.length).toFixed(2), // Средняя сумма траты
