@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
-    "@supabase/supabase-js": "^2.44.2",
-    "glpk.js": "^4.0.2"
+    "@supabase/supabase-js": "^2.44.2"
   }
 }

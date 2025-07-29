@@ -230,39 +230,6 @@
         </div>
     </section>
 
-    <!-- Секция оптимизации бюджета -->
-    <section id="budget-optimization-section" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Оптимизация бюджета</h2>
-        <p class="text-gray-400 mb-4">Введите свои доходы, цели по сбережениям и лимиты по категориям расходов, чтобы получить оптимальное распределение бюджета.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label for="income" class="block mb-2 text-sm font-medium text-gray-300">Месячный доход</label>
-                <input type="number" id="income" placeholder="Например: 3000" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-            </div>
-            <div>
-                <label for="savingsGoal" class="block mb-2 text-sm font-medium text-gray-300">Цель по сбережениям</label>
-                <input type="number" id="savingsGoal" placeholder="Например: 500" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-            </div>
-        </div>
-
-        <h3 class="text-xl font-bold text-white mb-2">Категории расходов</h3>
-        <div id="expense-categories" class="space-y-2 mb-4">
-            <!-- Поля для категорий будут добавляться сюда -->
-        </div>
-        <button id="add-category" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mb-4">Добавить категорию</button>
-
-        <button id="optimize-budget-button" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Оптимизировать бюджет</button>
-
-        <div id="optimization-result" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 hidden">
-            <h3 class="text-xl font-bold text-white mb-2">Результат оптимизации</h3>
-            <div id="optimization-result-content"></div>
-        </div>
-        <div id="optimization-loading" class="hidden mt-4 text-center text-blue-400">
-            <p>Оптимизация выполняется, пожалуйста, подождите...</p>
-        </div>
-    </section>
-
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
@@ -1905,86 +1872,6 @@
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
-
-            // --- Budget Optimization Logic ---
-            const optimizeBudgetButton = document.getElementById('optimize-budget-button');
-            const addCategoryButton = document.getElementById('add-category');
-            const expenseCategoriesContainer = document.getElementById('expense-categories');
-            const optimizationResultDiv = document.getElementById('optimization-result');
-            const optimizationResultContentDiv = document.getElementById('optimization-result-content');
-            const optimizationLoadingDiv = document.getElementById('optimization-loading');
-
-            function addExpenseCategory() {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'grid grid-cols-1 md:grid-cols-4 gap-2 items-center';
-                categoryDiv.innerHTML = `
-                    <input type="text" placeholder="Название категории" class="category-name bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <input type="number" placeholder="Мин. траты" class="category-min bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <input type="number" placeholder="Макс. траты" class="category-max bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <button class="remove-category bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Удалить</button>
-                `;
-                expenseCategoriesContainer.appendChild(categoryDiv);
-
-                categoryDiv.querySelector('.remove-category').addEventListener('click', () => {
-                    categoryDiv.remove();
-                });
-            }
-
-            addCategoryButton.addEventListener('click', addExpenseCategory);
-
-            optimizeBudgetButton.addEventListener('click', async () => {
-                const income = parseFloat(document.getElementById('income').value);
-                const savingsGoal = parseFloat(document.getElementById('savingsGoal').value);
-                const expenseCategories = [];
-
-                expenseCategoriesContainer.querySelectorAll('.grid').forEach(div => {
-                    const name = div.querySelector('.category-name').value;
-                    const min = parseFloat(div.querySelector('.category-min').value);
-                    const max = parseFloat(div.querySelector('.category-max').value);
-                    if (name && !isNaN(min) && !isNaN(max)) {
-                        expenseCategories.push({ name, min, max });
-                    }
-                });
-
-                if (isNaN(income) || isNaN(savingsGoal) || expenseCategories.length === 0) {
-                    alert('Пожалуйста, заполните все поля корректно.');
-                    return;
-                }
-
-                optimizationLoadingDiv.classList.remove('hidden');
-                optimizationResultDiv.classList.add('hidden');
-
-                try {
-                    const response = await fetch('/api/optimize-budget', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ income, savingsGoal, expenseCategories })
-                    });
-
-                    const result = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(result.error || 'Failed to optimize budget');
-                    }
-
-                    optimizationResultContentDiv.innerHTML = '';
-                    for (const category in result.optimizedSpending) {
-                        const p = document.createElement('p');
-                        p.textContent = `${category}: ${result.optimizedSpending[category].toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                        optimizationResultContentDiv.appendChild(p);
-                    }
-                    optimizationResultDiv.classList.remove('hidden');
-
-                } catch (error) {
-                    console.error('Error optimizing budget:', error);
-                    alert(`Ошибка при оптимизации бюджета: ${error.message}`);
-                } finally {
-                    optimizationLoadingDiv.classList.add('hidden');
-                }
-            });
-
-            // Add one category field by default
-            addExpenseCategory();
         });
     </script>
 
