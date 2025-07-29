@@ -5,6 +5,23 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Function to create tables if they don't exist
+async function ensureTablesExist() {
+  try {
+    // Try to create credit_loans table
+    await supabase.rpc('create_credit_loans_table_if_not_exists');
+  } catch (error) {
+    console.log('Could not create credit_loans table:', error.message);
+  }
+  
+  try {
+    // Try to create credit_cards table
+    await supabase.rpc('create_credit_cards_table_if_not_exists');
+  } catch (error) {
+    console.log('Could not create credit_cards table:', error.message);
+  }
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,8 +32,16 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  console.log('Credit management API called:', {
+    method: req.method,
+    body: req.body,
+    url: req.url
+  });
+
   try {
     const { action, data } = req.body;
+
+    console.log('Action:', action);
 
     switch (action) {
       case 'get_loans':
@@ -36,11 +61,12 @@ export default async function handler(req, res) {
       case 'get_credit_summary':
         return await handleGetCreditSummary(req, res);
       default:
+        console.log('Invalid action:', action);
         return res.status(400).json({ error: 'Invalid action' });
     }
   } catch (error) {
     console.error('Credit management error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 }
 
@@ -49,8 +75,52 @@ async function handleGetLoans(req, res) {
   try {
     const { userId } = req.body;
     
+    console.log('Getting loans for user:', userId);
+    
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if Supabase is configured
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase not configured');
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
+    // Check if table exists by trying to query it
+    try {
+      const { data: loans, error: loansError } = await supabase
+        .from('credit_loans')
+        .select('*')
+        .limit(1);
+
+      if (loansError) {
+        console.error('Table credit_loans does not exist or error:', loansError);
+        // Return empty data if table doesn't exist
+        return res.status(200).json({
+          loans: [],
+          summary: {
+            total_loans: 0,
+            active_loans: 0,
+            total_debt: 0,
+            total_monthly_payments: 0,
+            average_interest_rate: 0
+          }
+        });
+      }
+    } catch (tableError) {
+      console.error('Error checking table:', tableError);
+      // Return empty data if table doesn't exist
+      return res.status(200).json({
+        loans: [],
+        summary: {
+          total_loans: 0,
+          active_loans: 0,
+          total_debt: 0,
+          total_monthly_payments: 0,
+          average_interest_rate: 0
+        }
+      });
     }
 
     // Get loans with payments
@@ -63,7 +133,10 @@ async function handleGetLoans(req, res) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (loansError) throw loansError;
+    if (loansError) {
+      console.error('Error fetching loans:', loansError);
+      throw loansError;
+    }
 
     // Calculate additional fields for each loan
     const enrichedLoans = loans.map(loan => {
@@ -238,8 +311,52 @@ async function handleGetCreditCards(req, res) {
   try {
     const { userId } = req.body;
     
+    console.log('Getting credit cards for user:', userId);
+    
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if Supabase is configured
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase not configured');
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
+    // Check if table exists by trying to query it
+    try {
+      const { data: cards, error: cardsError } = await supabase
+        .from('credit_cards')
+        .select('*')
+        .limit(1);
+
+      if (cardsError) {
+        console.error('Table credit_cards does not exist or error:', cardsError);
+        // Return empty data if table doesn't exist
+        return res.status(200).json({
+          cards: [],
+          summary: {
+            total_cards: 0,
+            total_credit_limit: 0,
+            total_balance: 0,
+            average_utilization: 0,
+            cards_in_grace_period: 0
+          }
+        });
+      }
+    } catch (tableError) {
+      console.error('Error checking table:', tableError);
+      // Return empty data if table doesn't exist
+      return res.status(200).json({
+        cards: [],
+        summary: {
+          total_cards: 0,
+          total_credit_limit: 0,
+          total_balance: 0,
+          average_utilization: 0,
+          cards_in_grace_period: 0
+        }
+      });
     }
 
     // Get credit cards with payments and transactions
@@ -253,7 +370,10 @@ async function handleGetCreditCards(req, res) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (cardsError) throw cardsError;
+    if (cardsError) {
+      console.error('Error fetching credit cards:', cardsError);
+      throw cardsError;
+    }
 
     // Calculate additional fields for each card
     const enrichedCards = cards.map(card => {
@@ -500,8 +620,35 @@ async function handleGetCreditSummary(req, res) {
   try {
     const { userId } = req.body;
     
+    console.log('Getting credit summary for user:', userId);
+    
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if Supabase is configured
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase not configured');
+      return res.status(500).json({ error: 'Database not configured' });
+    }
+
+    // Check if tables exist
+    try {
+      await supabase.from('credit_loans').select('*').limit(1);
+      await supabase.from('credit_cards').select('*').limit(1);
+    } catch (tableError) {
+      console.error('Tables do not exist:', tableError);
+      // Return empty summary if tables don't exist
+      return res.status(200).json({
+        total_debt: 0,
+        total_monthly_obligations: 0,
+        credit_health_score: 100,
+        utilization_ratio: 0,
+        average_interest_rate: 0,
+        total_loans: 0,
+        total_cards: 0,
+        alerts: []
+      });
     }
 
     // Get loans summary
