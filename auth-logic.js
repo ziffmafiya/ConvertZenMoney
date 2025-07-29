@@ -1,83 +1,88 @@
-// A small delay or check might be needed if supabaseClient.js isn't guaranteed to load first.
-// For now, assuming it loads before this script executes.
+import { supabase } from './supabaseClient.js';
 
-// Re-declare supabase if it's not globally available in this context
-// (though it should be if index.html loads supabaseClient.js as a module)
-let supabase;
-if (window.supabase && window.supabase.auth) {
-    supabase = window.supabase;
-} else {
-    // Fallback or error handling if supabase is not yet available
-    console.error('Supabase client not found on window object. Ensure supabaseClient.js is loaded correctly.');
-    // You might want to add a retry mechanism or display an error to the user.
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const authForm = document.getElementById('auth-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const errorMessage = document.getElementById('error-message');
 
-authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = emailInput.value;
-    const password = passwordInput.value;
-    errorMessage.classList.add('hidden'); // Скрываем предыдущие ошибки
-
-    if (!supabase) {
-        errorMessage.textContent = 'Ошибка: Supabase клиент не инициализирован.';
-        errorMessage.classList.remove('hidden');
+    if (!authForm || !emailInput || !passwordInput || !errorMessage) {
+        console.error('Auth form elements not found. Ensure auth.html is fully loaded.');
         return;
     }
 
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
+    console.log('Supabase client in auth-logic.js:', supabase); // Log Supabase client
 
-        if (error) {
-            if (error.message.includes('Email not confirmed')) {
-                // Если пользователь не подтвердил почту, попробуем зарегистрировать
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                });
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        errorMessage.classList.add('hidden'); // Скрываем предыдущие ошибки
 
-                if (signUpError) {
-                    errorMessage.textContent = `Ошибка регистрации: ${signUpError.message}`;
-                    errorMessage.classList.remove('hidden');
+        if (!supabase) {
+            errorMessage.textContent = 'Ошибка: Supabase клиент не инициализирован.';
+            errorMessage.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                console.error('Supabase signInWithPassword error:', error); // Log sign-in error
+                if (error.message.includes('Email not confirmed')) {
+                    // Если пользователь не подтвердил почту, попробуем зарегистрировать
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                    });
+
+                    if (signUpError) {
+                        console.error('Supabase signUp error:', signUpError); // Log sign-up error
+                        errorMessage.textContent = `Ошибка регистрации: ${signUpError.message}`;
+                        errorMessage.classList.remove('hidden');
+                    } else {
+                        alert('На ваш email отправлено письмо для подтверждения. Пожалуйста, подтвердите свой аккаунт.');
+                        // Можно перенаправить пользователя или показать сообщение
+                    }
                 } else {
-                    alert('На ваш email отправлено письмо для подтверждения. Пожалуйста, подтвердите свой аккаунт.');
-                    // Можно перенаправить пользователя или показать сообщение
+                    errorMessage.textContent = `Ошибка входа: ${error.message}`;
+                    errorMessage.classList.remove('hidden');
                 }
             } else {
-                errorMessage.textContent = `Ошибка входа: ${error.message}`;
-                errorMessage.classList.remove('hidden');
+                // Успешный вход
+                console.log('User logged in:', data.user);
+                // Instead of direct redirect, notify parent to re-check auth
+                window.parent.postMessage({ type: 'authSuccess' }, '*');
             }
-        } else {
-            // Успешный вход
-            console.log('User logged in:', data.user);
-            // Instead of direct redirect, notify parent to re-check auth
-            window.parent.postMessage({ type: 'authSuccess' }, '*');
+        } catch (err) {
+            console.error('Unknown error during auth:', err); // Log unknown errors
+            errorMessage.textContent = `Неизвестная ошибка: ${err.message}`;
+            errorMessage.classList.remove('hidden');
         }
-    } catch (err) {
-        errorMessage.textContent = `Неизвестная ошибка: ${err.message}`;
-        errorMessage.classList.remove('hidden');
-    }
-});
+    });
 
-// Проверяем сессию при загрузке страницы
-async function checkSession() {
-    if (!supabase) {
-        console.error('Supabase client not available for session check.');
-        return;
+    // Проверяем сессию при загрузке страницы
+    async function checkSession() {
+        if (!supabase) {
+            console.error('Supabase client not available for session check.');
+            return;
+        }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.parent.postMessage({ type: 'authSuccess' }, '*'); // Notify parent
+        }
     }
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-        window.parent.postMessage({ type: 'authSuccess' }, '*'); // Notify parent
-    }
-}
 
-checkSession();
+    checkSession();
 
-// Listen for messages from the parent (index.html) if needed
-window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'checkAuth') {
-        checkSession();
-    }
+    // Listen for messages from the parent (index.html) if needed
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'checkAuth') {
+            checkSession();
+        }
+    });
 });
