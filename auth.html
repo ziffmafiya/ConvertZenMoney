@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0D1117;
+            color: #c9d1d9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .auth-container {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .input-field {
+            background-color: #0D1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        .btn {
+            background-color: #22c55e;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #16a34a;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2 class="text-2xl font-bold text-center mb-6">Вход</h2>
+        <form id="authForm" class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <input type="email" id="email" class="input-field" placeholder="your@example.com" required>
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Пароль</label>
+                <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn">Войти</button>
+            <p id="errorMessage" class="error-message text-center hidden"></p>
+        </form>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        const authForm = document.getElementById('authForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('errorMessage');
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMessage.classList.add('hidden');
+
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('User logged in:', data.user);
+                window.location.href = 'index.html'; // Redirect to main page on successful login
+
+            } catch (error) {
+                console.error('Authentication error:', error.message);
+                errorMessage.textContent = 'Ошибка входа: ' + error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+
+        // Check if user is already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -399,9 +399,38 @@
     </div>
 </div>
 
-    <script>
+    <script type="module">
+        import { supabase } from './supabaseClient.js';
+
+        // Check authentication status on page load
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                window.location.href = 'auth.html'; // Redirect to login if not authenticated
+            }
+        });
+
+        // Logout functionality
+        async function signOut() {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error('Error signing out:', error.message);
+                alert('Ошибка выхода: ' + error.message);
+            } else {
+                window.location.href = 'auth.html'; // Redirect to login after logout
+            }
+        }
+
         // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
         document.addEventListener('DOMContentLoaded', function () {
+            // Add logout button to settings modal
+            const settingsModalContent = document.querySelector('#settingsModal .space-y-4');
+            const logoutButtonHtml = `
+                <div>
+                    <button id="logoutButton" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Выйти</button>
+                </div>
+            `;
+            settingsModalContent.insertAdjacentHTML('beforeend', logoutButtonHtml);
+            document.getElementById('logoutButton').addEventListener('click', signOut);
             // --- Ссылки на DOM-элементы ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
