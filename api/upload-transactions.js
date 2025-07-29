@@ -44,79 +44,80 @@ async function getEmbedding(text) {
  * @param {object} res - Объект ответа для отправки результата клиенту.
  */
 export default async function handler(req, res) {
-    // Принимаем только POST-запросы, так как этот эндпоинт предназначен для создания данных.
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
-
-    // Извлекаем данные из тела запроса: список транзакций и флаги для их обработки.
-    const { transactions, excludeDebts, skipEmbedding } = req.body;
-    console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts, 'Skip Embedding:', skipEmbedding);
-
-    // Валидация входных данных.
-    if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-        console.error('Validation error: No transactions provided or invalid format.');
-        return res.status(400).json({ error: 'No transactions provided or invalid format' });
-    }
-
-    // Получаем URL и ключ для доступа к Supabase из переменных окружения.
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-    // Проверяем, что ключи для Supabase и Gemini заданы.
-    if (!supabaseUrl || !supabaseKey) {
-        console.error('Configuration error: Supabase URL or Anon Key not configured.');
-        return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
-    }
-    if (!process.env.GEMINI_API_KEY) {
-        console.error('Configuration error: GEMINI_API_KEY not configured.');
-        return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
-    }
-    console.log('Supabase client initialized.');
-
-    // Инициализируем клиент Supabase.
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    /**
-     * Нормализует строку: удаляет неразрывные пробелы, обрезает пробелы по краям и приводит к нижнему регистру.
-     * @param {string} str - Входная строка.
-     * @returns {string} - Нормализованная строка.
-     */
-    function normalize(str) {
-        return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
-    }
-
-    // --- Логика дедупликации ---
-    /**
-     * Создает уникальный хэш для транзакции на основе ее ключевых полей.
-     * Это позволяет эффективно идентифицировать дубликаты.
-     * @param {object} t - Объект транзакции.
-     * @returns {string} - Уникальный строковый хэш.
-     */
-    const createUniqueHash = (t) => {
-        // Создает консистентную, уникальную строку из основных полей транзакции,
-        // безопасно обрабатывая null/undefined значения и обеспечивая согласованное форматирование чисел.
-        // Нормализуем дату в формат ГГГГ-ММ-ДД для консистентного хэширования.
-        let normalizedDate = '';
-        if (t.date) {
-            const parts = t.date.split('.');
-            if (parts.length === 3) {
-                normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Предполагаем формат ДД.ММ.ГГГГ.
-            } else {
-                normalizedDate = t.date; // Используем как есть, если формат не соответствует.
-            }
-        }
-        
-        const category = (t.categoryName || '').trim();
-        const payee = (t.payee || '').trim();
-        const comment = (t.comment || '').trim();
-        // Форматируем числа до 2 десятичных знаков, чтобы избежать неконсистентности из-за плавающей точки.
-        const outcome = (t.outcome || 0).toFixed(2);
-        const income = (t.income || 0).toFixed(2);
-        return `${normalizedDate}|${category}|${payee}|${comment}|${outcome}|${income}`;
-    };
-
     try {
+        // Принимаем только POST-запросы, так как этот эндпоинт предназначен для создания данных.
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method Not Allowed' });
+        }
+
+        // Извлекаем данные из тела запроса: список транзакций и флаги для их обработки.
+        const { transactions, excludeDebts, skipEmbedding } = req.body;
+        console.log('Received request to upload transactions. Count:', transactions ? transactions.length : 0, 'Exclude Debts:', excludeDebts, 'Skip Embedding:', skipEmbedding);
+
+        // Валидация входных данных.
+        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+            console.error('Validation error: No transactions provided or invalid format.');
+            return res.status(400).json({ error: 'No transactions provided or invalid format' });
+        }
+
+        // Получаем URL и ключ для доступа к Supabase из переменных окружения.
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+        // Проверяем, что ключи для Supabase и Gemini заданы.
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('Configuration error: Supabase URL or Anon Key not configured.');
+            return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
+        }
+        if (!process.env.GEMINI_API_KEY) {
+            console.error('Configuration error: GEMINI_API_KEY not configured.');
+            return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+        }
+        console.log('Supabase client initialized.');
+
+        // Инициализируем клиент Supabase.
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        /**
+         * Нормализует строку: удаляет неразрывные пробелы, обрезает пробелы по краям и приводит к нижнему регистру.
+         * @param {string} str - Входная строка.
+         * @returns {string} - Нормализованная строка.
+         */
+        function normalize(str) {
+            return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+        }
+
+        // --- Логика дедупликации ---
+        /**
+         * Создает уникальный хэш для транзакции на основе ее ключевых полей.
+         * Это позволяет эффективно идентифицировать дубликаты.
+         * @param {object} t - Объект транзакции.
+         * @returns {string} - Уникальный строковый хэш.
+         */
+        const createUniqueHash = (t) => {
+            // Создает консистентную, уникальную строку из основных полей транзакции,
+            // безопасно обрабатывая null/undefined значения и обеспечивая согласованное форматирование чисел.
+            // Нормализуем дату в формат ГГГГ-ММ-ДД для консистентного хэширования.
+            let normalizedDate = '';
+            if (t.date) {
+                const parts = t.date.split('.');
+                if (parts.length === 3) {
+                    normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Предполагаем формат ДД.ММ.ГГГГ.
+                } else {
+                    normalizedDate = t.date; // Используем как есть, если формат не соответствует.
+                }
+            }
+            
+            const category = (t.categoryName || '').trim();
+            const payee = (t.payee || '').trim();
+            const comment = (t.comment || '').trim();
+            // Форматируем числа до 2 десятичных знаков, чтобы избежать неконсистентности из-за плавающей точки.
+            const outcome = (t.outcome || 0).toFixed(2);
+            const income = (t.income || 0).toFixed(2);
+            return `${normalizedDate}|${category}|${payee}|${comment}|${outcome}|${income}`;
+        };
+
+        
         // Шаг 1: Генерируем хэши для всех входящих транзакций.
         const transactionsWithHashes = transactions.map(t => ({
             ...t,
@@ -143,7 +144,7 @@ export default async function handler(req, res) {
             if (fetchError) {
                 // В случае ошибки при получении данных из Supabase, логируем ее и возвращаем ошибку клиенту.
                 console.error('Supabase fetch error during deduplication chunk processing:', fetchError);
-                return res.status(500).json({ error: `Failed to check for existing transactions. Supabase returned an error: ${fetchError.message}` });
+                throw new Error(`Failed to check for existing transactions. Supabase RPC Error: ${fetchError.message}`);
             }
 
             if (existingTransactions) {
@@ -238,7 +239,7 @@ export default async function handler(req, res) {
         if (error) {
             // В случае ошибки при вставке, логируем ее и возвращаем ошибку клиенту.
             console.error('Supabase insert error:', error);
-            return res.status(500).json({ error: error.message });
+            throw new Error(`Supabase insert error: ${error.message}`);
         }
 
         // Отправляем успешный ответ с количеством вставленных транзакций.
@@ -260,7 +261,11 @@ export default async function handler(req, res) {
         res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         // Обработка любых других непредвиденных ошибок.
-        console.error('Unhandled server error during embedding or Supabase insert:', error);
-        res.status(500).json({ error: error.message || 'Internal Server Error' });
+        console.error('FINAL CATCH: Unhandled server error during transaction upload:', error.message);
+        res.status(500).json({
+            error: 'An unexpected error occurred on the server.',
+            details: error.message,
+            stack: error.stack // Включаем стек только в режиме разработки
+        });
     }
 }
