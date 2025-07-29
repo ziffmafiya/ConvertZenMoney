@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    console.log('Supabase client in auth-logic.js:', supabase); // Log Supabase client
+    console.log('Supabase client in auth-logic.js:', supabase); // Log Supabase client initialization status
 
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -22,8 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!supabase) {
             errorMessage.textContent = 'Ошибка: Supabase клиент не инициализирован.';
             errorMessage.classList.remove('hidden');
+            console.error('Supabase client is null or undefined when attempting auth.');
             return;
         }
+
+        console.log('Attempting to sign in/sign up with:', { email, password });
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -32,8 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (error) {
-                console.error('Supabase signInWithPassword error:', error); // Log sign-in error
+                console.error('Supabase signInWithPassword error:', error); // Log sign-in error object
                 if (error.message.includes('Email not confirmed')) {
+                    console.log('Email not confirmed, attempting to sign up...');
                     // Если пользователь не подтвердил почту, попробуем зарегистрировать
                     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                         email: email,
@@ -41,10 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     if (signUpError) {
-                        console.error('Supabase signUp error:', signUpError); // Log sign-up error
+                        console.error('Supabase signUp error:', signUpError); // Log sign-up error object
                         errorMessage.textContent = `Ошибка регистрации: ${signUpError.message}`;
                         errorMessage.classList.remove('hidden');
                     } else {
+                        console.log('Sign up successful, data:', signUpData);
                         alert('На ваш email отправлено письмо для подтверждения. Пожалуйста, подтвердите свой аккаунт.');
                         // Можно перенаправить пользователя или показать сообщение
                     }
@@ -54,12 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 // Успешный вход
-                console.log('User logged in:', data.user);
+                console.log('User logged in successfully, data:', data.user);
                 // Instead of direct redirect, notify parent to re-check auth
                 window.parent.postMessage({ type: 'authSuccess' }, '*');
             }
         } catch (err) {
-            console.error('Unknown error during auth:', err); // Log unknown errors
+            console.error('Unknown error during auth process:', err); // Log unknown errors
             errorMessage.textContent = `Неизвестная ошибка: ${err.message}`;
             errorMessage.classList.remove('hidden');
         }
