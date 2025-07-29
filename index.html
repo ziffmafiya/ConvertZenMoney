@@ -399,45 +399,9 @@
     </div>
 </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        let supabase; // Объявляем supabase глобально, но инициализируем асинхронно
-
-        // Вспомогательная функция для получения токена аутентификации
-        async function getAuthToken() {
-            if (!supabase) {
-                console.error('Supabase client not initialized.');
-                return null;
-            }
-            const { data, error } = await supabase.auth.getSession();
-            if (error) {
-                console.error('Error getting session:', error);
-                return null;
-            }
-            return data.session?.access_token;
-        }
-
-        // Асинхронная функция для инициализации Supabase клиента
-        async function initializeSupabase() {
-            try {
-                const response = await fetch('/api/get-supabase-config');
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || 'Failed to fetch Supabase config');
-                }
-                const { supabaseUrl, supabaseKey } = await response.json();
-                supabase = Supabase.createClient(supabaseUrl, supabaseKey);
-                console.log('Supabase client initialized successfully.');
-            } catch (error) {
-                console.error('Error initializing Supabase client:', error);
-                alert('Не удалось инициализировать Supabase. Проверьте переменные окружения.');
-            }
-        }
-
         // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
-        document.addEventListener('DOMContentLoaded', async function () {
-            await initializeSupabase(); // Инициализируем Supabase перед использованием
-
+        document.addEventListener('DOMContentLoaded', function () {
             // --- Ссылки на DOM-элементы ---
             const csvFile = document.getElementById('csvFile');
             const processDataButton = document.getElementById('processDataButton');
@@ -592,20 +556,9 @@
                     params.append('month', selectedMonth);
                 }
 
-                const authToken = await getAuthToken();
-                if (!authToken) {
-                    console.error('Authentication token not available for transactions. Please log in.');
-                    alert('Ошибка: Не удалось получить токен аутентификации для транзакций. Пожалуйста, войдите в систему.');
-                    return;
-                }
-
                 try {
                     // Отправляем запрос на сервер для получения транзакций
-                    const response = await fetch(`/api/get-transactions?${params.toString()}`, {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
+                    const response = await fetch(`/api/get-transactions?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch transactions');
@@ -637,20 +590,8 @@
 
                 const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
-                const authToken = await getAuthToken();
-                if (!authToken) {
-                    console.error('Authentication token not available for monthly summary. Please log in.');
-                    incomeChangeEl.textContent = 'Ошибка аутентификации';
-                    expensesChangeEl.textContent = 'Ошибка аутентификации';
-                    return;
-                }
-
                 try {
-                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`, {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
+                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch monthly summary');
@@ -699,22 +640,9 @@
                 habitsLoadingDiv.classList.remove('hidden'); // Показываем индикатор загрузки
                 const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
 
-                const authToken = await getAuthToken(); // Получаем токен аутентификации
-
-                if (!authToken) {
-                    console.error('Authentication token not available for habits. Please log in.');
-                    habitsResultDiv.innerHTML = '<p class="text-red-400 col-span-full">Ошибка: Не удалось получить токен аутентификации. Пожалуйста, войдите в систему.</p>';
-                    habitsLoadingDiv.classList.add('hidden');
-                    return;
-                }
-
                 try {
-                    // Отправляем запрос на сервер для анализа привычек с токеном аутентификации
-                    const response = await fetch(`/api/analyze-habits?${params.toString()}`, {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
+                    // Отправляем запрос на сервер для анализа привычек
+                    const response = await fetch(`/api/analyze-habits?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch habits');
