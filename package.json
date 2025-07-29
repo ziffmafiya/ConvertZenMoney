@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
-    "@supabase/supabase-js": "^2.44.2",
-    "hdbscan": "^0.0.1-alpha.1"
+    "@supabase/supabase-js": "^2.44.2"
   }
 }

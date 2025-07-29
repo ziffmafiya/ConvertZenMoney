@@ -232,8 +232,7 @@ export default async function handler(req, res) {
         // Шаг 5: Вставляем новые, обогащенные эмбеддингами транзакции в базу данных.
         const { data, error } = await supabase
             .from('transactions')
-            .insert(finalTransactionsToInsert)
-            .select('id'); // Возвращаем ID вставленных транзакций
+            .insert(finalTransactionsToInsert);
 
         if (error) {
             // В случае ошибки при вставке, логируем ее и возвращаем ошибку клиенту.
@@ -244,41 +243,10 @@ export default async function handler(req, res) {
         // Отправляем успешный ответ с количеством вставленных транзакций.
         const insertedCount = data ? data.length : 0;
         console.log(`${insertedCount} transactions uploaded successfully.`);
-        
-        // Асинхронно запускаем кластеризацию для новых транзакций
-        if (insertedCount > 0) {
-            const insertedIds = data.map(t => t.id);
-            clusterTransactions(insertedIds).catch(e => console.error('Clustering failed:', e));
-        }
-        
         res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         // Обработка любых других непредвиденных ошибок.
-    console.error('Unhandled server error during embedding or Supabase insert:', error);
-    res.status(500).json({ error: error.message || 'Internal Server Error' });
-  }
-}
-
-// Функция для асинхронного вызова кластеризации новых транзакций
-async function clusterTransactions(transactionIds) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  try {
-    const response = await fetch(`${baseUrl}/api/cluster-transactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transactionIds })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Clustering API returned status ${response.status}: ${errorText}`);
+        console.error('Unhandled server error during embedding or Supabase insert:', error);
+        res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
-    
-    const result = await response.json();
-    console.log('Clustering result:', result);
-    return result;
-  } catch (error) {
-    console.error('Failed to trigger clustering:', error);
-    throw error;
-  }
 }
