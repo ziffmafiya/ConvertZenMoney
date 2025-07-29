@@ -192,29 +192,44 @@ export default async function handler(req, res) {
         
         console.log(`DEBUG: Final count of transactions to insert: ${transactionsToProcess.length}`);
 
-        // Шаг 4: Генерируем эмбеддинги для новых транзакций, если не указано пропустить этот шаг.
-        let transactionsToInsert = await Promise.all(transactionsToProcess.map(async (t) => {
-            let embedding = null;
-            if (!skipEmbedding) {
-                // Создаем текстовое описание для генерации эмбеддинга, включая все релевантные поля.
-                const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
-                embedding = await getEmbedding(description); // Получаем эмбеддинг.
+        // Шаг 4: Генерируем эмбеддинги и вставляем транзакции порциями, чтобы избежать тайм-аутов.
+        const EMBEDDING_CHUNK_SIZE = 50; // Обрабатываем по 50 транзакций за раз
+        let totalInsertedCount = 0;
+
+        for (let i = 0; i < transactionsToProcess.length; i += EMBEDDING_CHUNK_SIZE) {
+            const chunk = transactionsToProcess.slice(i, i + EMBEDDING_CHUNK_SIZE);
+            console.log(`Processing chunk ${i / EMBEDDING_CHUNK_SIZE + 1}...`);
+
+            let transactionsToInsert = await Promise.all(chunk.map(async (t) => {
+                let embedding = null;
+                if (!skipEmbedding) {
+                    const description = `Транзакция: ${t.comment || ''}. Категория: ${t.categoryName || ''}. Получатель: ${t.payee || ''}. Со счета: ${t.outcomeAccountName || ''}. На счет: ${t.incomeAccountName || ''}.`;
+                    embedding = await getEmbedding(description);
+                }
+                return {
+                    date: t.date,
+                    category_name: t.categoryName,
+                    payee: t.payee,
+                    comment: t.comment,
+                    outcome_account_name: t.outcomeAccountName,
+                    outcome: t.outcome,
+                    income_account_name: t.incomeAccountName,
+                    income: t.income,
+                    unique_hash: t.unique_hash,
+                    description_embedding: embedding
+                };
+            }));
+
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert(transactionsToInsert);
+
+            if (error) {
+                console.error('Supabase insert error during chunk processing:', error);
+                throw new Error(`Supabase insert error: ${error.message}`);
             }
-            
-            // Возвращаем объект транзакции, готовый к вставке в БД (с полями в snake_case).
-            return {
-                date: t.date,
-                category_name: t.categoryName,
-                payee: t.payee,
-                comment: t.comment,
-                outcome_account_name: t.outcomeAccountName,
-                outcome: t.outcome,
-                income_account_name: t.incomeAccountName,
-                income: t.income,
-                unique_hash: t.unique_hash, // Передаем хэш для вставки.
-                description_embedding: embedding // Добавляем эмбеддинг (может быть null).
-            };
-        }));
+            totalInsertedCount += data ? data.length : 0;
+        }
 
         console.log('DEBUG: Transactions to insert before final check (first 5):', JSON.stringify(transactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Total transactions to insert before final check:', transactionsToInsert.length);
@@ -231,23 +246,11 @@ export default async function handler(req, res) {
         console.log('DEBUG: Transactions to insert after final check (first 5):', JSON.stringify(finalTransactionsToInsert.slice(0, 5), null, 2));
         console.log('DEBUG: Final count of transactions to insert after all checks:', finalTransactionsToInsert.length);
 
-        // Шаг 5: Вставляем новые, обогащенные эмбеддингами транзакции в базу данных.
-        const { data, error } = await supabase
-            .from('transactions')
-            .insert(finalTransactionsToInsert);
-
-        if (error) {
-            // В случае ошибки при вставке, логируем ее и возвращаем ошибку клиенту.
-            console.error('Supabase insert error:', error);
-            throw new Error(`Supabase insert error: ${error.message}`);
-        }
-
         // Отправляем успешный ответ с количеством вставленных транзакций.
-        const insertedCount = data ? data.length : 0;
-        console.log(`${insertedCount} transactions uploaded successfully.`);
+        console.log(`${totalInsertedCount} transactions uploaded successfully.`);
 
         // Асинхронно запускаем кластеризацию после успешной загрузки
-        if (insertedCount > 0) {
+        if (totalInsertedCount > 0) {
             // Запускаем без await, чтобы не блокировать ответ клиенту
             (async () => {
                 try {
@@ -258,7 +261,7 @@ export default async function handler(req, res) {
             })();
         }
 
-        res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
+        res.status(200).json({ message: `${totalInsertedCount} new transactions uploaded successfully.` });
     } catch (error) {
         // Обработка любых других непредвиденных ошибок.
         console.error('FINAL CATCH: Unhandled server error during transaction upload:', error.message);
