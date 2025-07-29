@@ -22,11 +22,15 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        console.log('Starting clustering for transaction IDs:', transactionIds);
+        
         // Получаем эмбендинги для указанных транзакций
         const { data: transactions, error: fetchError } = await supabase
             .from('transactions')
             .select('id, description_embedding')
             .in('id', transactionIds);
+        
+        console.log(`Fetched ${transactions?.length || 0} transactions for clustering`);
         
         // Проверяем, что все ID являются UUID
         if (transactionIds.some(id => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
@@ -53,7 +57,9 @@ export default async function handler(req, res) {
         
         // Выполняем кластеризацию
         const clusterer = new HDBSCAN({ minClusterSize: 5 });
+        console.log('Running HDBSCAN clustering...');
         const clusters = clusterer.run(embeddings);
+        console.log(`Clustering completed. Found ${new Set(clusters).size} clusters`);
         
         // Формируем данные для сохранения
         const clusterData = validTransactions.map((t, index) => ({
@@ -67,6 +73,7 @@ export default async function handler(req, res) {
             .insert(clusterData);
         
         if (insertError) throw insertError;
+        console.log(`Saved ${clusterData.length} cluster assignments to database`);
 
         res.status(200).json({ 
             message: `Clustered ${validTransactions.length} transactions`,
