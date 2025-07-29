@@ -247,7 +247,14 @@ export default async function handler(req, res) {
 
         // Асинхронно запускаем кластеризацию после успешной загрузки
         if (insertedCount > 0) {
-            runClustering(supabase);
+            // Запускаем без await, чтобы не блокировать ответ клиенту
+            (async () => {
+                try {
+                    await runClustering(supabase);
+                } catch (e) {
+                    console.error("Error during background clustering execution:", e);
+                }
+            })();
         }
 
         res.status(200).json({ message: `${insertedCount} new transactions uploaded successfully.` });
