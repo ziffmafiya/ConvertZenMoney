@@ -1605,7 +1605,7 @@
                 console.log('Sending loan data:', JSON.stringify(loanData, null, 2));
 
                 try {
-                    const response = await fetch('/api/loan-credit/track-loan', {
+                    const response = await fetch('/api/track-loan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(loanData)
