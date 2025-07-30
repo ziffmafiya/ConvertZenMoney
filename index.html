@@ -1992,7 +1992,7 @@
                     // Проверяем, является ли это ошибкой размерности эмбеддингов
                                     if (error.message.includes('Vectors must have the same length') || 
                     error.message.includes('Embedding dimension mismatch')) {
-                    alert(`Ошибка размерности эмбеддингов: ${error.message}\n\nДля исправления:\n1. Выполните скрипт update_embedding_dimension_3072.sql в Supabase\n2. Загрузите транзакции заново\n3. Запустите кластеризацию снова`);
+                    alert(`Ошибка размерности эмбеддингов: ${error.message}\n\nДля исправления:\n1. Выполните скрипт update_embedding_dimension_768.sql в Supabase\n2. Загрузите транзакции заново\n3. Запустите кластеризацию снова`);
                     } else {
                         alert(`Ошибка при кластеризации: ${error.message}`);
                     }

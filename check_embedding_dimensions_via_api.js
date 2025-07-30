@@ -51,7 +51,7 @@ async function checkEmbeddingDimensions() {
             console.log(`   - Создано кластеров: ${clusterResult.clusters}`);
             console.log(`   - Обработано транзакций: ${clusterResult.transactions}`);
             console.log(`   - Точки шума: ${clusterResult.noise}`);
-            console.log('🎉 Размерность эмбеддингов корректна (3072)');
+            console.log('🎉 Размерность эмбеддингов корректна (768)');
         } else {
             const errorData = await clusterResponse.json();
             console.error('❌ Ошибка при кластеризации:', errorData.error);
