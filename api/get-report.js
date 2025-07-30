@@ -79,14 +79,38 @@ export default async function handler(req, res) {
             return res.status(200).json({ report: 'Нет транзакций за выбранный период для создания отчета.' });
         }
 
-        const transactionsJson = JSON.stringify(transactions, null, 2);
+        // Summarize transactions to reduce token count
+        let totalIncome = 0;
+        let totalExpenses = 0;
+        const expensesByCategory = {};
+
+        transactions.forEach(t => {
+            if (t.income > 0) {
+                totalIncome += t.income;
+            }
+            if (t.outcome > 0) {
+                totalExpenses += t.outcome;
+                expensesByCategory[t.categoryName] = (expensesByCategory[t.categoryName] || 0) + t.outcome;
+            }
+        });
+
+        const summary = {
+            totalIncome: totalIncome.toFixed(2),
+            totalExpenses: totalExpenses.toFixed(2),
+            netBalance: (totalIncome - totalExpenses).toFixed(2),
+            expensesByCategory: Object.entries(expensesByCategory)
+                .sort(([, a], [, b]) => b - a)
+                .reduce((r, [k, v]) => ({ ...r, [k]: v.toFixed(2) }), {})
+        };
+
+        const summaryJson = JSON.stringify(summary, null, 2);
 
         // Create the prompt for the Gemini AI
         const prompt = `
-            Ты — персональный финансовый ассистент. Создай краткий отчет на основе следующих транзакций за ${period} ${year}.
+            Ты — персональный финансовый ассистент. Создай краткий отчет на основе следующей сводки транзакций за ${period} ${year}.
 
-            **Транзакции в формате JSON:**
-            ${transactionsJson}
+            **Сводка транзакций в формате JSON:**
+            ${summaryJson}
 
             **Структура отчета:**
             1.  **Краткая сводка:** 2-3 предложения об общих доходах, расходах и чистом балансе.
