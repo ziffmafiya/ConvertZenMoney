@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     // 1. Fetch transaction data from Supabase
     const { data: transactions, error: fetchError } = await supabase
       .from('transactions')
-      .select('id, amount, description, created_at, description_embedding'); // Include description_embedding column
+      .select('id, description_embedding'); // Only fetch id and description_embedding
 
     if (fetchError) {
       console.error('Error fetching transactions from Supabase:', fetchError);
