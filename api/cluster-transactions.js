@@ -25,9 +25,38 @@ export default async function handler(req, res) {
 
     try {
         console.log('Starting transaction clustering...');
+        console.log('Parameters:', { minClusterSize, minSamples, epsilon });
+        console.log('Supabase URL:', supabaseUrl ? 'Configured' : 'Missing');
+        console.log('Supabase Key:', supabaseKey ? 'Configured' : 'Missing');
+        
         const startTime = performance.now();
 
+        // Проверяем доступность Edge Function
+        console.log('Checking Edge Function availability...');
+        try {
+            const { data: testData, error: testError } = await supabase.functions.invoke('cluster_embeddings', {
+                body: { test: true }
+            });
+            
+            if (testError) {
+                console.error('Edge Function test failed:', testError);
+                return res.status(500).json({ 
+                    error: 'Edge Function not available', 
+                    details: testError.message,
+                    type: 'edge_function_error'
+                });
+            }
+        } catch (testError) {
+            console.error('Edge Function connection failed:', testError);
+            return res.status(500).json({ 
+                error: 'Cannot connect to Edge Function', 
+                details: testError.message,
+                type: 'connection_error'
+            });
+        }
+
         // Вызываем Edge Function для кластеризации
+        console.log('Invoking Edge Function for clustering...');
         const { data, error } = await supabase.functions.invoke('cluster_embeddings', {
             body: {
                 minClusterSize,
@@ -44,24 +73,39 @@ export default async function handler(req, res) {
             return res.status(500).json({ 
                 error: 'Clustering failed', 
                 details: error.message,
+                type: 'clustering_error',
                 duration 
             });
         }
 
         console.log(`Clustering completed in ${duration}ms:`, data);
 
+        // Проверяем структуру ответа
+        if (!data || typeof data !== 'object') {
+            console.error('Invalid response structure:', data);
+            return res.status(500).json({ 
+                error: 'Invalid response from Edge Function',
+                type: 'invalid_response'
+            });
+        }
+
         // Возвращаем результаты кластеризации
         res.status(200).json({
             success: true,
-            clusters: data.clusters,
-            noise: data.noise,
-            total: data.total,
-            clusterStats: data.clusterStats,
+            clusters: data.clusters || 0,
+            noise: data.noise || 0,
+            total: data.total || 0,
+            clusterStats: data.clusterStats || {},
             duration
         });
 
     } catch (error) {
         console.error('Unexpected server error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            error: 'Internal Server Error',
+            details: error.message,
+            type: 'unexpected_error'
+        });
     }
 } 

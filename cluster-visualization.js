@@ -28,6 +28,9 @@ class ClusterVisualization {
                         <button id="runClusteringBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                             Запустить кластеризацию
                         </button>
+                        <button id="testSystemBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            Тест системы
+                        </button>
                         <button id="showClusterVizBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors hidden">
                             Показать визуализацию
                         </button>
@@ -106,6 +109,7 @@ class ClusterVisualization {
     // Привязка событий
     bindEvents() {
         document.getElementById('runClusteringBtn')?.addEventListener('click', () => this.runClustering());
+        document.getElementById('testSystemBtn')?.addEventListener('click', () => this.testSystem());
         document.getElementById('showClusterVizBtn')?.addEventListener('click', () => this.showVisualization());
     }
 
@@ -117,6 +121,24 @@ class ClusterVisualization {
         this.showStatus(true);
 
         try {
+            // Сначала выполняем диагностику
+            console.log('Running diagnostics...');
+            const diagnosticResponse = await fetch('/api/test-clustering');
+            const diagnostics = await diagnosticResponse.json();
+            
+            console.log('Diagnostics:', diagnostics);
+            
+            if (!diagnostics.status?.ready) {
+                const issues = [];
+                if (!diagnostics.status?.configValid) issues.push('Invalid configuration');
+                if (!diagnostics.status?.connectionValid) issues.push('Database connection failed');
+                if (!diagnostics.status?.edgeFunctionAvailable) issues.push('Edge Function not available');
+                if (!diagnostics.status?.hasData) issues.push('No transaction data');
+                if (!diagnostics.status?.hasEmbeddings) issues.push('No embeddings found');
+                
+                throw new Error(`System not ready: ${issues.join(', ')}`);
+            }
+
             const params = {
                 minClusterSize: parseInt(document.getElementById('minClusterSize').value),
                 minSamples: parseInt(document.getElementById('minSamples').value),
@@ -134,7 +156,8 @@ class ClusterVisualization {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.details || errorData.error || 'Unknown error'}`);
             }
 
             const result = await response.json();
@@ -344,6 +367,68 @@ class ClusterVisualization {
     showResults(show) {
         const results = document.getElementById('clusteringResults');
         results.classList.toggle('hidden', !show);
+    }
+
+    // Тестирование системы
+    async testSystem() {
+        try {
+            console.log('Testing system...');
+            const response = await fetch('/api/test-clustering');
+            const diagnostics = await response.json();
+            
+            console.log('System diagnostics:', diagnostics);
+            
+            // Создаем подробный отчет
+            let report = '📊 Диагностика системы кластеризации\n\n';
+            
+            // Статус конфигурации
+            report += '🔧 Конфигурация:\n';
+            Object.entries(diagnostics.environment).forEach(([key, value]) => {
+                report += `  ${key}: ${value}\n`;
+            });
+            
+            // Статус подключения
+            report += '\n🔗 Подключение к Supabase:\n';
+            report += `  Статус: ${diagnostics.supabase.connected ? '✅ Подключено' : '❌ Ошибка'}\n`;
+            if (diagnostics.supabase.error) {
+                report += `  Ошибка: ${diagnostics.supabase.error}\n`;
+            }
+            
+            // Статус базы данных
+            report += '\n🗄️ База данных:\n';
+            report += `  Подключение: ${diagnostics.database.connected ? '✅' : '❌'}\n`;
+            report += `  Транзакции: ${diagnostics.database.hasTransactions ? '✅' : '❌'}\n`;
+            report += `  Эмбеддинги: ${diagnostics.database.hasEmbeddings ? '✅' : '❌'}\n`;
+            if (diagnostics.database.error) {
+                report += `  Ошибка: ${diagnostics.database.error}\n`;
+            }
+            
+            // Статус Edge Function
+            report += '\n⚡ Edge Function:\n';
+            report += `  Доступность: ${diagnostics.edgeFunction.available ? '✅' : '❌'}\n`;
+            if (diagnostics.edgeFunction.error) {
+                report += `  Ошибка: ${diagnostics.edgeFunction.error}\n`;
+            }
+            
+            // Общий статус
+            report += '\n🎯 Общий статус:\n';
+            report += `  Система готова: ${diagnostics.status.ready ? '✅ Да' : '❌ Нет'}\n`;
+            
+            if (!diagnostics.status.ready) {
+                report += '\n⚠️ Проблемы:\n';
+                if (!diagnostics.status.configValid) report += '  - Неверная конфигурация\n';
+                if (!diagnostics.status.connectionValid) report += '  - Ошибка подключения к базе данных\n';
+                if (!diagnostics.status.edgeFunctionAvailable) report += '  - Edge Function недоступна\n';
+                if (!diagnostics.status.hasData) report += '  - Нет данных транзакций\n';
+                if (!diagnostics.status.hasEmbeddings) report += '  - Нет эмбеддингов\n';
+            }
+            
+            alert(report);
+            
+        } catch (error) {
+            console.error('Test error:', error);
+            alert(`Ошибка тестирования: ${error.message}`);
+        }
     }
 
     // Показать ошибку

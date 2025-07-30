@@ -155,4 +155,30 @@ Write-Host ""
 
 Write-ColorOutput "✅ Настройка завершена!" "Green"
 Write-Host ""
-Write-ColorOutput "📚 Дополнительная документация: CLUSTERING_README.md" "Cyan" 
+
+# Запуск диагностики
+Write-ColorOutput "🔍 Запуск диагностики..." "Yellow"
+try {
+    $diagnosticUrl = "http://localhost:3000/api/test-clustering"
+    Write-ColorOutput "Проверяем: $diagnosticUrl" "White"
+    
+    # Ждем немного, чтобы сервер запустился
+    Start-Sleep -Seconds 3
+    
+    $response = Invoke-WebRequest -Uri $diagnosticUrl -Method GET -ErrorAction Stop
+    $diagnostics = $response.Content | ConvertFrom-Json
+    
+    if ($diagnostics.status.ready) {
+        Write-ColorOutput "✅ Система готова к работе!" "Green"
+    } else {
+        Write-ColorOutput "⚠️ Система не готова. Проверьте диагностику в веб-интерфейсе." "Yellow"
+    }
+} catch {
+    Write-ColorOutput "⚠️ Не удалось выполнить диагностику. Проверьте, что сервер запущен." "Yellow"
+}
+
+Write-Host ""
+Write-ColorOutput "📚 Дополнительная документация:" "Cyan"
+Write-ColorOutput "  - CLUSTERING_README.md" "White"
+Write-ColorOutput "  - TROUBLESHOOTING.md" "White"
+Write-ColorOutput "  - CLUSTERING_SUMMARY.md" "White" 

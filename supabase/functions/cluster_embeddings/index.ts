@@ -1,10 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// Инициализируем Supabase клиент с service role key для полного доступа
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Инициализируем Supabase клиент с service role key для полного доступа
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseServiceKey
+      });
+      return new Response(JSON.stringify({ 
+        error: 'Missing environment variables',
+        details: 'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Простая реализация HDBSCAN для кластеризации
 class SimpleHDBSCAN {
@@ -100,7 +115,20 @@ serve(async (req) => {
 
   try {
     // Получаем параметры из тела запроса
-    const { minClusterSize = 5, minSamples = 3, epsilon = 0.5 } = await req.json();
+    const body = await req.json();
+    const { minClusterSize = 5, minSamples = 3, epsilon = 0.5, test } = body;
+
+    // Если это тестовый запрос, возвращаем информацию о доступности
+    if (test) {
+      return new Response(JSON.stringify({
+        status: 'available',
+        message: 'Edge Function is working',
+        timestamp: new Date().toISOString()
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     console.log('Starting clustering with parameters:', { minClusterSize, minSamples, epsilon });
 
