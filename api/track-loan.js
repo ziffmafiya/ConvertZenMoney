@@ -10,16 +10,10 @@ module.exports = async (req, res) => {
   console.log('Received request at /api/track-loan');
   
   try {
-    // Parse JSON body
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    
-    await new Promise(resolve => req.on('end', resolve));
-    const data = JSON.parse(body);
-    
+    // Use automatically parsed request body
+    const data = req.body;
     console.log('Request body:', data);
+    
     const { id, principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance, paid_amount } = data;
     
     if (id) {
@@ -41,6 +35,6 @@ module.exports = async (req, res) => {
     }
   } catch (err) {
     console.error('Error in /track-loan:', err);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
 };
