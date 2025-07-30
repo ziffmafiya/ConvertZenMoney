@@ -393,6 +393,10 @@
                     <label for="loanStartDate" class="block mb-2 text-sm font-medium text-gray-300">Дата начала</label>
                     <input type="date" id="loanStartDate" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
+                <div>
+                    <label for="loanPaidAmount" class="block mb-2 text-sm font-medium text-gray-300">Сумма уже выплачена (грн)</label>
+                    <input type="number" id="loanPaidAmount" placeholder="Например: 10000" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value="0">
+                </div>
             </form>
             <div class="flex justify-end gap-4 mt-6">
                 <button id="closeLoanModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
@@ -1586,13 +1590,16 @@
             addLoanForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
+                const principal = parseFloat(formData.get('loanPrincipal'));
+                const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
                 const loanData = {
-                    principal: parseFloat(formData.get('loanPrincipal')),
+                    principal: principal,
                     interest_rate: parseFloat(formData.get('loanInterestRate')),
                     term_months: parseInt(formData.get('loanTermMonths')),
                     start_date: formData.get('loanStartDate'),
                     monthly_payment: 0, // Will be calculated
-                    remaining_balance: parseFloat(formData.get('loanPrincipal'))
+                    remaining_balance: principal - paidAmount,
+                    paid_amount: paidAmount
                 };
 
                 try {
