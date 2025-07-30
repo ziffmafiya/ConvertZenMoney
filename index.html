@@ -1765,19 +1765,29 @@
                         body: JSON.stringify({ eps, minPts }),
                     });
 
+                    if (!response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        let errorMessage = `Ошибка кластеризации: Статус ${response.status}`;
+                        if (contentType && contentType.includes('application/json')) {
+                            const errorJson = await response.json();
+                            errorMessage += `: ${errorJson.error || JSON.stringify(errorJson)}`;
+                        } else {
+                            const errorText = await response.text();
+                            errorMessage += `. Сервер ответил: "${errorText.substring(0, 100)}..."`; // Show first 100 chars
+                        }
+                        clusteringResultDiv.textContent = errorMessage;
+                        clusteringResultDiv.classList.remove('hidden');
+                        return; // Stop execution if response is not ok
+                    }
+
                     const result = await response.json();
 
-                    if (response.ok) {
-                        clusteringResultDiv.textContent = result.message || 'Транзакции успешно кластеризованы!';
-                        clusteringResultDiv.classList.remove('hidden');
-                        fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать обновленные кластеры
-                    } else {
-                        clusteringResultDiv.textContent = `Ошибка кластеризации: ${result.error || 'Неизвестная ошибка'}`;
-                        clusteringResultDiv.classList.remove('hidden');
-                    }
+                    clusteringResultDiv.textContent = result.message || 'Транзакции успешно кластеризованы!';
+                    clusteringResultDiv.classList.remove('hidden');
+                    fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать обновленные кластеры
                 } catch (error) {
                     console.error('Error during clustering:', error);
-                    clusteringResultDiv.textContent = `Произошла ошибка при кластеризации: ${error.message}`;
+                    clusteringResultDiv.textContent = `Произошла ошибка при кластеризации: ${error.message}. Проверьте консоль для деталей.`;
                     clusteringResultDiv.classList.remove('hidden');
                 } finally {
                     clusteringLoadingDiv.classList.add('hidden');

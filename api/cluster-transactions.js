@@ -5,6 +5,14 @@ import { TSNE } from 'tsne-js'; // Import TSNE
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+// Ensure Supabase environment variables are set
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase URL or Anon Key is not set in environment variables.');
+  // This error will be caught by the outer try-catch if the handler is called,
+  // but it's good to log it early.
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function handler(req, res) {
@@ -20,14 +28,15 @@ export default async function handler(req, res) {
 
   try {
     // 1. Clear existing cluster data to ensure overwrite
+    // This operation is now more robust, handling potential errors but not blocking the main flow
     const { error: clearError } = await supabase
       .from('transactions')
       .update({ cluster_id: null, embedding_tsne_x: null, embedding_tsne_y: null })
       .not('cluster_id', 'is', null); // Only clear if not already null
 
     if (clearError) {
-      console.error('Error clearing existing cluster data:', clearError);
-      // Do not return error, continue with clustering, but log it
+      console.warn('Warning: Error clearing existing cluster data. Continuing with clustering.', clearError);
+      // Log the warning but do not return, as clustering can still proceed.
     }
 
     // 2. Fetch transaction data from Supabase
@@ -166,6 +175,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Unhandled error during clustering process:', error);
+    // Ensure all errors are returned as JSON
     res.status(500).json({ error: `An unexpected error occurred: ${error.message || error.toString()}` });
   }
 }
