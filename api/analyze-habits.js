@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import Chart from 'chart.js/auto'; // Для визуализации на фронтенде
 
 // Helper: получить предыдущий месяц и год
 function getPreviousMonth(year, month) {
@@ -53,7 +54,7 @@ async function generateHabitName(transactions) {
   return top ? `Привычка: ${top[0]}` : 'Неизвестная привычка';
 }
 
-// API-handler
+// API-handler для Next.js: возвращает JSON с привычками и метриками
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
   const { month, year } = req.query;
@@ -86,12 +87,12 @@ export default async function handler(req, res) {
   // Расписание
   const { data: workSchedule } = await supabase.from('user_work_schedule').select('*');
 
-  const habits = await analyzeHabitsWithEmbeddings(current, previous, supabase, workSchedule);
+  const habits = await analyzeHabitsWithEmbeddings(current, previous, workSchedule);
   res.status(200).json({ habits });
 }
 
 // Логика анализа
-async function analyzeHabitsWithEmbeddings(current, previous, supabase, workSchedule) {
+async function analyzeHabitsWithEmbeddings(current, previous, workSchedule) {
   const habits = {};
   const seen = new Set();
 
@@ -102,16 +103,13 @@ async function analyzeHabitsWithEmbeddings(current, previous, supabase, workSche
       match_threshold: 0.85,
       match_count: 10
     });
-    if (similar.length < 4) continue;
+    if (!similar || similar.length < 4) continue;
     const group = similar.filter(t => !seen.has(t.id));
     const dates = group.map(t => t.date);
-    if (!hasRegularPattern(dates)) continue;
-    if (countWeeks(dates) < 3) continue;
+    if (!hasRegularPattern(dates) || countWeeks(dates) < 3) continue;
 
     const name = await generateHabitName(group);
     const sum   = group.reduce((a,t) => a + t.outcome, 0);
-
-    // Тренд
     const prevGroup = previous.filter(t => t.payee === group[0].payee);
     const prevSum   = prevGroup.reduce((a,t) => a + t.outcome, 0);
     const trendVal  = (sum - prevSum).toFixed(2);
@@ -122,38 +120,54 @@ async function analyzeHabitsWithEmbeddings(current, previous, supabase, workSche
       totalSpent: sum.toFixed(2),
       avgSpent: (sum / group.length).toFixed(2),
       category: group[0].category_name,
-      transactions: group.map(t => ({ date: t.date, amount: t.outcome })),
-      trend: parseFloat(trendVal),
-      mostActivePeriod: null,
-      mostCommonWeekday: null,
-      dayType: null
+      trend: Number(trendVal),
+      distribution: {
+        periods: {}, weekdays: {}
+      },
+      transactions: group
     };
 
-    // Время суток
-    const periods = {};
     group.forEach(t => {
       const p = getTimePeriod(t.date);
-      periods[p] = (periods[p] || 0) + 1;
+      habits[name].distribution.periods[p] = (habits[name].distribution.periods[p]||0) + 1;
+      const wd = getWeekday(t.date);
+      habits[name].distribution.weekdays[wd] = (habits[name].distribution.weekdays[wd]||0) + 1;
+      seen.add(t.id);
     });
-    habits[name].mostActivePeriod = Object.entries(periods).sort((a,b) => b[1]-a[1])[0][0];
-
-    // День недели
-    const weekdays = {};
-    group.forEach(t => {
-      const d = getWeekday(t.date);
-      weekdays[d] = (weekdays[d] || 0) + 1;
-    });
-    habits[name].mostCommonWeekday = Number(Object.entries(weekdays).sort((a,b) => b[1]-a[1])[0][0]);
-
-    // Тип дня
-    const dt = group[0].date;
-    const wd = new Date(dt).getDay();
-    habits[name].dayType = workSchedule.length
-      ? ([1,2,3,4,5].includes(wd) ? 'workday' : 'weekend')
-      : null;
-
-    group.forEach(t => seen.add(t.id));
   }
 
   return habits;
 }
+
+// ---
+// Фронтенд: пример визуализации (React + Chart.js)
+// Используй этот компонент в вашей странице, передав month и year как props:
+//
+// import { useEffect, useRef, useState } from 'react';
+// import Chart from 'chart.js/auto';
+//
+// export default function HabitChart({ month, year }) {
+//   const [data, setData] = useState(null);
+//   const chartRef = useRef(null);
+//
+//   useEffect(() => {
+//     fetch(`/api/habits?month=${month}&year=${year}`)
+//       .then(res => res.json())
+//       .then(json => setData(json.habits));
+//   }, [month, year]);
+//
+//   useEffect(() => {
+//     if (!data) return;
+//     const labels = Object.keys(data);
+//     const totals = labels.map(k => data[k].totalSpent);
+//     const ctx = chartRef.current.getContext('2d');
+//     new Chart(ctx, {
+//       type: 'bar',
+//       data: { labels, datasets: [{ label: 'Total Spent', data: totals }] }
+//     });
+//   }, [data]);
+//
+//   return <canvas ref={chartRef} width={600} height={400} />;
+// }
+
+// Внедрение: подключи <HabitChart month="07" year="2025" /> на страницу пользователя.
