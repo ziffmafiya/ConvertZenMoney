@@ -1988,7 +1988,14 @@
                     
                 } catch (error) {
                     console.error('Error running clustering:', error);
-                    alert(`Ошибка при кластеризации: ${error.message}`);
+                    
+                    // Проверяем, является ли это ошибкой размерности эмбеддингов
+                    if (error.message.includes('Vectors must have the same length') || 
+                        error.message.includes('Embedding dimension mismatch')) {
+                        alert(`Ошибка размерности эмбеддингов: ${error.message}\n\nДля исправления:\n1. Выполните скрипт clear_embeddings.sql в Supabase\n2. Загрузите транзакции заново\n3. Запустите кластеризацию снова`);
+                    } else {
+                        alert(`Ошибка при кластеризации: ${error.message}`);
+                    }
                 } finally {
                     runClusteringButton.textContent = originalText;
                     runClusteringButton.disabled = false;

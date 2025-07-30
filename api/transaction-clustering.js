@@ -268,6 +268,25 @@ async function handleClusterTransactions(req, res) {
         const embeddings = unclusteredTransactions.map(t => t.description_embedding);
         const transactionIds = unclusteredTransactions.map(t => t.id);
 
+        // Проверяем размерность эмбеддингов
+        if (embeddings.length > 0) {
+            const firstEmbeddingLength = embeddings[0].length;
+            const inconsistentEmbeddings = embeddings.filter(emb => emb.length !== firstEmbeddingLength);
+            
+            if (inconsistentEmbeddings.length > 0) {
+                console.error(`Found ${inconsistentEmbeddings.length} embeddings with inconsistent dimensions. Expected: ${firstEmbeddingLength}, found: ${inconsistentEmbeddings.map(emb => emb.length).join(', ')}`);
+                return res.status(500).json({ 
+                    error: `Embedding dimension mismatch. Found embeddings with different dimensions. Please clear all embeddings and reload transactions with consistent dimension 768.`,
+                    details: {
+                        expected: firstEmbeddingLength,
+                        found: embeddings.map(emb => emb.length).filter((val, index, arr) => arr.indexOf(val) === index)
+                    }
+                });
+            }
+            
+            console.log(`All embeddings have consistent dimension: ${firstEmbeddingLength}`);
+        }
+
         // Выполняем кластеризацию
         const clusterLabels = dbscan(embeddings, eps, minPts);
 
