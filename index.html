@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <!-- Plotly.js CDN for plotting -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- t-SNE.js library for client-side t-SNE computation -->
+    <script src="https://cdn.jsdelivr.net/npm/tsne-js@1.0.3/tsne.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2073,59 +2075,62 @@
 
             refreshTsnePlotButton.addEventListener('click', plotTSNE);
 
-            async function fetchTSNEEmbeddings() {
-                try {
-                    tsneLoadingDiv.classList.remove('hidden');
-                    // In a real scenario, you would fetch actual transactions and their cluster labels.
-                    // For this example, we'll use allTransactions which should be populated by fetchAndRenderTransactions.
-                    if (!allTransactions || allTransactions.length === 0) {
-                        tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Нет транзакций для построения t-SNE графика. Загрузите данные.</p>`;
-                        return [];
-                    }
-
-                    const transactionsForTsne = allTransactions.map(t => ({
-                        id: t.id, // Assuming transactions have an ID
-                        amount: t.income > 0 ? t.income : t.outcome,
-                        category: t.categoryName,
-                        payee: t.payee,
-                        cluster: t.cluster // Use actual cluster if available
-                    }));
-
-                    const clusterLabelsForTsne = allTransactions.map(t => t.cluster);
-
-                    const response = await fetch('/api/get-tsne-embeddings', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            transactions: transactionsForTsne,
-                            clusterLabels: clusterLabelsForTsne
-                        }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    return data.embeddings;
-
-                } catch (error) {
-                    console.error('Error fetching t-SNE embeddings:', error);
-                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Ошибка загрузки графика: ${error.message}</p>`;
-                    return [];
-                } finally {
-                    tsneLoadingDiv.classList.add('hidden');
-                }
-            }
-
             async function plotTSNE() {
-                const embeddings = await fetchTSNEEmbeddings();
+                tsneLoadingDiv.classList.remove('hidden');
 
-                if (embeddings.length === 0) {
+                if (!allTransactions || allTransactions.length === 0) {
+                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Нет транзакций для построения t-SNE графика. Загрузите данные.</p>`;
+                    tsneLoadingDiv.classList.add('hidden');
                     return;
                 }
+
+                try {
+                    // Prepare data for t-SNE
+                    // We need numerical features. Let's use 'amount' and a numerical representation of 'category' and 'payee'.
+                    // For simplicity, we'll just use 'amount' and dummy numerical features for category/payee for now.
+                    // In a real scenario, you'd use embeddings or one-hot encoding for categorical data.
+                    const dataForTsne = allTransactions.map(t => {
+                        const amount = t.income > 0 ? t.income : t.outcome;
+                        // Dummy numerical features for category and payee
+                        // In a real app, you'd use actual embeddings or more sophisticated encoding
+                        const categoryHash = t.categoryName ? t.categoryName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 100 : 0;
+                        const payeeHash = t.payee ? t.payee.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 100 : 0;
+                        return [amount, categoryHash, payeeHash];
+                    });
+
+                    // Initialize t-SNE
+                    const tsne = new tsnejs.tSNE({
+                        dim: 2, // Output dimensions
+                        perplexity: 30, // Perplexity is a crucial parameter, often between 5 and 50
+                        earlyExaggeration: 4.0,
+                        learningRate: 100.0,
+                        nIter: 1000, // Number of iterations
+                        metric: 'euclidean' // Distance metric
+                    });
+
+                    tsne.init({
+                        data: dataForTsne,
+                        type: 'dense'
+                    });
+
+                    // Run t-SNE iterations
+                    for (let i = 0; i < 500; i++) { // Run fewer iterations for quicker demo
+                        tsne.step();
+                    }
+
+                    const tsneOutput = tsne.getPosition(); // Get the 2D embeddings
+
+                    const embeddings = tsneOutput.map((pos, index) => ({
+                        x: pos[0],
+                        y: pos[1],
+                        cluster: allTransactions[index].cluster // Use actual cluster if available
+                    }));
+
+                    if (embeddings.length === 0) {
+                        tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Не удалось сгенерировать t-SNE встраивания.</p>`;
+                        tsneLoadingDiv.classList.add('hidden');
+                        return;
+                    }
 
                 // Group data by cluster
                 const clusters = {};
@@ -2158,6 +2163,13 @@
                 };
 
                 Plotly.newPlot('tsnePlot', plotData, layout);
+
+                } catch (error) {
+                    console.error('Error generating t-SNE embeddings:', error);
+                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Ошибка загрузки графика: ${error.message}</p>`;
+                } finally {
+                    tsneLoadingDiv.classList.add('hidden');
+                }
             }
 
             // --- Начальная загрузка ---
