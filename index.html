@@ -2121,9 +2121,7 @@
                     });
 
                     // Run t-SNE iterations
-                    for (let i = 0; i < 500; i++) { // Run fewer iterations for quicker demo
-                        tsne.step();
-                    }
+                    await tsne.run(); // Use await as run() is likely asynchronous or blocking
 
                     const tsneOutput = tsne.getPosition(); // Get the 2D embeddings
 
