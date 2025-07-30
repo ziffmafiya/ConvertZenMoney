@@ -230,6 +230,19 @@
         </div>
     </section>
 
+    <!-- Секция кластеризации транзакций -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций</h2>
+        <p class="text-gray-400 mb-4">Запустите кластеризацию транзакций на основе их эмбеддингов. Результаты будут сохранены в Supabase.</p>
+        <button id="clusterTransactionsButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
+        <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
+            <!-- Clustering results will be displayed here -->
+        </div>
+        <div id="clusteringLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Кластеризация выполняется, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
@@ -1699,6 +1712,49 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
+
+            // --- Clustering Logic ---
+            const clusterTransactionsButton = document.getElementById('clusterTransactionsButton');
+            const clusteringResultDiv = document.getElementById('clusteringResult');
+            const clusteringLoadingDiv = document.getElementById('clusteringLoading');
+
+            clusterTransactionsButton.addEventListener('click', performClustering);
+
+            async function performClustering() {
+                clusteringResultDiv.textContent = '';
+                clusteringResultDiv.classList.add('hidden');
+                clusteringLoadingDiv.classList.remove('hidden');
+                clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
+
+                try {
+                    const response = await fetch('/api/cluster-transactions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({}), // No specific body needed for now
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        clusteringResultDiv.textContent = result.message || 'Транзакции успешно кластеризованы!';
+                        clusteringResultDiv.classList.remove('hidden');
+                        // Optionally, re-fetch transactions to show updated cluster IDs in the table
+                        fetchAndRenderTransactions();
+                    } else {
+                        clusteringResultDiv.textContent = `Ошибка кластеризации: ${result.error || 'Неизвестная ошибка'}`;
+                        clusteringResultDiv.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error during clustering:', error);
+                    clusteringResultDiv.textContent = `Произошла ошибка при кластеризации: ${error.message}`;
+                    clusteringResultDiv.classList.remove('hidden');
+                } finally {
+                    clusteringLoadingDiv.classList.add('hidden');
+                    clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
+                }
+            }
             
             // Обработчики для модального окна настроек глубокого анализа
             const deepAnalysisSettingsButton = document.getElementById('deepAnalysisSettingsButton');
