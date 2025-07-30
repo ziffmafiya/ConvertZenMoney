@@ -2078,6 +2078,13 @@
             async function plotTSNE() {
                 tsneLoadingDiv.classList.remove('hidden');
 
+                // Check if TSNE is defined, if not, wait and retry
+                if (typeof TSNE === 'undefined') {
+                    console.warn('TSNE library not yet loaded. Retrying in 500ms...');
+                    setTimeout(plotTSNE, 500);
+                    return;
+                }
+
                 if (!allTransactions || allTransactions.length === 0) {
                     tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Нет транзакций для построения t-SNE графика. Загрузите данные.</p>`;
                     tsneLoadingDiv.classList.add('hidden');
@@ -2099,7 +2106,7 @@
                     });
 
                     // Initialize t-SNE
-                    const tsne = new tsnejs.tSNE({
+                    const tsne = new TSNE({
                         dim: 2, // Output dimensions
                         perplexity: 30, // Perplexity is a crucial parameter, often between 5 and 50
                         earlyExaggeration: 4.0,
