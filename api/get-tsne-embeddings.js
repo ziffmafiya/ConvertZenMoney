@@ -1,9 +1,11 @@
-const express = require('express');
-const router = express.Router();
-// You might need to install a t-SNE library, e.g., 'tsne-js' or '@tensorflow/tfjs-tsne'
-// For simplicity, let's assume a placeholder for t-SNE logic.
+// This is a Vercel serverless function.
+// It should export a default function that handles the request.
 
-router.post('/get-tsne-embeddings', async (req, res) => {
+module.exports = async (req, res) => {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed. Only POST requests are supported.' });
+    }
+
     try {
         // In a real application, you would fetch transaction data,
         // preprocess it, and then apply t-SNE.
@@ -24,7 +26,7 @@ router.post('/get-tsne-embeddings', async (req, res) => {
         const embeddings = transactions.map((_, index) => ({
             x: Math.random() * 100, // Dummy X coordinate
             y: Math.random() * 100, // Dummy Y coordinate
-            cluster: clusterLabels ? clusterLabels[index] : 'unknown' // Assign cluster label if provided
+            cluster: clusterLabels && clusterLabels[index] !== undefined && clusterLabels[index] !== null ? clusterLabels[index] : 'unknown' // Assign cluster label if provided
         }));
 
         res.json({ embeddings });
@@ -33,6 +35,4 @@ router.post('/get-tsne-embeddings', async (req, res) => {
         console.error('Error generating t-SNE embeddings:', error);
         res.status(500).json({ error: 'Failed to generate t-SNE embeddings.' });
     }
-});
-
-module.exports = router;
+};
