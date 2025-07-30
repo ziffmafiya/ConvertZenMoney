@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -1876,3 +1877,1883 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Универсальный Финансовый Отчет</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+    <style>
+        .font-tektur {
+            font-family: 'Tektur', sans-serif;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, button, .tab-button, .font-semibold {
+            font-family: 'Tektur', sans-serif;
+        }
+    </style>
+</head>
+<body class="antialiased bg-[#0D1117] text-[#c9d1d9]">
+
+    <div class="container mx-auto p-4 md:p-8"> <!-- Increased max-width -->
+
+        <!-- Секция заголовка -->
+        <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
+            <!-- Actions -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2" id="quickFilters">
+                </div>
+            </div>
+            <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                Настройки
+            </button>
+        </header>
+
+        <!-- Секция фильтров -->
+        <div class="mb-8 md:mb-12">
+             <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
+                <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="">Весь год</option>
+                    <option value="01">Январь</option>
+                    <option value="02">Февраль</option>
+                    <option value="03">Март</option>
+                    <option value="04">Апрель</option>
+                    <option value="05">Май</option>
+                    <option value="06">Июнь</option>
+                    <option value="07">Июль</option>
+                    <option value="08">Август</option>
+                    <option value="09">Сентябрь</option>
+                    <option value="10">Октябрь</option>
+                    <option value="11">Ноябрь</option>
+                    <option value="12">Декабрь</option>
+                </select>
+                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+        </div>
+
+        <!-- Секция основных метрик -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Карточка актуального баланса -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
+                <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="netBalanceChange" class="text-sm font-semibold"></span>
+                    <div class="h-8 w-24"><canvas id="netBalanceSparkline"></canvas></div>
+                </div>
+            </div>
+             <!-- Карточка общего дохода -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
+                <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="incomeChange" class="text-sm font-semibold"></span>
+                    <div class="h-8 w-24"><canvas id="incomeSparkline"></canvas></div>
+                </div>
+            </div>
+            <!-- Карточка общих расходов -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
+                <div>
+                    <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span id="expensesChange" class="text-sm font-semibold"></span>
+                        <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
+                    </div>
+                </div>
+                <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
+            </div>
+            <!-- Карточка теоретических сбережений -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
+                <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
+                <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
+            </div>
+        </section>
+
+        <!-- Секция графика "Траты vs. Доходы" -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
+            <div class="h-96">
+                <canvas id="spendIncomeTrendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Секция аномалий -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
+            <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+            <div id="anomaliesList" class="space-y-3">
+                <!-- Anomalies will be listed here -->
+                <p class="text-gray-500">Аномалий не найдено.</p>
+            </div>
+            <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
+                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+            </div>
+        </section>
+
+        <!-- Секция детализации с вкладками -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+            
+            <!-- Карточка детализации расходов -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <div class="mb-4 border-b border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" id="category-tab" data-tab-target="#category-content" type="button" role="tab">По категориям</button>
+                        </li>
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-gray-700 hover:bg-gray-700 hover:border-gray-600" id="store-tab" data-tab-target="#store-content" type="button" role="tab">По магазинам</button>
+                        </li>
+                    </ul>
+                </div>
+                <div id="expensesTabContent">
+                    <div class="tab-content" id="category-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
+                        <div class="relative h-[35vh] w-full max-w-[450px] mx-auto">
+                            <canvas id="expensesChart"></canvas>
+                        </div>
+                        <div id="expensesLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
+                        <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Найти аномалии в данных</button>
+                    </div>
+                    <div class="tab-content hidden" id="store-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
+                        <div class="relative h-[45vh] w-full">
+                            <canvas id="storesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка с двумя карточками -->
+            <div class="flex flex-col gap-8 md:gap-12">
+                <!-- Карточка источников дохода -->
+                <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
+                    <div class="space-y-4" id="incomeList">
+                        <!-- Income bars will be generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Прогресс по цели -->
+                <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">Прогресс по цели</h3>
+                        <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Настроить</button>
+                    </div>
+                    <p id="goalDescription" class="text-gray-400">Цель не задана</p>
+                    <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
+                        <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
+                    </div>
+                <div class="flex justify-between text-sm font-semibold mt-2">
+                        <span id="goalProgressText" class="text-white">0%</span>
+                        <span id="goalTargetText" class="text-gray-400">Цель: -</span>
+                    </div>
+                    <p id="comparisonMonthText" class="text-sm text-gray-400 mt-1"></p>
+                </div>
+            </div>
+        </section>
+
+    <!-- Секция таблицы транзакций -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Дата</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Категория</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTableBody">
+                    <!-- Rows will be generated by JS -->
+                </tbody>
+            </table>
+        </div>
+        <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
+            <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        </div>
+    </section>
+
+
+    <!-- Секция глубокого анализа -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
+        <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+        <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
+        <div class="flex flex-wrap gap-4 mb-4">
+            <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
+            <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Настроить анализ</button>
+        </div>
+        <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
+            <!-- Analysis results will be displayed here -->
+        </div>
+        <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Анализ выполняется, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
+    <!-- Модальное окно настроек глубокого анализа -->
+    <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+            <h2 class="text-2xl font-bold text-white mb-4">Настройки глубокого анализа</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-300">Период анализа</label>
+                    <div class="flex gap-2">
+                        <select id="deepAnalysisMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="">Весь год</option>
+                            <option value="01">Январь</option>
+                            <option value="02">Февраль</option>
+                            <option value="03">Март</option>
+                            <option value="04">Апрель</option>
+                            <option value="05">Май</option>
+                            <option value="06">Июнь</option>
+                            <option value="07">Июль</option>
+                            <option value="08">Август</option>
+                            <option value="09">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
+                        </select>
+                        <input type="number" id="deepAnalysisYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    </div>
+                </div>
+                <div>
+                    <label for="deepAnalysisCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория для сравнительного анализа (опционально)</label>
+                    <input type="text" id="deepAnalysisCategory" placeholder="Например: Кафе и рестораны" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="deepAnalysisModel" class="block mb-2 text-sm font-medium text-gray-300">Модель ИИ для анализа</label>
+                    <select id="deepAnalysisModel" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeDeepAnalysisSettingsButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
+                <button id="saveDeepAnalysisSettingsButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Секция анализа привычек -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Анализ привычек</h2>
+        <p class="text-gray-400 mb-4">Здесь отображаются ваши регулярные траты, которые могут считаться привычками.</p>
+        <div id="habitsResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+            <!-- Habit cards will be displayed here -->
+        </div>
+        <div id="habitsLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Анализ привычек, пожалуйста, подождите...</p>
+        </div>
+        <div id="habitsPagination" class="flex justify-center items-center mt-4 space-x-2">
+            <button id="prevHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+            <span id="habitPageInfo" class="text-gray-400">Страница 1 из 1</span>
+            <button id="nextHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        </div>
+    </section>
+
+    <!-- Модальное окно деталей привычки -->
+    <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
+            <h2 id="habitDetailTitle" class="text-2xl font-bold text-white mb-4">Подробности привычки</h2>
+            <div class="chart-container" style="height: 40vh;">
+                <canvas id="habitTrendChart"></canvas>
+            </div>
+            <button id="closeHabitDetailModal" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно настройки цели -->
+    <div id="goalSetupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+            <h2 class="text-2xl font-bold text-white mb-4">Настройка цели</h2>
+            <div class="mb-4 border-b border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="goalTab" role="tablist">
+                    <li role="presentation">
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" data-tab-target="#manualGoalSetup">Задать вручную</button>
+                    </li>
+                    <li role="presentation">
+                        <button class="goal-tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-300" data-tab-target="#recommendedGoalSetup">Получить рекомендацию</button>
+                    </li>
+                </ul>
+            </div>
+            <div id="goalTabContent">
+                <div class="goal-tab-content" id="manualGoalSetup">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="goalCategory" class="block mb-2 text-sm font-medium text-gray-300">Категория расходов</label>
+                            <select id="goalCategory" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="goalType" class="block mb-2 text-sm font-medium text-gray-300">Тип цели</label>
+                            <select id="goalType" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="reduce">Сократить расходы на (в %)</option>
+                                <option value="limit">Потратить не более (в грн)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="goalValue" class="block mb-2 text-sm font-medium text-gray-300">Значение</label>
+                            <input type="number" id="goalValue" placeholder="Например: 15" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-tab-content hidden" id="recommendedGoalSetup">
+                    <p class="text-gray-400 mb-4">Нажмите кнопку, чтобы получить рекомендацию по цели на основе вашего анализа трат.</p>
+                    <button id="getGoalRecommendationButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">Получить рекомендацию</button>
+                    <div id="recommendationResult" class="mt-4 p-4 bg-gray-800 rounded-lg hidden">
+                        <!-- Recommendation will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeGoalModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+                <button id="saveGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Секция загрузки данных -->
+    
+
+    </div>
+
+    <!-- Модальное окно настроек -->
+<div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+        <h2 class="text-2xl font-bold text-white mb-4">Настройки</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300">Тема</label>
+                <div class="flex gap-2">
+                    <button id="lightThemeButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Светлая</button>
+                    <button id="darkThemeButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Темная</button>
+                </div>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300">Язык</label>
+                <div class="flex gap-2">
+                    <button id="ruLangButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Русский</button>
+                    <button id="enLangButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">English</button>
+                </div>
+            </div>
+            <div id="file-upload-section">
+                <h2 class="text-2xl font-bold text-white mb-4">Обновить данные из файла</h2>
+                <p class="text-gray-400 mb-4">Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.</p>
+                <input type="file" id="csvFile" accept=".csv" class="w-full p-4 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+                    <input id="excludeDebtsOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="excludeDebtsOnUpload" class="ml-3 text-lg font-medium text-gray-300">Исключить категорию "Долги" при загрузке</label>
+                </div>
+                <div class="flex items-center mb-4 p-4 bg-gray-800 rounded-lg">
+                    <input id="skipEmbeddingOnUpload" type="checkbox" class="w-5 h-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                    <label for="skipEmbeddingOnUpload" class="ml-3 text-lg font-medium text-gray-300">Не генерировать эмбеддинги при загрузке (для экономии квоты)</label>
+                </div>
+                <button id="processDataButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Загрузить в базу данных</button>
+            </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-6">
+            <button id="closeSettingsModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // Обработчик события, который запускается после полной загрузки и парсинга HTML-документа.
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Ссылки на DOM-элементы ---
+            const csvFile = document.getElementById('csvFile');
+            const processDataButton = document.getElementById('processDataButton');
+            const excludeDebtsOnUploadCheckbox = document.getElementById('excludeDebtsOnUpload');
+            const skipEmbeddingOnUploadCheckbox = document.getElementById('skipEmbeddingOnUpload'); // Ссылка на чекбокс для пропуска эмбеддингов
+            const filterMonthSelect = document.getElementById('filterMonth');
+            const filterYearInput = document.getElementById('filterYear');
+            const deepAnalysisButton = document.getElementById('deepAnalysisButton');
+            // Элементы для глубокого анализа (настройки в модальном окне)
+            const deepAnalysisMonthSelect = document.getElementById('deepAnalysisMonth');
+            const deepAnalysisYearInput = document.getElementById('deepAnalysisYear');
+            const deepAnalysisCategoryInput = document.getElementById('deepAnalysisCategory');
+            const deepAnalysisModelSelect = document.getElementById('deepAnalysisModel');
+            const analysisResultDiv = document.getElementById('analysisResult');
+            const analysisLoadingDiv = document.getElementById('analysisLoading');
+            const detectAnomaliesButton = document.getElementById('detectAnomaliesButton');
+            const habitsResultDiv = document.getElementById('habitsResult');
+            const habitsLoadingDiv = document.getElementById('habitsLoading');
+            const habitDetailModal = document.getElementById('habitDetailModal');
+            const habitDetailTitle = document.getElementById('habitDetailTitle');
+            const closeHabitDetailModal = document.getElementById('closeHabitDetailModal');
+            let habitTrendChart; // Переменная для хранения экземпляра графика тренда привычки
+            
+            const headerNetBalanceEl = document.getElementById('headerNetBalance');
+            const totalIncomeEl = document.getElementById('totalIncome');
+            const totalExpensesEl = document.getElementById('totalExpenses');
+            const expensesLegendContainer = document.getElementById('expensesLegend');
+            const incomeListContainer = document.getElementById('incomeList');
+            const quickFiltersContainer = document.getElementById('quickFilters');
+            const anomaliesListEl = document.getElementById('anomaliesList');
+            const prevAnomalyPageBtn = document.getElementById('prevAnomalyPage');
+            const nextAnomalyPageBtn = document.getElementById('nextAnomalyPage');
+            const anomalyPageInfoEl = document.getElementById('anomalyPageInfo');
+            const prevTransactionPageBtn = document.getElementById('prevTransactionPage');
+            const nextTransactionPageBtn = document.getElementById('nextTransactionPage');
+            const transactionPageInfoEl = document.getElementById('transactionPageInfo');
+            const prevHabitPageBtn = document.getElementById('prevHabitPage');
+            const nextHabitPageBtn = document.getElementById('nextHabitPage');
+            const habitPageInfoEl = document.getElementById('habitPageInfo');
+
+            const netBalanceChangeEl = document.getElementById('netBalanceChange');
+            const incomeChangeEl = document.getElementById('incomeChange');
+            const expensesChangeEl = document.getElementById('expensesChange');
+            const theoreticalSavingsEl = document.getElementById('theoreticalSavings');
+            const expensesToIncomeTextEl = document.getElementById('expensesToIncomeText');
+            let netBalanceSparklineChart;
+            let incomeSparklineChart;
+            let expensesSparklineChart;
+            // Removed expensesToIncomeChart
+
+            // --- Переменные для хранения экземпляров графиков Chart.js ---
+            let expensesChart;
+            let storesChart;
+            let spendIncomeTrendChart;
+            // let forecastChart; // Removed
+
+            // Переменные для пагинации аномалий
+            const anomaliesPerPage = 5;
+            let currentAnomalyPage = 1;
+            let allAnomalies = [];
+
+            // Переменные для пагинации транзакций
+            const transactionsPerPage = 8;
+            let currentTransactionPage = 1;
+            let allTransactions = [];
+
+            // Переменные для пагинации привычек
+            const habitsPerPage = 4; // Например, 4 привычки на страницу
+            let currentHabitPage = 1;
+            let allHabits = [];
+
+            // Цветовая палитра для графиков
+            const COLORS = [
+                '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#71717a',
+                '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#0ea5e9', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b'
+            ];
+
+            // Плагин для кастомизации всплывающих подсказок в Chart.js
+            const tooltipPlugin = {
+                callbacks: {
+                    label: function(context) {
+                        let labelText = context.dataset.label || context.label || '';
+                        if (labelText) {
+                            labelText += ': ';
+                        }
+                        let value = 0;
+                        // For bar charts with indexAxis: 'y', the value is in 'x'
+                        if (context.chart.config.type === 'bar' && context.chart.config.options.indexAxis === 'y') {
+                            if (context.parsed.x !== null && !isNaN(context.parsed.x)) {
+                                value = context.parsed.x;
+                            }
+                        } else { // For doughnut and other charts
+                            if (context.parsed.y !== null && !isNaN(context.parsed.y)) {
+                                value = context.parsed.y;
+                            } else if (context.parsed !== null && !isNaN(context.parsed)) {
+                                value = context.parsed;
+                            }
+                        }
+                        
+                        labelText += new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                        return labelText;
+                    }
+                }
+            };
+
+            // Стандартное распределение расходов (в процентах от общего дохода)
+            const STANDARD_EXPENSE_DISTRIBUTION = {
+                "Необходимые расходы": {
+                    "Платежи, комиссии / Аренда": [0.15, 0.20],
+                    "Платежи, комиссии / Комуналка": [0.05, 0.05],
+                    "Платежи, комиссии / Связь": [0.01, 0.02],
+                    "Платежи, комиссии / Почтовые услуги": [0.00, 0.01],
+                    "Продукты": [0.15, 0.20],
+                    "Проезд": [0.05, 0.05],
+                    "Забота о себе": [0.01, 0.02],
+                    "Здоровье и фитнес": [0.03, 0.04]
+                },
+                "Желания": {
+                    "Кафе и рестораны": [0.05, 0.07],
+                    "Кафе и рестораны / Кофе": [0.01, 0.02],
+                    "Отдых и развлечения": [0.05, 0.07],
+                    "Бар": [0.02, 0.03],
+                    "Покупки: одежда, техника": [0.05, 0.07],
+                    "Подарки": [0.02, 0.03],
+                    "Хотелки": [0.02, 0.03]
+                },
+                "Сбережения и долги": {
+                    "Образование": [0.05, 0.10],
+                    "Остальное — сбережения и погашение кредитов/долгов": [0.10, 0.15]
+                }
+            };
+            
+            // Функция для нормализации строк (удаление лишних пробелов, приведение к нижнему регистру)
+            function normalize(str) {
+                return (str ?? '').replace(/\u00A0/g, ' ').trim().toLowerCase();
+            }
+            
+            // --- Обработка данных и рендеринг ---
+            // Асинхронная функция для получения и отображения транзакций
+            async function fetchAndRenderTransactions() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                // Год должен быть выбран для получения данных
+                if (!selectedYear) {
+                    analyzeAndRender([]); // Очищаем графики, если год не выбран
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear });
+                if (selectedMonth) {
+                    params.append('month', selectedMonth);
+                }
+
+                try {
+                    // Отправляем запрос на сервер для получения транзакций
+                    const response = await fetch(`/api/get-transactions?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch transactions');
+                    }
+                    const { transactions } = await response.json();
+                    
+                    // Запускаем анализ и отображение полученных транзакций
+                    analyzeAndRender(transactions);
+                    fetchAndRenderHabits();
+                    fetchAndRenderMonthlySummary(); // Добавляем вызов нового API
+
+                } catch (error) {
+                    console.error('Error fetching transactions:', error);
+                    alert(`Не удалось загрузить транзакции: ${error.message}`);
+                }
+            }
+
+            // Асинхронная функция для получения и отображения сводки по месяцам
+            async function fetchAndRenderMonthlySummary() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    // Очищаем поля, если нет выбранного месяца/года
+                    incomeChangeEl.textContent = 'Нет данных';
+                    expensesChangeEl.textContent = 'Нет данных';
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+
+                try {
+                    const response = await fetch(`/api/get-monthly-summary?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch monthly summary');
+                    }
+                    const { incomeChange, outcomeChange } = await response.json();
+                    
+                    // Обновляем элементы на странице
+                    incomeChangeEl.textContent = incomeChange;
+                    expensesChangeEl.textContent = outcomeChange;
+
+                    // Применяем цвета в зависимости от значения
+                    if (incomeChange.startsWith('+')) {
+                        incomeChangeEl.className = 'text-sm font-semibold text-green-400';
+                    } else if (incomeChange.startsWith('-')) {
+                        incomeChangeEl.className = 'text-sm font-semibold text-red-400';
+                    } else {
+                        incomeChangeEl.className = 'text-sm font-semibold text-gray-400';
+                    }
+
+                    if (outcomeChange.startsWith('+')) {
+                        expensesChangeEl.className = 'text-sm font-semibold text-red-400'; // Расходы растут - плохо
+                    } else if (outcomeChange.startsWith('-')) {
+                        expensesChangeEl.className = 'text-sm font-semibold text-green-400'; // Расходы падают - хорошо
+                    } else {
+                        expensesChangeEl.className = 'text-sm font-semibold text-gray-400';
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching monthly summary:', error);
+                    alert(`Не удалось загрузить сводку по месяцам: ${error.message}`);
+                    incomeChangeEl.textContent = 'Ошибка';
+                    expensesChangeEl.textContent = 'Ошибка';
+                }
+            }
+
+            // Асинхронная функция для получения и отображения привычек
+            async function fetchAndRenderHabits() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Пожалуйста, выберите год и месяц для анализа привычек.</p>';
+                    return;
+                }
+
+                habitsLoadingDiv.classList.remove('hidden'); // Показываем индикатор загрузки
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+
+                try {
+                    // Отправляем запрос на сервер для анализа привычек
+                    const response = await fetch(`/api/analyze-habits?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch habits');
+                    }
+                    const { habits } = await response.json();
+                    allHabits = Object.values(habits); // Сохраняем все привычки как массив
+                    renderHabits(allHabits); // Отображаем первую страницу привычек
+                } catch (error) {
+                    console.error('Error fetching habits:', error);
+                    alert(`Не удалось загрузить привычки: ${error.message}`);
+                } finally {
+                    habitsLoadingDiv.classList.add('hidden'); // Скрываем индикатор загрузки
+                }
+            }
+
+            // Функция для отображения карточек привычек с пагинацией
+            function renderHabits(habits) {
+                habitsResultDiv.innerHTML = '';
+                if (habits.length === 0) {
+                    habitsResultDiv.innerHTML = '<p class="text-gray-400 col-span-full">Привычки не найдены для выбранного периода.</p>';
+                    habitPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevHabitPageBtn.disabled = true;
+                    nextHabitPageBtn.disabled = true;
+                    return;
+                }
+
+                const totalPages = Math.ceil(habits.length / habitsPerPage);
+                currentHabitPage = Math.min(Math.max(1, currentHabitPage), totalPages); // Убедимся, что страница в пределах допустимого
+
+                const startIndex = (currentHabitPage - 1) * habitsPerPage;
+                const endIndex = startIndex + habitsPerPage;
+                const habitsToDisplay = habits.slice(startIndex, endIndex);
+
+                // Иконки для разных категорий привычек
+                const categoryIcons = {
+                    'Продукты': '🛒',
+                    'Кафе и рестораны': '☕',
+                    'Транспорт': '🚕',
+                    'Развлечения': '🎬',
+                    'Онлайн-сервисы': '💻',
+                    'default': '💰'
+                };
+
+                habitsToDisplay.forEach(habit => {
+                    const trendColor = habit.trend > 0 ? 'text-red-400' : 'text-green-400';
+                    const trendArrow = habit.trend > 0 ? '↑' : '↓';
+                    const icon = categoryIcons[habit.category] || categoryIcons['default'];
+
+                    const habitCard = document.createElement('div');
+                    habitCard.className = 'metric-card p-4 flex flex-col';
+                    habitCard.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-300">${habit.name}</h3>
+                                <span class="text-2xl">${icon}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm">Всего потрачено</p>
+                            <p class="text-2xl font-bold text-blue-400">${parseFloat(habit.totalSpent).toLocaleString('ru-RU')} грн</p>
+                            <div class="flex justify-between items-center text-sm text-gray-400 mt-1">
+                                <span>${habit.count} раз за месяц</span>
+                                <span class="${trendColor}">${trendArrow} ${Math.abs(habit.trend)}%</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Категория: ${habit.category}</p>
+                        </div>
+                        <button class="habit-details-btn mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" data-payee="${habit.payee}" data-habit='${JSON.stringify(habit)}'>Подробнее</button>
+                    `;
+                    habitsResultDiv.appendChild(habitCard);
+                });
+
+                habitPageInfoEl.textContent = `Страница ${currentHabitPage} из ${totalPages}`;
+                prevHabitPageBtn.disabled = currentHabitPage === 1;
+                nextHabitPageBtn.disabled = currentHabitPage === totalPages;
+            }
+
+            // Асинхронная функция для выполнения глубокого анализа трат с помощью ИИ
+            async function performDeepAnalysis() {
+                // Используем настройки из модального окна
+                const selectedMonth = deepAnalysisMonthSelect.value;
+                const selectedYear = deepAnalysisYearInput.value;
+                const analysisCategory = deepAnalysisCategoryInput.value.trim();
+                const analysisModel = deepAnalysisModelSelect.value;
+
+                if (!selectedMonth || !selectedYear) {
+                    alert('Пожалуйста, выберите месяц и год для глубокого анализа.');
+                    return;
+                }
+
+                analysisResultDiv.textContent = '';
+                analysisLoadingDiv.classList.remove('hidden');
+
+                const params = new URLSearchParams({ month: selectedMonth, year: selectedYear, model: analysisModel });
+                if (analysisCategory) {
+                    params.append('category', analysisCategory);
+                }
+
+                try {
+                    const response = await fetch(`/api/deep-analysis?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to perform deep analysis');
+                    }
+                    const { analysis } = await response.json();
+                    analysisResultDiv.textContent = analysis;
+                } catch (error) {
+                    console.error('Error performing deep analysis:', error);
+                    analysisResultDiv.textContent = `Ошибка при выполнении глубокого анализа: ${error.message}`;
+                } finally {
+                    analysisLoadingDiv.classList.add('hidden');
+                }
+            }
+
+            // Асинхронная функция для обнаружения аномалий
+            async function detectAnomalies() {
+                analysisResultDiv.textContent = '';
+                analysisLoadingDiv.classList.remove('hidden');
+                analysisLoadingDiv.querySelector('p').textContent = 'Идет поиск аномалий, это может занять некоторое время...';
+
+                try {
+                    // Отправляем запрос на сервер для обнаружения аномалий
+                    const response = await fetch('/api/detect-anomalies');
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to detect anomalies');
+                    }
+                    const result = await response.json();
+                    alert(`Поиск аномалий завершен. Найдено: ${result.anomalies_found}. Данные на странице будут обновлены.`);
+                    fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать аномалии
+                } catch (error) {
+                    console.error('Error detecting anomalies:', error);
+                    alert(`Ошибка при поиске аномалий: ${error.message}`);
+                } finally {
+                    analysisLoadingDiv.classList.add('hidden');
+                    analysisLoadingDiv.querySelector('p').textContent = 'Анализ выполняется, пожалуйста, подождите...'; // Сбрасываем текст
+                }
+            }
+
+            // Основная функция для анализа и отображения данных
+            function analyzeAndRender(transactions) {
+                if (!transactions) return;
+
+                let totalIncome = 0;
+                let totalExpenses = 0;
+                const expensesByCategory = {};
+                const expensesByPayee = {};
+                const incomeSources = {};
+            const dailyData = {}; // Для графика трендов
+
+                transactions.forEach(t => {
+                    const date = t.date.split('T')[0];
+                    if (!dailyData[date]) {
+                        dailyData[date] = { income: 0, expenses: 0 };
+                    }
+
+                    if (t.income > 0 && t.outcome === 0) {
+                        totalIncome += t.income;
+                        dailyData[date].income += t.income;
+                        if (!normalize(t.categoryName).includes('возврат')) {
+                           incomeSources[t.categoryName] = (incomeSources[t.categoryName] || 0) + t.income;
+                        }
+                    } else if (t.outcome > 0 && t.income === 0) {
+                        totalExpenses += t.outcome;
+                        dailyData[date].expenses += t.outcome;
+                        
+                        let category = t.categoryName;
+                        const creditKeywords = ["роутер", "очки", "бритва", "пылесос"];
+                        const description = normalize(t.payee + ' ' + t.comment + ' ' + t.incomeAccountName);
+
+                        if (creditKeywords.some(keyword => description.includes(keyword))) {
+                            category = "Платеж по кредиту";
+                        }
+                        
+                        expensesByCategory[category] = (expensesByCategory[category] || 0) + t.outcome;
+                        expensesByPayee[t.payee] = (expensesByPayee[t.payee] || 0) + t.outcome;
+                    }
+                });
+
+                const netBalance = totalIncome - totalExpenses;
+
+                // Calculate actual expense percentages
+                const actualExpensePercentages = {};
+                if (totalExpenses > 0) {
+                    for (const category in expensesByCategory) {
+                        actualExpensePercentages[category] = (expensesByCategory[category] / totalExpenses);
+                    }
+                }
+
+                // Update main metrics
+                headerNetBalanceEl.textContent = `${netBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                headerNetBalanceEl.style.color = netBalance >= 0 ? '#22c55e' : '#ef4444';
+                totalIncomeEl.textContent = `${totalIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                totalExpensesEl.textContent = `${totalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+
+                // Prepare data for charts and lists
+                const expenseDataByCategoryChart = {
+                    labels: Object.keys(expensesByCategory),
+                    datasets: [{
+                        data: Object.values(expensesByCategory),
+                        backgroundColor: COLORS.slice(0, Object.keys(expensesByCategory).length),
+                        borderColor: '#1f2937',
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                };
+
+                const sortedExpensesByPayee = Object.entries(expensesByPayee)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 10); // Топ 10
+                const expenseDataByStoreChart = {
+                    labels: sortedExpensesByPayee.map(([payee]) => payee),
+                    datasets: [{
+                        label: 'Расходы',
+                        data: sortedExpensesByPayee.map(([, amount]) => amount),
+                        backgroundColor: COLORS.slice(0, sortedExpensesByPayee.length),
+                        borderColor: '#1f2937',
+                        borderWidth: 2
+                    }]
+                };
+                
+                const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+                const trendData = {
+                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })),
+                    datasets: [
+                        {
+                            label: 'Доходы',
+                            data: sortedDates.map(date => dailyData[date].income),
+                            borderColor: '#22c55e', // green-500
+                            backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Расходы',
+                            data: sortedDates.map(date => dailyData[date].expenses),
+                            borderColor: '#ef4444', // red-500
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                };
+
+                const incomeDataList = Object.entries(incomeSources)
+                    .map(([source, amount]) => ({ source, amount }))
+                    .sort((a, b) => b.amount - a.amount);
+
+                renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions, actualExpensePercentages);
+                allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
+                renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
+                allTransactions = transactions; // Сохраняем все транзакции
+                renderTransactionsTable(allTransactions); // Отображаем первую страницу транзакций
+                updateGoalProgress(); // Теперь вызывается здесь, когда allTransactions точно определены
+                // renderForecastChart(transactions); // Removed
+                renderSparklines(transactions);
+                theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
+            }
+
+            // Функция для отображения аномалий с пагинацией
+            function renderAnomalies(anomalies) {
+                anomaliesListEl.innerHTML = '';
+                if (anomalies.length === 0) {
+                    anomaliesListEl.innerHTML = '<p class="text-gray-500">Аномалий не найдено.</p>';
+                    anomalyPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevAnomalyPageBtn.disabled = true;
+                    nextAnomalyPageBtn.disabled = true;
+                    return;
+                }
+
+                const totalPages = Math.ceil(anomalies.length / anomaliesPerPage);
+                currentAnomalyPage = Math.min(Math.max(1, currentAnomalyPage), totalPages); // Убедимся, что страница в пределах допустимого
+
+                const startIndex = (currentAnomalyPage - 1) * anomaliesPerPage;
+                const endIndex = startIndex + anomaliesPerPage;
+                const anomaliesToDisplay = anomalies.slice(startIndex, endIndex);
+
+                anomaliesToDisplay.forEach(anomaly => {
+                    const anomalyEl = document.createElement('div');
+                    anomalyEl.className = 'p-3 bg-gray-800 rounded-lg border border-orange-500/30 shadow-lg shadow-black/20';
+                    anomalyEl.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-white">${anomaly.payee}</span>
+                            <span class="font-bold text-orange-400">${anomaly.outcome.toLocaleString('ru-RU')} грн</span>
+                        </div>
+                        <p class="text-sm text-gray-400">${anomaly.anomaly_reason}</p>
+                    `;
+                    anomaliesListEl.appendChild(anomalyEl);
+                });
+
+                anomalyPageInfoEl.textContent = `Страница ${currentAnomalyPage} из ${totalPages}`;
+                prevAnomalyPageBtn.disabled = currentAnomalyPage === 1;
+                nextAnomalyPageBtn.disabled = currentAnomalyPage === totalPages;
+            }
+
+            // --- Обработка файла и фильтрация ---
+            function handleFileProcessing() {
+                if (csvFile.files.length === 0) {
+                    alert('Пожалуйста, выберите CSV файл.');
+                    return;
+                }
+
+                const file = csvFile.files[0];
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const csvData = e.target.result;
+                    const lines = csvData.split('\n').filter(line => line.trim() !== '');
+
+                    const headers = [
+                        "date", "categoryName", "payee", "comment", "outcomeAccountName",
+                        "outcome", "outcomeCurrencyShortTitle", "incomeAccountName",
+                        "income", "incomeCurrencyShortTitle", "createdDate", "changedDate", "qrCode"
+                    ];
+
+                    const data = [];
+                    lines.forEach(line => {
+                        const values = line.split(';');
+                        if (values.length >= headers.length - 1) { // Допускаем отсутствие qrCode
+                            let row = {};
+                            headers.forEach((header, index) => {
+                                row[header] = (values[index] || '').replace(/"/g, '');
+                            });
+                            data.push(row);
+                        } else {
+                            console.warn(`Skipping malformed line: ${line}`);
+                        }
+                    });
+
+                    const transactionData = data.filter(row => {
+                        const income = parseFloat(row.income.replace(',', '.')) || 0;
+                        const outcome = parseFloat(row.outcome.replace(',', '.')) || 0;
+                        return (income > 0 && outcome === 0) || (outcome > 0 && income === 0);
+                    }).map(row => ({
+                        date: row.date,
+                        categoryName: row.categoryName,
+                        payee: row.payee,
+                        comment: row.comment,
+                        outcomeAccountName: row.outcomeAccountName,
+                        outcome: parseFloat(row.outcome.replace(',', '.')) || 0,
+                        incomeAccountName: row.incomeAccountName,
+                        income: parseFloat(row.income.replace(',', '.')) || 0,
+                    }));
+
+                    if (transactionData.length === 0) {
+                        alert('В файле не найдено подходящих транзакций для загрузки.');
+                        return;
+                    }
+                    
+                    // Загружаем все обработанные данные из файла. Сервер обработает дубликаты.
+                    uploadTransactionsToSupabase(transactionData, excludeDebtsOnUploadCheckbox.checked, skipEmbeddingOnUploadCheckbox.checked);
+                };
+
+                reader.onerror = () => {
+                    alert('Ошибка при чтении файла.');
+                };
+
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            function renderTransactionsTable(transactions) {
+                const tableBody = document.getElementById('transactionsTableBody');
+                tableBody.innerHTML = '';
+                if (transactions.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Нет транзакций для отображения.</td></tr>`;
+                    transactionPageInfoEl.textContent = 'Страница 0 из 0';
+                    prevTransactionPageBtn.disabled = true;
+                    nextTransactionPageBtn.disabled = true;
+                    return;
+                }
+
+                const totalPages = Math.ceil(transactions.length / transactionsPerPage);
+                currentTransactionPage = Math.min(Math.max(1, currentTransactionPage), totalPages);
+
+                const startIndex = (currentTransactionPage - 1) * transactionsPerPage;
+                const endIndex = startIndex + transactionsPerPage;
+                const transactionsToDisplay = transactions.slice(startIndex, endIndex);
+
+                transactionsToDisplay.forEach(t => {
+                    const row = document.createElement('tr');
+                    const amount = t.income > 0 ? t.income : t.outcome;
+                    const amountClass = t.income > 0 ? 'text-green-500' : 'text-red-500';
+                    const sign = t.income > 0 ? '+' : '-';
+
+                    row.innerHTML = `
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${new Date(t.date).toLocaleDateString('ru-RU')}</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.categoryName}</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.payee || 'N/A'}</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left ${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                // Добавляем эффект при наведении на строки таблицы
+                const tableRows = tableBody.querySelectorAll('tr');
+                tableRows.forEach(row => {
+                    row.classList.add('hover:bg-gray-700');
+                });
+
+                transactionPageInfoEl.textContent = `Страница ${currentTransactionPage} из ${totalPages}`;
+                prevTransactionPageBtn.disabled = currentTransactionPage === 1;
+                nextTransactionPageBtn.disabled = currentTransactionPage === totalPages;
+            }
+
+                async function updateGoalProgress() {
+                const goal = JSON.parse(localStorage.getItem('userGoal'));
+                const goalDescriptionEl = document.getElementById('goalDescription');
+                const goalProgressBar = document.getElementById('goalProgressBar');
+                const goalProgressText = document.getElementById('goalProgressText');
+                const goalTargetText = document.getElementById('goalTargetText');
+                const comparisonMonthTextEl = document.getElementById('comparisonMonthText');
+
+                if (!goal) {
+                    goalDescriptionEl.textContent = 'Цель не задана';
+                    goalProgressBar.style.width = '0%';
+                    goalProgressText.textContent = '0%';
+                    goalTargetText.textContent = 'Цель: -';
+                    comparisonMonthTextEl.textContent = '';
+                    return;
+                }
+
+                // Update UI with goal details
+                if (goal.type === 'reduce') {
+                    goalDescriptionEl.textContent = `Снизить траты в категории "${goal.category}" на ${goal.value}%`;
+                    goalTargetText.textContent = `Цель: ${goal.value}%`;
+                } else {
+                    goalDescriptionEl.textContent = `Потратить не более ${goal.value} грн в категории "${goal.category}"`;
+                    goalTargetText.textContent = `Цель: ${goal.value} грн`;
+                }
+
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    return; // Need month and year to calculate progress
+                }
+
+                try {
+                    const response = await fetch('/api/get-goal-progress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ year: selectedYear, month: selectedMonth, goal })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to get goal progress');
+                    }
+
+                    const { progress1, progress2, comparisonMonth, currentValue, targetValue, status } = await response.json();
+                    
+                    // Ограничиваем progress1 100% для отображения на прогресс-баре
+                    const displayProgress1 = Math.min(100, Math.max(0, progress1));
+                    
+                    goalProgressBar.style.width = `${displayProgress1}%`;
+                    
+                    if (goal.type === 'limit') {
+                        goalProgressText.textContent = `${currentValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                        goalTargetText.textContent = `Цель: ${targetValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                    } else if (goal.type === 'reduce') {
+                        let progressText = '';
+                        if (progress2 > 0) {
+                            progressText = `Вы сэкономили ${progress2.toFixed(1)}%`;
+                        } else if (progress2 < 0) {
+                            progressText = `Вы потратили на ${Math.abs(progress2).toFixed(1)}% больше`;
+                        } else {
+                            progressText = `Без изменений`;
+                        }
+                        goalProgressText.textContent = progressText;
+                        goalTargetText.textContent = `Цель: ${targetValue}%`;
+                    }
+
+                    if (comparisonMonth) {
+                        comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
+                    } else {
+                        comparisonMonthTextEl.textContent = '';
+                    }
+
+                    if (status === 'Over Limit' || (goal.type === 'reduce' && progress1 < 100)) {
+                        goalProgressBar.classList.remove('bg-blue-500');
+                        goalProgressBar.classList.add('bg-red-500');
+                    } else {
+                        goalProgressBar.classList.remove('bg-red-500');
+                        goalProgressBar.classList.add('bg-blue-500');
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching goal progress:', error);
+                    goalProgressText.textContent = 'Ошибка';
+                    comparisonMonthTextEl.textContent = '';
+                }
+            }
+
+            function renderSparklines(transactions) {
+                if (netBalanceSparklineChart) netBalanceSparklineChart.destroy();
+                if (incomeSparklineChart) incomeSparklineChart.destroy();
+                if (expensesSparklineChart) expensesSparklineChart.destroy();
+
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                let dataForSparklines = {};
+                let labelsForSparklines = [];
+                let currentPeriodTotal = { income: 0, expenses: 0, netBalance: 0 };
+                let previousPeriodTotal = { income: 0, expenses: 0, netBalance: 0 };
+
+                if (selectedMonth) {
+                    // Месячный вид: агрегируем по дням для текущего и предыдущего месяца
+                    const currentMonthTransactions = transactions.filter(t => {
+                        const date = new Date(t.date);
+                        return date.getFullYear() == selectedYear && (date.getMonth() + 1) == parseInt(selectedMonth);
+                    });
+
+                    const previousMonth = parseInt(selectedMonth) === 1 ? 12 : parseInt(selectedMonth) - 1;
+                    const previousYear = parseInt(selectedMonth) === 1 ? parseInt(selectedYear) - 1 : parseInt(selectedYear);
+
+                    const previousMonthTransactions = transactions.filter(t => {
+                        const date = new Date(t.date);
+                        return date.getFullYear() == previousYear && (date.getMonth() + 1) == previousMonth;
+                    });
+
+                    // Агрегируем дневные данные для текущего месяца
+                    currentMonthTransactions.forEach(t => {
+                        const date = t.date.split('T')[0];
+                        if (!dataForSparklines[date]) {
+                            dataForSparklines[date] = { income: 0, expenses: 0, netBalance: 0 };
+                        }
+                        dataForSparklines[date].income += t.income;
+                        dataForSparklines[date].expenses += t.outcome;
+                        dataForSparklines[date].netBalance += (t.income - t.outcome);
+                        currentPeriodTotal.income += t.income;
+                        currentPeriodTotal.expenses += t.outcome;
+                        currentPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
+
+                    // Агрегируем общую сумму за предыдущий месяц
+                    previousMonthTransactions.forEach(t => {
+                        previousPeriodTotal.income += t.income;
+                        previousPeriodTotal.expenses += t.outcome;
+                        previousPeriodTotal.netBalance += (t.income - t.outcome);
+                    });
+
+                    labelsForSparklines = Object.keys(dataForSparklines).sort();
+                    // Если нет данных за текущий месяц, используем данные за предыдущий для визуализации спарклайнов
+                    if (labelsForSparklines.length === 0 && Object.keys(previousMonthTransactions).length > 0) {
+                        previousMonthTransactions.forEach(t => {
+                            const date = t.date.split('T')[0];
+                            if (!dataForSparklines[date]) {
+                                dataForSparklines[date] = { income: 0, expenses: 0, netBalance: 0 };
+                            }
+                            dataForSparklines[date].income += t.income;
+                            dataForSparklines[date].expenses += t.outcome;
+                            dataForSparklines[date].netBalance += (t.income - t.outcome);
+                        });
+                        labelsForSparklines = Object.keys(dataForSparklines).sort();
+                    }
+
+                } else {
+                    // Годовой вид: агрегируем по месяцам
+                    const monthlyData = {};
+                    transactions.forEach(t => {
+                        const monthYear = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
+                        if (!monthlyData[monthYear]) {
+                            monthlyData[monthYear] = { income: 0, expenses: 0, netBalance: 0 };
+                        }
+                        monthlyData[monthYear].income += t.income;
+                        monthlyData[monthYear].expenses += t.outcome;
+                        monthlyData[monthYear].netBalance += (t.income - t.outcome);
+                    });
+
+                    const sortedMonths = Object.keys(monthlyData).sort();
+                    const lastSixMonths = sortedMonths.slice(-6); // Получаем данные за последние 6 месяцев
+
+                    lastSixMonths.forEach(month => {
+                        dataForSparklines[month] = monthlyData[month];
+                    });
+                    labelsForSparklines = lastSixMonths;
+
+                    // Рассчитываем итоги для текущего и предыдущего периодов в годовом виде
+                    if (sortedMonths.length >= 2) {
+                        const currentMonthKey = sortedMonths[sortedMonths.length - 1];
+                        const previousMonthKey = sortedMonths[sortedMonths.length - 2];
+                        currentPeriodTotal = monthlyData[currentMonthKey];
+                        previousPeriodTotal = monthlyData[previousMonthKey];
+                    }
+                }
+
+                const netBalanceData = labelsForSparklines.map(label => dataForSparklines[label]?.netBalance || 0);
+                const incomeData = labelsForSparklines.map(label => dataForSparklines[label]?.income || 0);
+                const expensesData = labelsForSparklines.map(label => dataForSparklines[label]?.expenses || 0);
+
+                // Используем currentPeriodTotal и previousPeriodTotal для расчета изменений
+                // incomeChangeEl и expensesChangeEl теперь обновляются функцией fetchAndRenderMonthlySummary()
+                // Здесь нужно обновить только netBalanceChangeEl.
+                function calculateNetBalanceChange(current, previous) {
+                    if (previous === 0) {
+                        if (current === 0) return 0;
+                        return current > 0 ? 100 : -100;
+                    }
+                    return ((current - previous) / previous) * 100;
+                }
+
+                function updateNetBalanceChangeText(element, change) {
+                    if (isNaN(change) || !isFinite(change)) {
+                        element.className = 'text-sm font-semibold text-gray-400';
+                        element.textContent = 'Нет данных';
+                    } else if (change > 0) {
+                        element.className = 'text-sm font-semibold text-green-400';
+                        element.textContent = `+${change.toFixed(1)}%`;
+                    } else if (change < 0) {
+                        element.className = 'text-sm font-semibold text-red-400';
+                        element.textContent = `${change.toFixed(1)}%`;
+                    } else {
+                        element.className = 'text-sm font-semibold text-gray-400';
+                        element.textContent = '0%';
+                    }
+                }
+
+                if (Object.keys(currentPeriodTotal).length > 0 && Object.keys(previousPeriodTotal).length > 0) {
+                    const netBalanceChange = calculateNetBalanceChange(currentPeriodTotal.netBalance, previousPeriodTotal.netBalance);
+                    updateNetBalanceChangeText(netBalanceChangeEl, netBalanceChange);
+                } else {
+                    netBalanceChangeEl.textContent = 'Нет данных';
+                }
+
+                const sparklineOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: { point: { radius: 0 } },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                };
+
+                netBalanceSparklineChart = new Chart(document.getElementById('netBalanceSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labelsForSparklines, datasets: [{ data: netBalanceData, borderColor: '#8b5cf6', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
+
+                incomeSparklineChart = new Chart(document.getElementById('incomeSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labelsForSparklines, datasets: [{ data: incomeData, borderColor: '#22c55e', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
+
+                expensesSparklineChart = new Chart(document.getElementById('expensesSparkline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labelsForSparklines, datasets: [{ data: expensesData, borderColor: '#ef4444', borderWidth: 1 }] },
+                    options: sparklineOptions
+                });
+            }
+
+            // --- Функции рендеринга ---
+            function renderCharts(expenseDataByCategory, expenseDataByStore, trendData) {
+                if (expensesChart) expensesChart.destroy();
+                if (storesChart) storesChart.destroy();
+                if (spendIncomeTrendChart) spendIncomeTrendChart.destroy();
+                const ctxCategory = document.getElementById('expensesChart').getContext('2d');
+                expensesChart = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: expenseDataByCategory,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxStore = document.getElementById('storesChart').getContext('2d');
+                storesChart = new Chart(ctxStore, {
+                    type: 'bar',
+                    data: expenseDataByStore,
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                        },
+                        plugins: { legend: { display: false }, tooltip: tooltipPlugin }
+                    }
+                });
+
+                const ctxTrend = document.getElementById('spendIncomeTrendChart').getContext('2d');
+                spendIncomeTrendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: trendData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                            y: { 
+                                beginAtZero: true, // Начинаем ось Y с нуля
+                                ticks: { 
+                                    color: '#9ca3af',
+                                    callback: function(value, index, values) {
+                                        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'UAH' }).format(value);
+                                    }
+                                }, 
+                                grid: { color: '#374151' } 
+                            }
+                        },
+                        plugins: { 
+                            legend: { 
+                                position: 'top',
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                             }, 
+                            tooltip: tooltipPlugin 
+                        }
+                    }
+                });
+            }
+
+            // Функция renderExpensesToIncomeChart удалена
+
+            function getStandardPercentage(categoryName) {
+                for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
+                    if (STANDARD_EXPENSE_DISTRIBUTION[group][categoryName] !== undefined) {
+                        return STANDARD_EXPENSE_DISTRIBUTION[group][categoryName]; // Возвращаем массив [min, max]
+                    }
+                }
+                return null; // Категория не найдена в стандартном распределении
+            }
+
+            function renderLegendsAndLists(expenseDataByCategory, incomeData, totalIncome, transactions, actualExpensePercentages) {
+                expensesLegendContainer.innerHTML = '';
+                if (expenseDataByCategory.labels.length > 0) {
+                    // Сортируем категории по значению (по убыванию) для легенды
+                    const sortedCategories = expenseDataByCategory.labels
+                        .map((label, i) => ({
+                            label,
+                            value: expenseDataByCategory.datasets[0].data[i],
+                            color: expenseDataByCategory.datasets[0].backgroundColor[i]
+                        }))
+                        .sort((a, b) => b.value - a.value);
+
+                    sortedCategories.forEach(category => {
+                        const { label, value, color } = category;
+                        const actualPercentage = actualExpensePercentages[label] !== undefined ? actualExpensePercentages[label] * 100 : 0;
+                        const standardRange = getStandardPercentage(label);
+
+                        let progressBarColor = 'bg-gray-500';
+                        let comparisonText = `Факт: ${actualPercentage.toFixed(1)}%`;
+                        let barWidth = actualPercentage;
+
+                        if (standardRange !== null) {
+                            const [minStandard, maxStandard] = standardRange.map(p => p * 100);
+                            comparisonText += ` | Норма: ${minStandard.toFixed(1)}% - ${maxStandard.toFixed(1)}%`;
+
+                            if (actualPercentage > maxStandard + 0.5) {
+                                progressBarColor = 'bg-red-500';
+                                comparisonText += ` (Перерасход)`;
+                            } else if (actualPercentage < minStandard - 0.5) {
+                                progressBarColor = 'bg-green-500';
+                                comparisonText += ` (Экономия)`;
+                            } else {
+                                progressBarColor = 'bg-blue-500';
+                                comparisonText += ` (В норме)`;
+                            }
+                            
+                            const referenceValue = Math.max(maxStandard, actualPercentage);
+                            barWidth = (actualPercentage / (referenceValue > 0 ? referenceValue : 1)) * 100;
+                            barWidth = Math.min(100, barWidth);
+                        }
+
+                        const anomalousTransactions = transactions.filter(t => t.categoryName === label && t.is_anomaly);
+                        const isCategoryAnomalous = anomalousTransactions.length > 0;
+                        const anomalyReason = isCategoryAnomalous 
+                            ? anomalousTransactions.map(t => t.anomaly_reason).join('<br>')
+                            : '';
+
+                        // Build the combined tooltip content
+                        let combinedTooltipHtml = `<div class="font-semibold mb-1">${comparisonText}</div>`;
+                        if (isCategoryAnomalous) {
+                            combinedTooltipHtml += `<div class="mt-2 pt-2 border-t border-slate-500"><h4 class="font-bold text-orange-400 mb-1">Аномалии:</h4>${anomalyReason}</div>`;
+                        }
+
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'flex items-center mb-2 text-sm relative group'; 
+
+                        legendItem.innerHTML = `
+                            <div class="flex w-full items-center">
+                                <div class="w-4 h-4 mr-3 rounded-md flex-shrink-0" style="background-color: ${color}"></div>
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-300 mr-2 truncate">${label}</span>
+                                        <span class="font-bold text-white whitespace-nowrap">${value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-4 mt-1 relative">
+                                        <div class="${progressBarColor} h-4 rounded-full flex items-center justify-center" style="width: ${barWidth}%">
+                                            <span class="text-xs font-bold text-white">${actualPercentage.toFixed(1)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${isCategoryAnomalous ? `
+                                    <div class="ml-2 flex-shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="absolute bottom-full mb-2 w-72 bg-slate-800 border border-slate-600 text-white text-xs rounded py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none" style="left: 50%; transform: translateX(-50%);">
+                                ${combinedTooltipHtml}
+                            </div>
+                        `;
+                        expensesLegendContainer.appendChild(legendItem);
+                    });
+                }
+
+                incomeListContainer.innerHTML = '';
+                const totalIncomeForList = incomeData.reduce((sum, item) => sum + item.amount, 0);
+                if (totalIncomeForList > 0) {
+                    incomeData.forEach(item => {
+                        const percentage = (item.amount / totalIncomeForList) * 100;
+                        const incomeElement = document.createElement('div');
+                        incomeElement.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-gray-300">${item.source}</span><span class="font-semibold text-green-400">${item.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></div><div class="w-full bg-gray-600 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div></div>`;
+                        incomeListContainer.appendChild(incomeElement);
+                    });
+                }
+            }
+            // --- Логика вкладок ---
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.classList.remove('text-blue-500', 'border-blue-500');
+                        t.classList.add('text-gray-400', 'border-gray-700', 'hover:bg-gray-700', 'hover:border-gray-600');
+                    });
+                    tab.classList.add('text-blue-500', 'border-blue-500');
+                    tab.classList.remove('text-gray-400', 'border-gray-700', 'hover:bg-gray-700', 'hover:border-gray-600');
+                    const target = document.querySelector(tab.dataset.tabTarget);
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+                    target.classList.remove('hidden');
+                });
+            });
+
+            // --- Goal Modal Logic ---
+            const setupGoalButton = document.getElementById('setupGoalButton');
+            const goalSetupModal = document.getElementById('goalSetupModal');
+            const closeGoalModalButton = document.getElementById('closeGoalModalButton');
+            const saveGoalButton = document.getElementById('saveGoalButton');
+            const goalCategorySelect = document.getElementById('goalCategory');
+            const goalTabs = document.querySelectorAll('.goal-tab-button');
+            const getGoalRecommendationButton = document.getElementById('getGoalRecommendationButton');
+            const recommendationResultDiv = document.getElementById('recommendationResult');
+
+            setupGoalButton.addEventListener('click', () => {
+                // Populate categories
+                const categories = [...new Set(allTransactions.filter(t => t.outcome > 0).map(t => t.categoryName))];
+                goalCategorySelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+                goalSetupModal.classList.remove('hidden');
+            });
+
+            closeGoalModalButton.addEventListener('click', () => {
+                goalSetupModal.classList.add('hidden');
+            });
+
+            saveGoalButton.addEventListener('click', () => {
+                const goal = {
+                    category: document.getElementById('goalCategory').value,
+                    type: document.getElementById('goalType').value,
+                    value: parseFloat(document.getElementById('goalValue').value)
+                };
+
+                if (!goal.category || !goal.type || isNaN(goal.value)) {
+                    alert('Пожалуйста, заполните все поля корректно.');
+                    return;
+                }
+
+                localStorage.setItem('userGoal', JSON.stringify(goal));
+                goalSetupModal.classList.add('hidden');
+                updateGoalProgress(); // Refresh the goal card
+            });
+
+            getGoalRecommendationButton.addEventListener('click', async () => {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    alert('Пожалуйста, выберите год и месяц для получения рекомендации.');
+                    return;
+                }
+                
+                console.log(`Requesting recommendation for ${selectedMonth}/${selectedYear}...`);
+                getGoalRecommendationButton.textContent = 'Анализируем...';
+                getGoalRecommendationButton.disabled = true;
+                recommendationResultDiv.classList.remove('hidden');
+                recommendationResultDiv.innerHTML = `<p class="text-gray-400">Загрузка...</p>`;
+
+                try {
+                    const response = await fetch(`/api/recommend-goal?year=${selectedYear}&month=${selectedMonth}`);
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    console.log('Received recommendation response:', result);
+                    const { recommendation } = result;
+                    
+                    if (recommendation) {
+                        console.log('Displaying recommendation:', recommendation);
+                        recommendationResultDiv.innerHTML = `
+                            <p class="text-gray-300">${recommendation.reason}</p>
+                            <button id="applyRecommendationButton" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Применить эту цель</button>
+                        `;
+                        document.getElementById('applyRecommendationButton').addEventListener('click', () => {
+                            const goalToStore = {
+                                category: recommendation.category,
+                                type: recommendation.type,
+                                value: recommendation.value
+                            };
+                            localStorage.setItem('userGoal', JSON.stringify(goalToStore));
+                            goalSetupModal.classList.add('hidden');
+                            updateGoalProgress();
+                        });
+                    } else {
+                        console.log('No recommendation available.');
+                        recommendationResultDiv.innerHTML = `<p class="text-gray-400">Недостаточно данных для рекомендации за выбранный период.</p>`;
+                    }
+
+                } catch (error) {
+                    console.error('Error getting recommendation:', error);
+                    recommendationResultDiv.innerHTML = `<p class="text-red-400">Ошибка при получении рекомендации: ${error.message}</p>`;
+                } finally {
+                    getGoalRecommendationButton.textContent = 'Получить рекомендацию';
+                    getGoalRecommendationButton.disabled = false;
+                }
+            });
+            
+            goalTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    goalTabs.forEach(t => {
+                        t.classList.remove('text-blue-500', 'border-blue-500');
+                        t.classList.add('text-gray-400', 'border-transparent', 'hover:text-gray-300', 'hover:border-gray-300');
+                    });
+                    tab.classList.add('text-blue-500', 'border-blue-500');
+                    tab.classList.remove('text-gray-400', 'border-transparent', 'hover:text-gray-300', 'hover:border-gray-300');
+                    
+                    const targetId = tab.dataset.tabTarget;
+                    document.querySelectorAll('.goal-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.querySelector(targetId).classList.remove('hidden');
+                });
+            });
+
+
+            // --- Обработчики событий и начальный вызов ---
+            processDataButton.addEventListener('click', handleFileProcessing);
+
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettingsModalButton = document.getElementById('closeSettingsModalButton');
+            const lightThemeButton = document.getElementById('lightThemeButton');
+            const darkThemeButton = document.getElementById('darkThemeButton');
+            const ruLangButton = document.getElementById('ruLangButton');
+            const enLangButton = document.getElementById('enLangButton');
+
+            settingsButton.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+                settingsModal.classList.add('flex');
+            });
+
+            closeSettingsModalButton.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+                settingsModal.classList.remove('flex');
+            });
+
+            lightThemeButton.addEventListener('click', () => {
+                document.body.classList.remove('bg-[#0D1117]', 'text-[#c9d1d9]');
+                document.body.classList.add('bg-white', 'text-black');
+            });
+
+            darkThemeButton.addEventListener('click', () => {
+                document.body.classList.remove('bg-white', 'text-black');
+                document.body.classList.add('bg-[#0D1117]', 'text-[#c9d1d9]');
+            });
+
+            i18next.init({
+                lng: 'ru',
+                debug: true,
+                resources: {
+                    en: {
+                        translation: {
+                            "settings": "Settings",
+                            "theme": "Theme",
+                            "light": "Light",
+                            "dark": "Dark",
+                            "language": "Language",
+                            "russian": "Русский",
+                            "english": "English",
+                            "update_data": "Update data from file",
+                            "upload_csv": "Upload a CSV file to add new transactions to the database. Existing transactions will be ignored.",
+                            "exclude_debts": "Exclude 'Debts' category on upload",
+                            "skip_embedding": "Do not generate embeddings on upload (to save quota)",
+                            "upload_to_db": "Upload to database",
+                            "close": "Close"
+                        }
+                    },
+                    ru: {
+                        translation: {
+                            "settings": "Настройки",
+                            "theme": "Тема",
+                            "light": "Светлая",
+                            "dark": "Темная",
+                            "language": "Язык",
+                            "russian": "Русский",
+                            "english": "English",
+                            "update_data": "Обновить данные из файла",
+                            "upload_csv": "Загрузите CSV-файл, чтобы добавить новые транзакции в базу данных. Существующие транзакции будут проигнорированы.",
+                            "exclude_debts": "Исключить категорию \"Долги\" при загрузке",
+                            "skip_embedding": "Не генерировать эмбеддинги при загрузке (для экономии квоты)",
+                            "upload_to_db": "Загрузить в базу данных",
+                            "close": "Закрыть"
+                        }
+                    }
+                }
+            }, function(err, t) {
+                updateContent();
+            });
+
+            function updateContent() {
+                document.getElementById('settingsButton').innerHTML = i18next.t('settings');
+                document.querySelector('#settingsModal h2').innerHTML = i18next.t('settings');
+                document.querySelector('#settingsModal label:nth-child(1)').innerHTML = i18next.t('theme');
+                document.getElementById('lightThemeButton').innerHTML = i18next.t('light');
+                document.getElementById('darkThemeButton').innerHTML = i18next.t('dark');
+                document.querySelector('#settingsModal label:nth-child(2)').innerHTML = i18next.t('language');
+                document.getElementById('ruLangButton').innerHTML = i18next.t('russian');
+                document.getElementById('enLangButton').innerHTML = i18next.t('english');
+                document.querySelector('#file-upload-section h2').innerHTML = i18next.t('update_data');
+                document.querySelector('#file-upload-section p').innerHTML = i18next.t('upload_csv');
+                document.querySelector('label[for="excludeDebtsOnUpload"]').innerHTML = i18next.t('exclude_debts');
+                document.querySelector('label[for="skipEmbeddingOnUpload"]').innerHTML = i18next.t('skip_embedding');
+                document.getElementById('processDataButton').innerHTML = i18next.t('upload_to_db');
+                document.getElementById('closeSettingsModalButton').innerHTML = i18next.t('close');
+            }
+
+            ruLangButton.addEventListener('click', () => {
+                i18next.changeLanguage('ru', updateContent);
+            });
+
+            enLangButton.addEventListener('click', () => {
+                i18next.changeLanguage('en', updateContent);
+            });
+
+            filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
+            filterYearInput.addEventListener('change', fetchAndRenderTransactions);
+            deepAnalysisButton.addEventListener('click', performDeepAnalysis);
+            detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            
+            // Обработчики для модального окна настроек глубокого анализа
+            const deepAnalysisSettingsButton = document.getElementById('deepAnalysisSettingsButton');
+            const deepAnalysisSettingsModal = document.getElementById('deepAnalysisSettingsModal');
+            const closeDeepAnalysisSettingsButton = document.getElementById('closeDeepAnalysisSettingsButton');
+            const saveDeepAnalysisSettingsButton = document.getElementById('saveDeepAnalysisSettingsButton');
+            
+            deepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisMonthSelect.value = filterMonthSelect.value;
+                deepAnalysisYearInput.value = filterYearInput.value;
+                deepAnalysisSettingsModal.classList.remove('hidden');
+                deepAnalysisSettingsModal.classList.add('flex');
+            });
+            
+            closeDeepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisSettingsModal.classList.add('hidden');
+            });
+            
+            saveDeepAnalysisSettingsButton.addEventListener('click', () => {
+                deepAnalysisSettingsModal.classList.add('hidden');
+            });
+            closeHabitDetailModal.addEventListener('click', () => habitDetailModal.classList.add('hidden'));
+
+            prevAnomalyPageBtn.addEventListener('click', () => {
+                if (currentAnomalyPage > 1) {
+                    currentAnomalyPage--;
+                    renderAnomalies(allAnomalies);
+                }
+            });
+
+            nextAnomalyPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allAnomalies.length / anomaliesPerPage);
+                if (currentAnomalyPage < totalPages) {
+                    currentAnomalyPage++;
+                    renderAnomalies(allAnomalies);
+                }
+            });
+
+            prevHabitPageBtn.addEventListener('click', () => {
+                if (currentHabitPage > 1) {
+                    currentHabitPage--;
+                    renderHabits(allHabits);
+                }
+            });
+
+            nextHabitPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allHabits.length / habitsPerPage);
+                if (currentHabitPage < totalPages) {
+                    currentHabitPage++;
+                    renderHabits(allHabits);
+                }
+            });
+
+            prevTransactionPageBtn.addEventListener('click', () => {
+                if (currentTransactionPage > 1) {
+                    currentTransactionPage--;
+                    renderTransactionsTable(allTransactions);
+                }
+            });
+
+            nextTransactionPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(allTransactions.length / transactionsPerPage);
+                if (currentTransactionPage < totalPages) {
+                    currentTransactionPage++;
+                    renderTransactionsTable(allTransactions);
+                }
+            });
+
+            quickFiltersContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quick-filter-btn')) {
+                    document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    const period = e.target.dataset.period;
+                    const today = new Date();
+                    filterYearInput.value = today.getFullYear();
+
+                    if (period === 'month') {
+                        filterMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
+                    } else if (period === 'quarter') {
+                    const quarter = Math.floor(today.getMonth() / 3);
+                    // Для простоты мы просто выбираем весь год для квартала,
+                    // так как бэкенд не поддерживает получение данных поквартально напрямую.
+                    // Более сложная реализация потребовала бы фильтрации транзакций на клиенте.
+                    filterMonthSelect.value = ''; 
+                    } else { // year
+                        filterMonthSelect.value = '';
+                    }
+                    fetchAndRenderTransactions();
+                }
+            });
+
+            habitsResultDiv.addEventListener('click', (e) => {
+                if (e.target.classList.contains('habit-details-btn')) {
+                    const habitData = JSON.parse(e.target.dataset.habit);
+                    
+                    habitDetailTitle.textContent = `Динамика трат: ${habitData.name}`;
+                    
+                    const chartData = {
+                        labels: habitData.transactions.map(t => new Date(t.date).toLocaleDateString('ru-RU')),
+                        datasets: [{
+                            label: 'Сумма траты',
+                            data: habitData.transactions.map(t => t.amount),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    };
+
+                    if (habitTrendChart) {
+                        habitTrendChart.destroy();
+                    }
+
+                    habitTrendChart = new Chart(document.getElementById('habitTrendChart').getContext('2d'), {
+                        type: 'line',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: '#9ca3af' }, 
+                                    grid: { color: '#374151' }
+                                },
+                                x: {
+                                    ticks: { color: '#9ca3af' }, 
+                                    grid: { color: '#374151' }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+
+                    habitDetailModal.classList.remove('hidden');
+                }
+            });
+            
+            // --- Функция загрузки в Supabase ---
+            async function uploadTransactionsToSupabase(transactions, excludeDebts, skipEmbedding) {
+                try {
+                    const response = await fetch('/api/upload-transactions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ transactions, excludeDebts, skipEmbedding }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log('Transactions uploaded successfully:', result);
+                        alert(result.message || 'Транзакции успешно загружены в Supabase!');
+                        fetchAndRenderTransactions(); // Обновляем данные из БД
+                    } else {
+                        console.error('Error uploading transactions:', result.error);
+                        alert(`Ошибка при загрузке транзакций: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Network or server error during upload:', error);
+                    alert('Произошла ошибка при загрузке транзакций. Проверьте консоль для деталей.');
+                }
+            }
+
+            // --- Начальная загрузка ---
+            // Устанавливаем текущий год и запускаем начальную загрузку данных
+            filterYearInput.value = new Date().getFullYear();
+            fetchAndRenderTransactions();
+        });
+    </script>
+
+</body>
+</html>
+>>>>>>> 8a095f2c87df41106baf87b1b22b0f0dde11e0c2
