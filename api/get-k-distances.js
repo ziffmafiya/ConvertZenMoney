@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const minPts = 1537; // Fixed minPts as per the task description
+  const minPts = 3; // Fixed minPts as per the task description
   const k = minPts - 1; // k-th nearest neighbor (4th in this case)
 
   try {
