@@ -230,6 +230,26 @@
         </div>
     </section>
 
+    <!-- Секция отчетов -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Отчеты и аналитика</h2>
+        <div class="flex flex-wrap gap-4 mb-4">
+            <select id="reportPeriod" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                <option value="month">Месяц</option>
+                <option value="quarter">Квартал</option>
+                <option value="year">Год</option>
+            </select>
+            <input type="number" id="reportYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            <button id="generateReportButton" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Сформировать отчет</button>
+        </div>
+        <div id="reportResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
+            <!-- Report will be displayed here -->
+        </div>
+        <div id="reportLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Формирование отчета, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
@@ -1598,6 +1618,41 @@
 
             // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
+
+            // --- Report Generation Logic ---
+            const generateReportButton = document.getElementById('generateReportButton');
+            const reportPeriodSelect = document.getElementById('reportPeriod');
+            const reportYearInput = document.getElementById('reportYear');
+            const reportResultDiv = document.getElementById('reportResult');
+            const reportLoadingDiv = document.getElementById('reportLoading');
+
+            generateReportButton.addEventListener('click', async () => {
+                const period = reportPeriodSelect.value;
+                const year = reportYearInput.value;
+
+                if (!year) {
+                    alert('Пожалуйста, укажите год для отчета.');
+                    return;
+                }
+
+                reportResultDiv.textContent = '';
+                reportLoadingDiv.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(`/api/get-report?period=${period}&year=${year}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to generate report');
+                    }
+                    const { report } = await response.json();
+                    reportResultDiv.textContent = report;
+                } catch (error) {
+                    console.error('Error generating report:', error);
+                    reportResultDiv.textContent = `Ошибка при формировании отчета: ${error.message}`;
+                } finally {
+                    reportLoadingDiv.classList.add('hidden');
+                }
+            });
 
             const settingsButton = document.getElementById('settingsButton');
             const settingsModal = document.getElementById('settingsModal');
