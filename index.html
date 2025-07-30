@@ -1752,9 +1752,13 @@
             const showKDistanceGraphButton = document.getElementById('showKDistanceGraphButton');
             const kDistanceGraphContainer = document.getElementById('kDistanceGraphContainer');
             let kDistanceChart; // Переменная для хранения экземпляра графика k-расстояний
+            const showScatterPlotButton = document.getElementById('showScatterPlotButton');
+            const scatterPlotContainer = document.getElementById('scatterPlotContainer');
+            let scatterPlotChart; // Переменная для хранения экземпляра Scatter Plot
 
             clusterTransactionsButton.addEventListener('click', performClustering);
             showKDistanceGraphButton.addEventListener('click', fetchAndRenderKDistances);
+            showScatterPlotButton.addEventListener('click', fetchAndRenderScatterPlot);
 
             async function performClustering() {
                 clusteringResultDiv.textContent = '';
@@ -1762,6 +1766,7 @@
                 clusteringLoadingDiv.classList.remove('hidden');
                 clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
                 kDistanceGraphContainer.classList.add('hidden'); // Скрываем график k-расстояний при кластеризации
+                scatterPlotContainer.classList.add('hidden'); // Скрываем Scatter Plot при кластеризации
 
                 const eps = parseFloat(epsInput.value);
                 const minPts = parseInt(minPtsInput.value);
@@ -1808,6 +1813,7 @@
                 clusteringLoadingDiv.classList.remove('hidden');
                 clusteringLoadingDiv.querySelector('p').textContent = 'Расчет k-расстояний, пожалуйста, подождите...';
                 kDistanceGraphContainer.classList.add('hidden'); // Скрываем контейнер перед загрузкой
+                scatterPlotContainer.classList.add('hidden'); // Скрываем Scatter Plot
 
                 try {
                     const response = await fetch('/api/get-k-distances');
