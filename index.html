@@ -239,6 +239,21 @@
                 <option value="quarter">Квартал</option>
                 <option value="year">Год</option>
             </select>
+            <select id="reportMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                <option value="">Выберите месяц</option>
+                <option value="01">Январь</option>
+                <option value="02">Февраль</option>
+                <option value="03">Март</option>
+                <option value="04">Апрель</option>
+                <option value="05">Май</option>
+                <option value="06">Июнь</option>
+                <option value="07">Июль</option>
+                <option value="08">Август</option>
+                <option value="09">Сентябрь</option>
+                <option value="10">Октябрь</option>
+                <option value="11">Ноябрь</option>
+                <option value="12">Декабрь</option>
+            </select>
             <input type="number" id="reportYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
             <button id="generateReportButton" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Сформировать отчет</button>
         </div>
@@ -1622,24 +1637,44 @@
             // --- Report Generation Logic ---
             const generateReportButton = document.getElementById('generateReportButton');
             const reportPeriodSelect = document.getElementById('reportPeriod');
+            const reportMonthSelect = document.getElementById('reportMonth');
             const reportYearInput = document.getElementById('reportYear');
             const reportResultDiv = document.getElementById('reportResult');
             const reportLoadingDiv = document.getElementById('reportLoading');
 
+            reportPeriodSelect.addEventListener('change', () => {
+                if (reportPeriodSelect.value === 'month') {
+                    reportMonthSelect.classList.remove('hidden');
+                } else {
+                    reportMonthSelect.classList.add('hidden');
+                }
+            });
+
             generateReportButton.addEventListener('click', async () => {
                 const period = reportPeriodSelect.value;
                 const year = reportYearInput.value;
+                const month = reportMonthSelect.value;
 
                 if (!year) {
                     alert('Пожалуйста, укажите год для отчета.');
                     return;
                 }
 
+                if (period === 'month' && !month) {
+                    alert('Пожалуйста, выберите месяц для отчета.');
+                    return;
+                }
+
                 reportResultDiv.textContent = '';
                 reportLoadingDiv.classList.remove('hidden');
 
+                let apiUrl = `/api/get-report?period=${period}&year=${year}`;
+                if (period === 'month') {
+                    apiUrl += `&month=${month}`;
+                }
+
                 try {
-                    const response = await fetch(`/api/get-report?period=${period}&year=${year}`);
+                    const response = await fetch(apiUrl);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to generate report');

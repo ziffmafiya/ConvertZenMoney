@@ -8,8 +8,8 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Extract parameters (period, year) from the request
-    const { period, year } = req.query;
+    // Extract parameters (period, year, month) from the request
+    const { period, year, month } = req.query;
 
     // Validate required parameters
     if (!period || !year) {
@@ -43,9 +43,12 @@ export default async function handler(req, res) {
         const currentYear = parseInt(year);
 
         if (period === 'month') {
-            const month = new Date().getMonth() + 1; // Use current month for simplicity
-            startDate = `${currentYear}-${String(month).padStart(2, '0')}-01`;
-            endDate = `${currentYear}-${String(month).padStart(2, '0')}-${new Date(currentYear, month, 0).getDate()}`;
+            if (!month) {
+                return res.status(400).json({ error: 'Month is required for monthly report.' });
+            }
+            const monthInt = parseInt(month);
+            startDate = `${currentYear}-${String(monthInt).padStart(2, '0')}-01`;
+            endDate = `${currentYear}-${String(monthInt).padStart(2, '0')}-${new Date(currentYear, monthInt, 0).getDate()}`;
         } else if (period === 'quarter') {
             const quarter = Math.floor((new Date().getMonth() + 3) / 3);
             const startMonth = (quarter - 1) * 3 + 1;
