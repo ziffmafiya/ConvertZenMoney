@@ -23,13 +23,21 @@ export default async function handler(req, res) {
     }
 
     if (!transactions || transactions.length === 0) {
+      console.log('DEBUG: No transactions fetched from Supabase.');
       return res.status(200).json({ message: 'No transactions to cluster.' });
     }
+
+    console.log(`DEBUG: Total transactions fetched: ${transactions.length}`);
+    // Log a sample of transactions to inspect the embedding structure
+    console.log('DEBUG: Sample transaction (first 2) with embedding:', JSON.stringify(transactions.slice(0, 2).map(t => ({ id: t.id, embedding: t.description_embedding })), null, 2));
 
     // Filter out transactions without embeddings and prepare data for clustering
     const transactionsWithEmbeddings = transactions.filter(t => t.description_embedding && Array.isArray(t.description_embedding) && t.description_embedding.length > 0);
 
+    console.log(`DEBUG: Transactions with valid embeddings after filter: ${transactionsWithEmbeddings.length}`);
+
     if (transactionsWithEmbeddings.length === 0) {
+      console.log('DEBUG: Filtered transactionsWithEmbeddings is empty.');
       return res.status(200).json({ message: 'No transactions with embeddings to cluster.' });
     }
 
