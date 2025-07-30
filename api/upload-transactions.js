@@ -27,8 +27,10 @@ async function getEmbedding(text) {
         throw new Error('Embedding model not initialized.');
     }
     try {
-        // Отправляем текст в модель ИИ для получения эмбеддинга.
-        const result = await embeddingModel.embedContent(text);
+        // Отправляем текст в модель ИИ для получения эмбеддинга с указанной размерностью.
+        const result = await embeddingModel.embedContent(text, {
+            outputDimensionality: 768
+        });
         return result.embedding.values;
     } catch (error) {
         console.error('Error generating embedding for text:', text, error);

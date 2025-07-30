@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         // Получаем транзакции за указанный период, исключая те, у которых нет эмбеддингов
         const { data: currentTransactions, error: currentError } = await supabase
             .from('transactions')
-            .select('*')
+            .select('id, date, category_name, payee, comment, outcome_account_name, outcome, income_account_name, income, created_at, description_embedding, unique_hash, cluster_id, is_anomaly, anomaly_reason, cluster')
             .gte('date', startDate)
             .lte('date', endDate)
             .not('description_embedding', 'is', null);
