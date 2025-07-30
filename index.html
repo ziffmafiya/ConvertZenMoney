@@ -9,8 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <!-- Plotly.js CDN for plotting -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- t-SNE.js library for client-side t-SNE computation -->
-    <script src="https://cdn.jsdelivr.net/npm/tsne-js@1.0.3/build/tsne.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -235,38 +233,6 @@
         </div>
     </section>
 
-    <!-- Секция кластеризации транзакций -->
-    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций</h2>
-        <p class="text-gray-400 mb-4">Запустите кластеризацию транзакций на основе их эмбеддингов. Результаты будут сохранены в Supabase.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label for="epsInput" class="block mb-2 text-sm font-medium text-gray-300">EPS (расстояние)</label>
-                <input type="number" id="epsInput" value="0.5" step="0.1" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-            </div>
-            <div>
-                <label for="minPtsInput" class="block mb-2 text-sm font-medium text-gray-300">MinPts (мин. точек в кластере)</label>
-                <input type="number" id="minPtsInput" value="5" step="1" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-            </div>
-        </div>
-        <div class="flex flex-wrap gap-4 mb-4">
-            <button id="clusterTransactionsButton" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
-            <button id="showKDistanceGraphButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Показать график k-расстояний</button>
-        </div>
-        <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
-            <!-- Clustering results will be displayed here -->
-        </div>
-        <div id="clusteringLoading" class="hidden mt-4 text-center text-blue-400">
-            <p>Кластеризация выполняется, пожалуйста, подождите...</p>
-        </div>
-        <div id="kDistanceGraphContainer" class="mt-6 p-4 bg-gray-800 rounded-lg hidden">
-            <h3 class="text-xl font-bold text-white mb-4">График k-расстояний (k=4)</h3>
-            <div class="h-96">
-                <canvas id="kDistanceChart"></canvas>
-            </div>
-            <p class="text-gray-400 text-sm mt-2">Найдите "локоть" на графике, чтобы определить оптимальное значение EPS.</p>
-        </div>
-    </section>
 
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
@@ -392,16 +358,6 @@
         </div>
     </div>
 
-    <!-- Секция t-SNE визуализации -->
-    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">t-SNE Визуализация Кластеров</h2>
-        <p class="text-gray-400 mb-4">Визуальная оценка плотности кластеров транзакций с использованием t-SNE.</p>
-        <div id="tsnePlot" style="width: 100%; height: 600px; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);"></div>
-        <div id="tsneLoading" class="hidden mt-4 text-center text-blue-400">
-            <p>Генерация t-SNE встраиваний и построение графика, пожалуйста, подождите...</p>
-        </div>
-        <button id="refreshTsnePlotButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Обновить t-SNE график</button>
-    </section>
 
     </div>
 
