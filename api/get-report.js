@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     // Initialize Supabase and Google Generative AI clients
     const supabase = createClient(supabaseUrl, supabaseKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     try {
         // Determine the date range based on the selected period
