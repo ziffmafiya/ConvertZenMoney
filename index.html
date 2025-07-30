@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -234,13 +235,17 @@
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций</h2>
         <p class="text-gray-400 mb-4">Запустите кластеризацию транзакций на основе их эмбеддингов. Результаты будут сохранены в Supabase.</p>
-        <button id="clusterTransactionsButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
+        <div class="flex flex-wrap gap-4 mb-4">
+            <button id="clusterTransactionsButton" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
+            <button id="showClusterVisualizationButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Показать визуализацию кластеров</button>
+        </div>
         <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
             <!-- Clustering results will be displayed here -->
         </div>
         <div id="clusteringLoading" class="hidden mt-4 text-center text-blue-400">
             <p>Кластеризация выполняется, пожалуйста, подождите...</p>
         </div>
+        <div id="clusterPlot" class="mt-6 hidden" style="width: 100%; height: 600px; background-color: #161b22; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px;"></div>
     </section>
 
     <!-- Модальное окно настроек глубокого анализа -->
@@ -1717,12 +1722,16 @@
             const clusterTransactionsButton = document.getElementById('clusterTransactionsButton');
             const clusteringResultDiv = document.getElementById('clusteringResult');
             const clusteringLoadingDiv = document.getElementById('clusteringLoading');
+            const showClusterVisualizationButton = document.getElementById('showClusterVisualizationButton');
+            const clusterPlotDiv = document.getElementById('clusterPlot');
 
             clusterTransactionsButton.addEventListener('click', performClustering);
+            showClusterVisualizationButton.addEventListener('click', fetchAndRenderClusters);
 
             async function performClustering() {
                 clusteringResultDiv.textContent = '';
                 clusteringResultDiv.classList.add('hidden');
+                clusterPlotDiv.classList.add('hidden'); // Hide plot when clustering
                 clusteringLoadingDiv.classList.remove('hidden');
                 clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
 
@@ -1740,8 +1749,7 @@
                     if (response.ok) {
                         clusteringResultDiv.textContent = result.message || 'Транзакции успешно кластеризованы!';
                         clusteringResultDiv.classList.remove('hidden');
-                        // Optionally, re-fetch transactions to show updated cluster IDs in the table
-                        fetchAndRenderTransactions();
+                        fetchAndRenderTransactions(); // Обновляем данные на странице, чтобы показать обновленные кластеры
                     } else {
                         clusteringResultDiv.textContent = `Ошибка кластеризации: ${result.error || 'Неизвестная ошибка'}`;
                         clusteringResultDiv.classList.remove('hidden');
@@ -1754,6 +1762,104 @@
                     clusteringLoadingDiv.classList.add('hidden');
                     clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
                 }
+            }
+
+            async function fetchAndRenderClusters() {
+                clusteringResultDiv.classList.add('hidden'); // Hide clustering result
+                clusteringLoadingDiv.classList.remove('hidden');
+                clusterPlotDiv.classList.add('hidden'); // Hide previous plot
+                clusteringLoadingDiv.querySelector('p').textContent = 'Загрузка данных кластеров для визуализации...';
+
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear) {
+                    alert('Пожалуйста, выберите год для визуализации кластеров.');
+                    clusteringLoadingDiv.classList.add('hidden');
+                    return;
+                }
+
+                const params = new URLSearchParams({ year: selectedYear });
+                if (selectedMonth) {
+                    params.append('month', selectedMonth);
+                }
+
+                try {
+                    const response = await fetch(`/api/get-transactions?${params.toString()}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to fetch transactions for clustering visualization');
+                    }
+                    const { transactions } = await response.json();
+
+                    const clusteredTransactions = transactions.filter(t => t.cluster_id !== null && t.embedding_tsne_x !== null && t.embedding_tsne_y !== null);
+
+                    if (clusteredTransactions.length === 0) {
+                        alert('Нет данных для визуализации кластеров. Убедитесь, что транзакции кластеризованы и имеют TSNE-координаты.');
+                        clusteringLoadingDiv.classList.add('hidden');
+                        return;
+                    }
+
+                    renderClusterPlot(clusteredTransactions);
+                    clusterPlotDiv.classList.remove('hidden'); // Show the plot
+                } catch (error) {
+                    console.error('Error fetching cluster data:', error);
+                    alert(`Не удалось загрузить данные кластеров: ${error.message}`);
+                } finally {
+                    clusteringLoadingDiv.classList.add('hidden');
+                    clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
+                }
+            }
+
+            function renderClusterPlot(transactions) {
+                const clusters = {};
+                transactions.forEach(item => {
+                    const clusterId = item.cluster_id;
+                    if (clusterId === null) return; // Skip transactions without a cluster ID
+
+                    if (!clusters[clusterId]) {
+                        clusters[clusterId] = { x: [], y: [], text: [], name: `Кластер ${clusterId}` };
+                    }
+                    clusters[clusterId].x.push(item.embedding_tsne_x);
+                    clusters[clusterId].y.push(item.embedding_tsne_y);
+                    clusters[clusterId].text.push(`${item.payee} (${item.categoryName}): ${item.outcome.toLocaleString('ru-RU')} грн`);
+                });
+
+                const data = Object.keys(clusters).map(clusterId => ({
+                    x: clusters[clusterId].x,
+                    y: clusters[clusterId].y,
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: clusters[clusterId].name,
+                    text: clusters[clusterId].text,
+                    marker: { size: 8, opacity: 0.8 }
+                }));
+
+                const layout = {
+                    title: 'Визуализация Кластеров Транзакций (TSNE)',
+                    xaxis: {
+                        title: 'TSNE Компонент 1',
+                        gridcolor: '#374151',
+                        zerolinecolor: '#374151',
+                        tickfont: { color: '#9ca3af' },
+                        titlefont: { color: '#d1d5db' }
+                    },
+                    yaxis: {
+                        title: 'TSNE Компонент 2',
+                        gridcolor: '#374151',
+                        zerolinecolor: '#374151',
+                        tickfont: { color: '#9ca3af' },
+                        titlefont: { color: '#d1d5db' }
+                    },
+                    plot_bgcolor: '#161b22',
+                    paper_bgcolor: '#161b22',
+                    font: {
+                        color: '#d1d5db'
+                    },
+                    hovermode: 'closest'
+                };
+
+                Plotly.newPlot('clusterPlot', data, layout);
             }
             
             // Обработчики для модального окна настроек глубокого анализа
