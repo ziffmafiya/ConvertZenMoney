@@ -1,138 +1,178 @@
-const express = require('express');
-const router = express.Router();
-const db = require('./db');
-
-// Loan Tracking Endpoints
-router.post('/track-loan', async (req, res) => {
-  try {
-    const { id, principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance } = req.body;
+document.addEventListener('DOMContentLoaded', function() {
+    // Loan modal elements
+    const loanModal = document.getElementById('loanModal');
+    const addLoanButton = document.getElementById('addLoanButton');
+    const closeLoanModal = document.getElementById('closeLoanModal');
+    const saveLoanButton = document.getElementById('saveLoanButton');
     
-    if (id) {
-      const result = await db.query(
-        'UPDATE loans SET principal = $1, interest_rate = $2, term_months = $3, start_date = $4, monthly_payment = $5, remaining_balance = $6 WHERE id = $7 RETURNING *',
-        [principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance, id]
-      );
-      res.json(result.rows[0]);
-    } else {
-      const result = await db.query(
-        'INSERT INTO loans (principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance]
-      );
-      res.status(201).json(result.rows[0]);
+    // Credit card modal elements
+    const creditCardModal = document.getElementById('creditCardModal');
+    const addCreditCardButton = document.getElementById('addCreditCardButton');
+    const closeCreditCardModal = document.getElementById('closeCreditCardModal');
+    const saveCreditCardButton = document.getElementById('saveCreditCardButton');
+
+    // Loan modal handlers
+    if (addLoanButton) {
+        addLoanButton.addEventListener('click', () => loanModal.classList.remove('hidden'));
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
+    
+    if (closeLoanModal) {
+        closeLoanModal.addEventListener('click', () => loanModal.classList.add('hidden'));
+    }
+    
+    if (saveLoanButton) {
+        saveLoanButton.addEventListener('click', createLoan);
+    }
+
+    // Credit card modal handlers
+    if (addCreditCardButton) {
+        addCreditCardButton.addEventListener('click', () => creditCardModal.classList.remove('hidden'));
+    }
+    
+    if (closeCreditCardModal) {
+        closeCreditCardModal.addEventListener('click', () => creditCardModal.classList.add('hidden'));
+    }
+    
+    if (saveCreditCardButton) {
+        saveCreditCardButton.addEventListener('click', createCreditCard);
+    }
+
+    // Create new loan
+    async function createLoan() {
+        const principal = parseFloat(document.getElementById('loanPrincipal').value);
+        const interestRate = parseFloat(document.getElementById('loanInterestRate').value);
+        const termMonths = parseInt(document.getElementById('loanTermMonths').value);
+        const startDate = document.getElementById('loanStartDate').value;
+
+        if (!principal || !interestRate || !termMonths || !startDate) {
+            alert('Пожалуйста, заполните все поля');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/track-loan', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    principal,
+                    interest_rate: interestRate,
+                    term_months: termMonths,
+                    start_date: startDate,
+                    monthly_payment: 0, // Calculated on server
+                    remaining_balance: principal
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка сервера');
+            }
+
+            const data = await response.json();
+            alert(`Кредит добавлен! ID: ${data.id}`);
+            loanModal.classList.add('hidden');
+            fetchLoans(); // Refresh loan list
+        } catch (error) {
+            console.error('Error creating loan:', error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    }
+
+    // Create new credit card
+    async function createCreditCard() {
+        const cardName = document.getElementById('creditCardName').value;
+        const gracePeriodDays = parseInt(document.getElementById('gracePeriodDays').value);
+        const statementDay = parseInt(document.getElementById('statementDay').value);
+        const paymentDueDay = parseInt(document.getElementById('paymentDueDay').value);
+
+        if (!cardName || !gracePeriodDays || !statementDay || !paymentDueDay) {
+            alert('Пожалуйста, заполните все поля');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/set-grace-period', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    card_name: cardName,
+                    grace_period_days: gracePeriodDays,
+                    statement_day: statementDay,
+                    payment_due_day: paymentDueDay,
+                    unpaid_balance: 0
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка сервера');
+            }
+
+            const data = await response.json();
+            alert(`Карта добавлена! ID: ${data.id}`);
+            creditCardModal.classList.add('hidden');
+            fetchCreditCards(); // Refresh card list
+        } catch (error) {
+            console.error('Error creating credit card:', error);
+            alert(`Ошибка: ${error.message}`);
+        }
+    }
+
+    // Fetch and display loans
+    async function fetchLoans() {
+        try {
+            const response = await fetch('/api/loan-progress');
+            if (!response.ok) throw new Error('Ошибка загрузки кредитов');
+            
+            const loans = await response.json();
+            const container = document.getElementById('loansList');
+            container.innerHTML = '';
+            
+            loans.forEach(loan => {
+                const loanEl = document.createElement('div');
+                loanEl.className = 'bg-gray-800 p-4 rounded-lg';
+                loanEl.innerHTML = `
+                    <h4 class="font-semibold">${loan.principal} грн под ${loan.interest_rate}%</h4>
+                    <p>Остаток: ${loan.remaining_balance} грн</p>
+                    <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${loan.progress.percentComplete}%"></div>
+                    </div>
+                    <p class="text-sm mt-1">${loan.progress.paymentsMade}/${loan.term_months} платежей</p>
+                `;
+                container.appendChild(loanEl);
+            });
+        } catch (error) {
+            console.error('Error fetching loans:', error);
+        }
+    }
+
+    // Fetch and display credit cards
+    async function fetchCreditCards() {
+        try {
+            const response = await fetch('/api/grace-status');
+            if (!response.ok) throw new Error('Ошибка загрузки карт');
+            
+            const cards = await response.json();
+            const container = document.getElementById('creditCardsList');
+            container.innerHTML = '';
+            
+            cards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'bg-gray-800 p-4 rounded-lg';
+                cardEl.innerHTML = `
+                    <h4 class="font-semibold">${card.card_name}</h4>
+                    <p>Льготный период: ${card.grace_period_days} дней</p>
+                    <p>Минимальный платёж: ${card.min_payment} грн</p>
+                    <p>Дней до оплаты: ${card.days_remaining}</p>
+                `;
+                container.appendChild(cardEl);
+            });
+        } catch (error) {
+            console.error('Error fetching credit cards:', error);
+        }
+    }
+
+    // Initial fetch
+    fetchLoans();
+    fetchCreditCards();
 });
-
-router.get('/loan-progress/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const loanResult = await db.query('SELECT * FROM loans WHERE id = $1', [id]);
-    
-    if (loanResult.rows.length === 0) {
-      return res.status(404).send('Loan not found');
-    }
-    
-    const loan = loanResult.rows[0];
-    const paymentsMade = Math.floor(
-      (new Date() - new Date(loan.start_date)) / (30 * 24 * 60 * 60 * 1000)
-    );
-    
-    const progress = {
-      paymentsMade: Math.min(paymentsMade, loan.term_months),
-      totalPayments: loan.term_months,
-      percentComplete: Math.round((Math.min(paymentsMade, loan.term_months) / loan.term_months) * 100),
-      remainingBalance: loan.remaining_balance,
-      nextPaymentDate: calculateNextPayment(loan.start_date, paymentsMade)
-    };
-    
-    res.json(progress);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Credit Card Endpoints
-router.post('/set-grace-period', async (req, res) => {
-  try {
-    const { card_id, grace_period_days, statement_day, payment_due_day } = req.body;
-    
-    if (!card_id) {
-      return res.status(400).send('Card ID is required');
-    }
-    
-    const result = await db.query(
-      `UPDATE credit_cards 
-       SET grace_period_days = $1, statement_day = $2, payment_due_day = $3 
-       WHERE id = $4 
-       RETURNING *`,
-      [grace_period_days, statement_day, payment_due_day, card_id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).send('Credit card not found');
-    }
-    
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-router.get('/grace-status/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const cardResult = await db.query('SELECT * FROM credit_cards WHERE id = $1', [id]);
-    
-    if (cardResult.rows.length === 0) {
-      return res.status(404).send('Credit card not found');
-    }
-    
-    const card = cardResult.rows[0];
-    const today = new Date();
-    
-    const statementDate = new Date(today.getFullYear(), today.getMonth(), card.statement_day);
-    if (today < statementDate) {
-      statementDate.setMonth(statementDate.getMonth() - 1);
-    }
-    
-    const dueDate = new Date(statementDate);
-    dueDate.setDate(dueDate.getDate() + card.grace_period_days);
-    
-    const daysRemaining = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-    
-    const transactionsResult = await db.query(
-      `SELECT amount FROM transactions 
-       WHERE card_id = $1 AND date >= $2`,
-      [id, statementDate.toISOString().split('T')[0]]
-    );
-    
-    const totalSpent = transactionsResult.rows.reduce((sum, row) => sum + parseFloat(row.amount), 0);
-    const minPayment = Math.max(totalSpent * 0.05, 100);
-    
-    res.json({
-      card_id: id,
-      current_balance: card.unpaid_balance,
-      total_spent_this_period: totalSpent,
-      min_payment: minPayment,
-      due_date: dueDate.toISOString().split('T')[0],
-      days_remaining: daysRemaining
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Helper function
-function calculateNextPayment(startDate, paymentsMade) {
-  const nextDate = new Date(startDate);
-  nextDate.setMonth(nextDate.getMonth() + paymentsMade + 1);
-  return nextDate.toISOString().split('T')[0];
-}
-
-module.exports = router;
