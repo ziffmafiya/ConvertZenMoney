@@ -198,6 +198,7 @@
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
+                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Кластер</th>
                     </tr>
                 </thead>
                 <tbody id="transactionsTableBody">
@@ -1055,6 +1056,7 @@
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.payee || 'N/A'}</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left ${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
+                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.cluster !== undefined && t.cluster !== null ? t.cluster : 'N/A'}</td>
                     `;
                     tableBody.appendChild(row);
                 });
