@@ -245,12 +245,22 @@
                 <input type="number" id="minPtsInput" value="5" step="1" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
             </div>
         </div>
-        <button id="clusterTransactionsButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
+        <div class="flex flex-wrap gap-4 mb-4">
+            <button id="clusterTransactionsButton" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
+            <button id="showKDistanceGraphButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Показать график k-расстояний</button>
+        </div>
         <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
             <!-- Clustering results will be displayed here -->
         </div>
         <div id="clusteringLoading" class="hidden mt-4 text-center text-blue-400">
             <p>Кластеризация выполняется, пожалуйста, подождите...</p>
+        </div>
+        <div id="kDistanceGraphContainer" class="mt-6 p-4 bg-gray-800 rounded-lg hidden">
+            <h3 class="text-xl font-bold text-white mb-4">График k-расстояний (k=4)</h3>
+            <div class="h-96">
+                <canvas id="kDistanceChart"></canvas>
+            </div>
+            <p class="text-gray-400 text-sm mt-2">Найдите "локоть" на графике, чтобы определить оптимальное значение EPS.</p>
         </div>
     </section>
 
@@ -1731,14 +1741,19 @@
             const clusteringLoadingDiv = document.getElementById('clusteringLoading');
             const epsInput = document.getElementById('epsInput');
             const minPtsInput = document.getElementById('minPtsInput');
+            const showKDistanceGraphButton = document.getElementById('showKDistanceGraphButton');
+            const kDistanceGraphContainer = document.getElementById('kDistanceGraphContainer');
+            let kDistanceChart; // Переменная для хранения экземпляра графика k-расстояний
 
             clusterTransactionsButton.addEventListener('click', performClustering);
+            showKDistanceGraphButton.addEventListener('click', fetchAndRenderKDistances);
 
             async function performClustering() {
                 clusteringResultDiv.textContent = '';
                 clusteringResultDiv.classList.add('hidden');
                 clusteringLoadingDiv.classList.remove('hidden');
                 clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
+                kDistanceGraphContainer.classList.add('hidden'); // Скрываем график k-расстояний при кластеризации
 
                 const eps = parseFloat(epsInput.value);
                 const minPts = parseInt(minPtsInput.value);
@@ -1777,6 +1792,101 @@
                     clusteringLoadingDiv.classList.add('hidden');
                     clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
                 }
+            }
+
+            async function fetchAndRenderKDistances() {
+                clusteringResultDiv.textContent = '';
+                clusteringResultDiv.classList.add('hidden');
+                clusteringLoadingDiv.classList.remove('hidden');
+                clusteringLoadingDiv.querySelector('p').textContent = 'Расчет k-расстояний, пожалуйста, подождите...';
+                kDistanceGraphContainer.classList.add('hidden'); // Скрываем контейнер перед загрузкой
+
+                try {
+                    const response = await fetch('/api/get-k-distances');
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        const kDistances = result.kDistances;
+                        if (kDistances && kDistances.length > 0) {
+                            renderKDistanceChart(kDistances);
+                            kDistanceGraphContainer.classList.remove('hidden');
+                        } else {
+                            clusteringResultDiv.textContent = result.message || 'Нет данных для построения графика k-расстояний.';
+                            clusteringResultDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        clusteringResultDiv.textContent = `Ошибка при получении k-расстояний: ${result.error || 'Неизвестная ошибка'}`;
+                        clusteringResultDiv.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error fetching k-distances:', error);
+                    clusteringResultDiv.textContent = `Произошла ошибка при получении k-расстояний: ${error.message}`;
+                    clusteringResultDiv.classList.remove('hidden');
+                } finally {
+                    clusteringLoadingDiv.classList.add('hidden');
+                    clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
+                }
+            }
+
+            function renderKDistanceChart(kDistances) {
+                if (kDistanceChart) kDistanceChart.destroy();
+
+                const ctx = document.getElementById('kDistanceChart').getContext('2d');
+                kDistanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({ length: kDistances.length }, (_, i) => i),
+                        datasets: [{
+                            label: 'Расстояние до 4-го соседа',
+                            data: kDistances,
+                            borderColor: '#8b5cf6', // purple-500
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 1 // Small points for better visualization
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Индекс точки (отсортировано)',
+                                    color: '#d1d5db'
+                                },
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Расстояние',
+                                    color: '#d1d5db'
+                                },
+                                beginAtZero: true,
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Расстояние: ${context.parsed.y.toFixed(4)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
             }
             
             // Обработчики для модального окна настроек глубокого анализа
