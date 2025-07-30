@@ -7,8 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- Plotly.js CDN for plotting -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -200,7 +198,6 @@
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
                         <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Кластер</th>
                     </tr>
                 </thead>
                 <tbody id="transactionsTableBody">
@@ -232,7 +229,6 @@
             <p>Анализ выполняется, пожалуйста, подождите...</p>
         </div>
     </section>
-
 
     <!-- Модальное окно настроек глубокого анализа -->
     <div id="deepAnalysisSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
@@ -358,6 +354,8 @@
         </div>
     </div>
 
+    <!-- Секция загрузки данных -->
+    
 
     </div>
 
@@ -1034,7 +1032,6 @@
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.payee || 'N/A'}</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left ${amountClass} font-semibold">${sign}${amount.toLocaleString('ru-RU')} грн</td>
                         <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.income > 0 ? t.incomeAccountName : t.outcomeAccountName}</td>
-                        <td class="p-3 md:p-4 border-b border-gray-700 text-left">${t.cluster !== undefined && t.cluster !== null ? t.cluster : 'N/A'}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -1702,160 +1699,6 @@
             filterYearInput.addEventListener('change', fetchAndRenderTransactions);
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
-
-            // --- Clustering Logic ---
-            const clusterTransactionsButton = document.getElementById('clusterTransactionsButton');
-            const clusteringResultDiv = document.getElementById('clusteringResult');
-            const clusteringLoadingDiv = document.getElementById('clusteringLoading');
-            const epsInput = document.getElementById('epsInput');
-            const minPtsInput = document.getElementById('minPtsInput');
-            const showKDistanceGraphButton = document.getElementById('showKDistanceGraphButton');
-            const kDistanceGraphContainer = document.getElementById('kDistanceGraphContainer');
-            let kDistanceChart; // Переменная для хранения экземпляра графика k-расстояний
-
-            clusterTransactionsButton.addEventListener('click', performClustering);
-            showKDistanceGraphButton.addEventListener('click', fetchAndRenderKDistances);
-
-            async function performClustering() {
-                clusteringResultDiv.textContent = '';
-                clusteringResultDiv.classList.add('hidden');
-                clusteringLoadingDiv.classList.remove('hidden');
-                clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
-                kDistanceGraphContainer.classList.add('hidden'); // Скрываем график k-расстояний при кластеризации
-
-                const eps = parseFloat(epsInput.value);
-                const minPts = parseInt(minPtsInput.value);
-
-                if (isNaN(eps) || isNaN(minPts)) {
-                    alert('Пожалуйста, введите корректные значения для EPS и MinPts.');
-                    clusteringLoadingDiv.classList.add('hidden');
-                    return;
-                }
-
-                try {
-                    const response = await fetch('/api/cluster-transactions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ eps, minPts }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        clusteringResultDiv.textContent = result.message || 'Транзакции успешно кластеризованы!';
-                        clusteringResultDiv.classList.remove('hidden');
-                        // Optionally, re-fetch transactions to show updated cluster IDs in the table
-                        fetchAndRenderTransactions();
-                    } else {
-                        clusteringResultDiv.textContent = `Ошибка кластеризации: ${result.error || 'Неизвестная ошибка'}`;
-                        clusteringResultDiv.classList.remove('hidden');
-                    }
-                } catch (error) {
-                    console.error('Error during clustering:', error);
-                    clusteringResultDiv.textContent = `Произошла ошибка при кластеризации: ${error.message}`;
-                    clusteringResultDiv.classList.remove('hidden');
-                } finally {
-                    clusteringLoadingDiv.classList.add('hidden');
-                    clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
-                }
-            }
-
-            async function fetchAndRenderKDistances() {
-                clusteringResultDiv.textContent = '';
-                clusteringResultDiv.classList.add('hidden');
-                clusteringLoadingDiv.classList.remove('hidden');
-                clusteringLoadingDiv.querySelector('p').textContent = 'Расчет k-расстояний, пожалуйста, подождите...';
-                kDistanceGraphContainer.classList.add('hidden'); // Скрываем контейнер перед загрузкой
-
-                try {
-                    const response = await fetch('/api/get-k-distances');
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        const kDistances = result.kDistances;
-                        if (kDistances && kDistances.length > 0) {
-                            renderKDistanceChart(kDistances);
-                            kDistanceGraphContainer.classList.remove('hidden');
-                        } else {
-                            clusteringResultDiv.textContent = result.message || 'Нет данных для построения графика k-расстояний.';
-                            clusteringResultDiv.classList.remove('hidden');
-                        }
-                    } else {
-                        clusteringResultDiv.textContent = `Ошибка при получении k-расстояний: ${result.error || 'Неизвестная ошибка'}`;
-                        clusteringResultDiv.classList.remove('hidden');
-                    }
-                } catch (error) {
-                    console.error('Error fetching k-distances:', error);
-                    clusteringResultDiv.textContent = `Произошла ошибка при получении k-расстояний: ${error.message}`;
-                    clusteringResultDiv.classList.remove('hidden');
-                } finally {
-                    clusteringLoadingDiv.classList.add('hidden');
-                    clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация выполняется, пожалуйста, подождите...'; // Reset text
-                }
-            }
-
-            function renderKDistanceChart(kDistances) {
-                if (kDistanceChart) kDistanceChart.destroy();
-
-                const ctx = document.getElementById('kDistanceChart').getContext('2d');
-                kDistanceChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: Array.from({ length: kDistances.length }, (_, i) => i),
-                        datasets: [{
-                            label: 'Расстояние до 4-го соседа',
-                            data: kDistances,
-                            borderColor: '#8b5cf6', // purple-500
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                            fill: false,
-                            tension: 0.1,
-                            pointRadius: 1 // Small points for better visualization
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Индекс точки (отсортировано)',
-                                    color: '#d1d5db'
-                                },
-                                ticks: { color: '#9ca3af' },
-                                grid: { color: '#374151' }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Расстояние',
-                                    color: '#d1d5db'
-                                },
-                                beginAtZero: true,
-                                ticks: { color: '#9ca3af' },
-                                grid: { color: '#374151' }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                labels: {
-                                    color: '#d1d5db'
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Расстояние: ${context.parsed.y.toFixed(4)}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
             
             // Обработчики для модального окна настроек глубокого анализа
             const deepAnalysisSettingsButton = document.getElementById('deepAnalysisSettingsButton');
@@ -2024,122 +1867,10 @@
                 }
             }
 
-            // --- t-SNE Plotting Logic ---
-            const tsnePlotDiv = document.getElementById('tsnePlot');
-            const tsneLoadingDiv = document.getElementById('tsneLoading');
-            const refreshTsnePlotButton = document.getElementById('refreshTsnePlotButton');
-
-            refreshTsnePlotButton.addEventListener('click', plotTSNE);
-
-            async function plotTSNE() {
-                tsneLoadingDiv.classList.remove('hidden');
-
-                // Check if TSNE is defined, if not, wait and retry
-                if (typeof TSNE === 'undefined') {
-                    console.warn('TSNE library not yet loaded. Retrying in 500ms...');
-                    setTimeout(plotTSNE, 500);
-                    return;
-                }
-
-                if (!allTransactions || allTransactions.length === 0) {
-                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Нет транзакций для построения t-SNE графика. Загрузите данные.</p>`;
-                    tsneLoadingDiv.classList.add('hidden');
-                    return;
-                }
-
-                try {
-                    // Prepare data for t-SNE
-                    // We need numerical features. Let's use 'amount' and a numerical representation of 'category' and 'payee'.
-                    // For simplicity, we'll just use 'amount' and dummy numerical features for category/payee for now.
-                    // In a real scenario, you'd use embeddings or one-hot encoding for categorical data.
-                    const dataForTsne = allTransactions.map(t => {
-                        const amount = t.income > 0 ? t.income : t.outcome;
-                        // Dummy numerical features for category and payee
-                        // In a real app, you'd use actual embeddings or more sophisticated encoding
-                        const categoryHash = t.categoryName ? t.categoryName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 100 : 0;
-                        const payeeHash = t.payee ? t.payee.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 100 : 0;
-                        return [amount, categoryHash, payeeHash];
-                    });
-
-                    // Initialize t-SNE
-                    const tsne = new TSNE({
-                        dim: 2, // Output dimensions
-                        perplexity: 30, // Perplexity is a crucial parameter, often between 5 and 50
-                        earlyExaggeration: 4.0,
-                        learningRate: 100.0,
-                        nIter: 1000, // Number of iterations
-                        metric: 'euclidean' // Distance metric
-                    });
-
-                    tsne.init({
-                        data: dataForTsne,
-                        type: 'dense'
-                    });
-
-                    // Run t-SNE iterations
-                    await tsne.run(); // Use await as run() is likely asynchronous or blocking
-
-                    const tsneOutput = tsne.getPosition(); // Get the 2D embeddings
-
-                    const embeddings = tsneOutput.map((pos, index) => ({
-                        x: pos[0],
-                        y: pos[1],
-                        cluster: allTransactions[index].cluster // Use actual cluster if available
-                    }));
-
-                    if (embeddings.length === 0) {
-                        tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Не удалось сгенерировать t-SNE встраивания.</p>`;
-                        tsneLoadingDiv.classList.add('hidden');
-                        return;
-                    }
-
-                // Group data by cluster
-                const clusters = {};
-                embeddings.forEach(e => {
-                    const clusterName = e.cluster !== undefined && e.cluster !== null ? `Кластер ${e.cluster}` : 'Без кластера';
-                    if (!clusters[clusterName]) {
-                        clusters[clusterName] = { x: [], y: [], name: clusterName, mode: 'markers', type: 'scatter', marker: { size: 8, opacity: 0.8 } };
-                    }
-                    clusters[clusterName].x.push(e.x);
-                    clusters[clusterName].y.push(e.y);
-                });
-
-                const plotData = Object.values(clusters);
-
-                const layout = {
-                    title: 't-SNE Точечная Диаграмма Кластеров Транзакций',
-                    xaxis: { title: 't-SNE Измерение 1', zeroline: false, showgrid: false },
-                    yaxis: { title: 't-SNE Измерение 2', zeroline: false, showgrid: false },
-                    hovermode: 'closest',
-                    plot_bgcolor: '#161b22', // Background color for the plot area
-                    paper_bgcolor: '#161b22', // Background color for the entire chart area
-                    font: {
-                        color: '#c9d1d9' // Font color for titles and labels
-                    },
-                    legend: {
-                        font: {
-                            color: '#c9d1d9'
-                        }
-                    }
-                };
-
-                Plotly.newPlot('tsnePlot', plotData, layout);
-
-                } catch (error) {
-                    console.error('Error generating t-SNE embeddings:', error);
-                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Ошибка загрузки графика: ${error.message}</p>`;
-                } finally {
-                    tsneLoadingDiv.classList.add('hidden');
-                }
-            }
-
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
-            fetchAndRenderTransactions().then(() => {
-                // Plot t-SNE after transactions are fetched and rendered
-                plotTSNE();
-            });
+            fetchAndRenderTransactions();
         });
     </script>
 
