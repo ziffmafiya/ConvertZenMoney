@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     // if the data is not simple 2D points. For high-dimensional embeddings,
     // a custom distance function (e.g., cosine similarity converted to distance)
     // might be more appropriate. For now, it will use Euclidean distance.
-    const clusters = dbscan.run(data, 0.5, 5); // eps (distance), minPts (min points in cluster)
+    const clusters = dbscan.run(data, 1, 10); // eps (distance), minPts (min points in cluster)
 
     // Map cluster results back to original transactionsWithEmbeddings
     const updates = [];
