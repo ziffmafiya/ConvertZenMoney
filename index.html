@@ -292,6 +292,96 @@
         </div>
     </section>
 
+    <!-- Секция кластеризации транзакций -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций</h2>
+        <p class="text-gray-400 mb-4">Анализ и группировка транзакций по смыслу с использованием ИИ.</p>
+        
+        <!-- Панель управления кластеризацией -->
+        <div class="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <div class="flex flex-wrap gap-4 items-center">
+                <button id="runClusteringButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    Запустить кластеризацию
+                </button>
+                <button id="loadClustersButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    Загрузить кластеры
+                </button>
+                <div class="flex items-center gap-2">
+                    <label class="text-gray-300 text-sm">Лимит:</label>
+                    <input type="number" id="clustersLimit" value="10" min="1" max="50" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 w-16">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-gray-300 text-sm">Смещение:</label>
+                    <input type="number" id="clustersOffset" value="0" min="0" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 w-16">
+                </div>
+            </div>
+        </div>
+
+        <!-- Поиск похожих транзакций -->
+        <div class="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-3">Поиск похожих транзакций</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <input type="text" id="searchDescription" placeholder="Описание транзакции" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-2">
+                <input type="text" id="searchCategory" placeholder="Категория (опционально)" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-2">
+                <input type="date" id="searchDateFrom" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-2">
+                <input type="date" id="searchDateTo" class="bg-gray-700 border border-gray-600 text-white text-sm rounded px-3 py-2">
+            </div>
+            <div class="flex items-center gap-4 mt-3">
+                <button id="findSimilarButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    Найти похожие
+                </button>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="includeClusters" class="bg-gray-700 border-gray-600 rounded">
+                    <label for="includeClusters" class="text-gray-300 text-sm">Включить кластеры</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Результаты кластеризации -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Список кластеров -->
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h3 class="text-lg font-semibold text-white mb-3">Кластеры транзакций</h3>
+                <div id="clustersResult" class="space-y-3 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500">Кластеры не загружены. Нажмите "Загрузить кластеры" для просмотра.</p>
+                </div>
+                <div id="clustersLoading" class="hidden mt-4 text-center text-blue-400">
+                    <p>Загрузка кластеров...</p>
+                </div>
+            </div>
+
+            <!-- Похожие транзакции -->
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h3 class="text-lg font-semibold text-white mb-3">Похожие транзакции</h3>
+                <div id="similarTransactionsResult" class="space-y-3 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500">Введите описание для поиска похожих транзакций.</p>
+                </div>
+                <div id="similarLoading" class="hidden mt-4 text-center text-blue-400">
+                    <p>Поиск похожих транзакций...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика кластеризации -->
+        <div class="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-3">Статистика кластеризации</h3>
+            <div id="clusteringStats" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-400" id="totalClusters">-</div>
+                    <div class="text-sm text-gray-400">Всего кластеров</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-400" id="totalTransactions">-</div>
+                    <div class="text-sm text-gray-400">Транзакций в кластерах</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-400" id="avgClusterSize">-</div>
+                    <div class="text-sm text-gray-400">Средний размер кластера</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Модальное окно деталей привычки -->
     <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
@@ -1867,10 +1957,237 @@
                 }
             }
 
+            // --- Функции кластеризации ---
+            
+            // Функция для запуска кластеризации
+            async function runClustering() {
+                const runClusteringButton = document.getElementById('runClusteringButton');
+                const originalText = runClusteringButton.textContent;
+                
+                try {
+                    runClusteringButton.textContent = 'Кластеризация...';
+                    runClusteringButton.disabled = true;
+                    
+                    const response = await fetch('/api/transaction-clustering?action=cluster', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Ошибка при кластеризации');
+                    }
+                    
+                    const result = await response.json();
+                    alert(`Кластеризация завершена! Создано ${result.clusters_created} кластеров.`);
+                    
+                    // Обновляем статистику
+                    updateClusteringStats();
+                    
+                } catch (error) {
+                    console.error('Error running clustering:', error);
+                    alert(`Ошибка при кластеризации: ${error.message}`);
+                } finally {
+                    runClusteringButton.textContent = originalText;
+                    runClusteringButton.disabled = false;
+                }
+            }
+            
+            // Функция для загрузки кластеров
+            async function loadClusters() {
+                const clustersResult = document.getElementById('clustersResult');
+                const clustersLoading = document.getElementById('clustersLoading');
+                const limit = document.getElementById('clustersLimit').value;
+                const offset = document.getElementById('clustersOffset').value;
+                
+                try {
+                    clustersLoading.classList.remove('hidden');
+                    clustersResult.innerHTML = '';
+                    
+                    let url = `/api/transaction-clustering?action=get&limit=${limit}&offset=${offset}`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Ошибка при загрузке кластеров');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.clusters && result.clusters.length > 0) {
+                        clustersResult.innerHTML = '';
+                        
+                        result.clusters.forEach((cluster, index) => {
+                            const clusterElement = document.createElement('div');
+                            clusterElement.className = 'p-3 bg-gray-700 rounded-lg border border-gray-600';
+                            
+                            const totalAmount = cluster.transactions.reduce((sum, t) => sum + Math.abs(t.income || t.outcome), 0);
+                            const avgAmount = totalAmount / cluster.transactions.length;
+                            
+                            clusterElement.innerHTML = `
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-semibold text-white">Кластер ${cluster.cluster_id}</h4>
+                                    <span class="text-sm text-gray-400">${cluster.transactions.length} транзакций</span>
+                                </div>
+                                <p class="text-sm text-gray-300 mb-2">${cluster.description || 'Описание недоступно'}</p>
+                                <div class="text-xs text-gray-400 mb-2">
+                                    <span class="mr-3">Общая сумма: ${totalAmount.toLocaleString('ru-RU')} грн</span>
+                                    <span>Средняя: ${avgAmount.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="space-y-1">
+                                    ${cluster.transactions.slice(0, 3).map(t => `
+                                        <div class="text-xs text-gray-500 flex justify-between">
+                                            <span>${t.payee}</span>
+                                            <span>${(t.income || t.outcome).toLocaleString('ru-RU')} грн</span>
+                                        </div>
+                                    `).join('')}
+                                    ${cluster.transactions.length > 3 ? `<div class="text-xs text-gray-500">... и еще ${cluster.transactions.length - 3} транзакций</div>` : ''}
+                                </div>
+                            `;
+                            
+                            clustersResult.appendChild(clusterElement);
+                        });
+                    } else {
+                        clustersResult.innerHTML = '<p class="text-gray-500">Кластеры не найдены.</p>';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading clusters:', error);
+                    clustersResult.innerHTML = `<p class="text-red-400">Ошибка: ${error.message}</p>`;
+                } finally {
+                    clustersLoading.classList.add('hidden');
+                }
+            }
+            
+            // Функция для поиска похожих транзакций
+            async function findSimilarTransactions() {
+                const searchDescription = document.getElementById('searchDescription').value.trim();
+                const searchCategory = document.getElementById('searchCategory').value.trim();
+                const searchDateFrom = document.getElementById('searchDateFrom').value;
+                const searchDateTo = document.getElementById('searchDateTo').value;
+                const includeClusters = document.getElementById('includeClusters').checked;
+                
+                const similarTransactionsResult = document.getElementById('similarTransactionsResult');
+                const similarLoading = document.getElementById('similarLoading');
+                
+                if (!searchDescription) {
+                    alert('Пожалуйста, введите описание для поиска.');
+                    return;
+                }
+                
+                try {
+                    similarLoading.classList.remove('hidden');
+                    similarTransactionsResult.innerHTML = '';
+                    
+                    const requestBody = {
+                        description: searchDescription,
+                        limit: 10
+                    };
+                    
+                    if (searchCategory) requestBody.category = searchCategory;
+                    if (searchDateFrom) requestBody.dateFrom = searchDateFrom;
+                    if (searchDateTo) requestBody.dateTo = searchDateTo;
+                    if (includeClusters) requestBody.includeClusters = includeClusters;
+                    
+                    const response = await fetch('/api/transaction-clustering?action=find-similar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Ошибка при поиске похожих транзакций');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.similar_transactions && result.similar_transactions.length > 0) {
+                        similarTransactionsResult.innerHTML = '';
+                        
+                        result.similar_transactions.forEach(transaction => {
+                            const transactionElement = document.createElement('div');
+                            transactionElement.className = 'p-3 bg-gray-700 rounded-lg border border-gray-600';
+                            
+                            const amount = transaction.income || transaction.outcome;
+                            const amountClass = transaction.income > 0 ? 'text-green-400' : 'text-red-400';
+                            const sign = transaction.income > 0 ? '+' : '-';
+                            
+                            transactionElement.innerHTML = `
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="font-semibold text-white">${transaction.payee}</span>
+                                    <span class="${amountClass} font-bold">${sign}${amount.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <p class="text-sm text-gray-300 mb-1">${transaction.categoryName}</p>
+                                <p class="text-xs text-gray-400 mb-1">${new Date(transaction.date).toLocaleDateString('ru-RU')}</p>
+                                ${transaction.similarity_score ? `<p class="text-xs text-blue-400">Схожесть: ${(transaction.similarity_score * 100).toFixed(1)}%</p>` : ''}
+                                ${transaction.cluster_id ? `<p class="text-xs text-purple-400">Кластер: ${transaction.cluster_id}</p>` : ''}
+                            `;
+                            
+                            similarTransactionsResult.appendChild(transactionElement);
+                        });
+                    } else {
+                        similarTransactionsResult.innerHTML = '<p class="text-gray-500">Похожие транзакции не найдены.</p>';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error finding similar transactions:', error);
+                    similarTransactionsResult.innerHTML = `<p class="text-red-400">Ошибка: ${error.message}</p>`;
+                } finally {
+                    similarLoading.classList.add('hidden');
+                }
+            }
+            
+            // Функция для обновления статистики кластеризации
+            async function updateClusteringStats() {
+                const totalClusters = document.getElementById('totalClusters');
+                const totalTransactions = document.getElementById('totalTransactions');
+                const avgClusterSize = document.getElementById('avgClusterSize');
+                
+                try {
+                    const response = await fetch('/api/transaction-clustering?action=get&limit=1000&offset=0');
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        
+                        if (result.clusters && result.clusters.length > 0) {
+                            const totalClustersCount = result.clusters.length;
+                            const totalTransactionsCount = result.clusters.reduce((sum, cluster) => sum + cluster.transactions.length, 0);
+                            const averageClusterSize = totalTransactionsCount / totalClustersCount;
+                            
+                            totalClusters.textContent = totalClustersCount;
+                            totalTransactions.textContent = totalTransactionsCount;
+                            avgClusterSize.textContent = averageClusterSize.toFixed(1);
+                        } else {
+                            totalClusters.textContent = '0';
+                            totalTransactions.textContent = '0';
+                            avgClusterSize.textContent = '0';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating clustering stats:', error);
+                    totalClusters.textContent = '-';
+                    totalTransactions.textContent = '-';
+                    avgClusterSize.textContent = '-';
+                }
+            }
+            
+            // --- Обработчики событий кластеризации ---
+            document.getElementById('runClusteringButton').addEventListener('click', runClustering);
+            document.getElementById('loadClustersButton').addEventListener('click', loadClusters);
+            document.getElementById('findSimilarButton').addEventListener('click', findSimilarTransactions);
+            
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
+            
+            // Загружаем статистику кластеризации при загрузке страницы
+            updateClusteringStats();
         });
     </script>
 

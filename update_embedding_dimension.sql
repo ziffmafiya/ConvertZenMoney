@@ -1,11 +1,23 @@
--- Этот скрипт настраивает базу данных Supabase для работы с векторными эмбеддингами с помощью расширения pgvector.
+-- Скрипт для обновления размерности эмбеддинга с 2048 на 768
+-- Выполните этот скрипт, если у вас уже есть данные с эмбеддингами размерности 2048
 
--- Шаг 1: Устанавливаем расширение pgvector, если оно еще не установлено.
--- Это расширение добавляет поддержку векторных типов данных и операций над ними.
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Шаг 1: Проверяем текущую структуру таблицы
+-- SELECT column_name, data_type, character_maximum_length 
+-- FROM information_schema.columns 
+-- WHERE table_name = 'transactions' AND column_name = 'description_embedding';
 
--- Шаг 2: Создаем или заменяем функцию для поиска похожих транзакций.
--- Эта функция позволяет находить транзакции, семантически близкие к заданному вектору запроса.
+-- Шаг 2: Удаляем старый индекс (если существует)
+DROP INDEX IF EXISTS transactions_description_embedding_idx;
+
+-- Шаг 3: Изменяем тип столбца description_embedding на vector(768)
+-- ВАЖНО: Это действие удалит все существующие эмбеддинги!
+-- Если у вас есть важные данные, сначала сделайте резервную копию
+ALTER TABLE transactions ALTER COLUMN description_embedding TYPE vector(768) USING description_embedding::vector(768);
+
+-- Шаг 4: Создаем новый индекс для размерности 768
+CREATE INDEX ON transactions USING ivfflat (description_embedding vector_cosine_ops) WITH (lists = 100);
+
+-- Шаг 5: Обновляем функцию match_transactions для размерности 768
 CREATE OR REPLACE FUNCTION match_transactions(
   query_embedding vector(768), -- Векторное представление (эмбеддинг) для поиска. Размерность 768.
   match_threshold float,        -- Порог схожести (от 0 до 1). Результаты ниже этого порога будут отфильтрованы.
@@ -47,11 +59,5 @@ AS $$
   LIMIT match_count; -- Ограничиваем количество результатов.
 $$;
 
--- Шаг 3: Создаем индекс типа IVFFlat для ускорения векторного поиска.
--- Это необязательный, но крайне рекомендуемый шаг для повышения производительности на больших объемах данных.
-CREATE INDEX ON transactions USING ivfflat (description_embedding vector_cosine_ops) WITH (lists = 100);
-
--- Примечание: При изменении размерности вектора (например, с 2048 на 768),
--- может потребоваться пересоздать столбец 'description_embedding' и переиндексировать данные.
--- Пример команды для изменения типа столбца:
--- ALTER TABLE transactions ALTER COLUMN description_embedding TYPE vector(768) USING description_embedding::vector(768);
+-- Примечание: После выполнения этого скрипта все существующие эмбеддинги будут удалены.
+-- Вам нужно будет заново загрузить транзакции с эмбеддингами размерности 768. 
