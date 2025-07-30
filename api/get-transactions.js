@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     try {
         // Начинаем строить запрос к таблице 'transactions'
-        let query = supabase.from('transactions').select('id, date, category_name, payee, comment, outcome_account_name, outcome, income_account_name, income, created_at, description_embedding, unique_hash, cluster_id, is_anomaly, anomaly_reason, cluster');
+        let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
 
         // Применяем фильтры по дате, если они указаны
         if (year) {
@@ -50,7 +50,6 @@ export default async function handler(req, res) {
         // Фронтенд ожидает camelCase.
         // Необходимо преобразовать ключи перед отправкой ответа.
         const transactions = data.map(t => ({
-            id: t.id,
             date: t.date,
             categoryName: t.category_name,
             payee: t.payee,
@@ -59,13 +58,8 @@ export default async function handler(req, res) {
             outcome: t.outcome,
             incomeAccountName: t.income_account_name,
             income: t.income,
-            createdAt: t.created_at, // Add created_at
-            descriptionEmbedding: t.description_embedding, // Add description_embedding
-            uniqueHash: t.unique_hash, // Add unique_hash
-            clusterId: t.cluster_id, // Add cluster_id
-            isAnomaly: t.is_anomaly, // Use camelCase for consistency
-            anomalyReason: t.anomaly_reason, // Use camelCase for consistency
-            cluster: t.cluster // Add cluster
+            is_anomaly: t.is_anomaly,
+            anomaly_reason: t.anomaly_reason
         }));
 
         // Отправляем успешный ответ с преобразованными данными
