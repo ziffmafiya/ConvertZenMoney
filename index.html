@@ -1587,20 +1587,23 @@
                 addCreditCardModal.classList.add('hidden');
             });
 
-            addLoanForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const principal = parseFloat(formData.get('loanPrincipal'));
-                const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
-                const loanData = {
-                    principal: principal,
-                    interest_rate: parseFloat(formData.get('loanInterestRate')),
-                    term_months: parseInt(formData.get('loanTermMonths')),
-                    start_date: formData.get('loanStartDate'),
-                    monthly_payment: 0, // Will be calculated
-                    remaining_balance: principal - paidAmount,
-                    paid_amount: paidAmount
-                };
+                addLoanForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const principal = parseFloat(document.getElementById('loanPrincipal').value);
+                    const interestRate = parseFloat(document.getElementById('loanInterestRate').value);
+                    const termMonths = parseInt(document.getElementById('loanTermMonths').value);
+                    const startDate = document.getElementById('loanStartDate').value;
+                    const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
+                    
+                    const loanData = {
+                        principal: principal,
+                        interest_rate: interestRate,
+                        term_months: termMonths,
+                        start_date: startDate,
+                        monthly_payment: 0, // Will be calculated
+                        remaining_balance: principal - paidAmount,
+                        paid_amount: paidAmount
+                    };
 
                 console.log('Sending loan data:', JSON.stringify(loanData, null, 2));
 
