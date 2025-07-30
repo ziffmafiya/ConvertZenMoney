@@ -1502,6 +1502,105 @@
                 });
             });
 
+            // --- Loan and Credit Card Functionality ---
+            const addLoanButton = document.getElementById('addLoanButton');
+            const addCreditCardButton = document.getElementById('addCreditCardButton');
+            
+            if (addLoanButton) {
+                addLoanButton.addEventListener('click', () => {
+                    console.log('Add loan button clicked');
+                    const principal = prompt("Введите сумму кредита:");
+                    const interestRate = prompt("Введите процентную ставку:");
+                    const termMonths = prompt("Введите срок (в месяцах):");
+                    const startDate = prompt("Введите дату начала (ГГГГ-ММ-ДД):");
+                    
+                    if (principal && interestRate && termMonths && startDate) {
+                        fetch('/api/loan-credit/track-loan', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            principal: parseFloat(principal),
+                            interest_rate: parseFloat(interestRate),
+                            term_months: parseInt(termMonths),
+                            start_date: startDate,
+                            monthly_payment: 0, // Will be calculated
+                            remaining_balance: parseFloat(principal)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`Кредит добавлен! ID: ${data.id}`);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error adding loan:', error);
+                        alert('Ошибка при добавлении кредита');
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert(`Кредит добавлен! ID: ${data.id}`);
+                            location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Error adding loan:', error);
+                            alert(`Ошибка: ${error.message}`);
+                        });
+                    } else {
+                        alert('Все поля должны быть заполнены');
+                    }
+                });
+            }
+            
+            if (addCreditCardButton) {
+                addCreditCardButton.addEventListener('click', () => {
+                    console.log('Add credit card button clicked');
+                    const cardName = prompt("Введите название карты:");
+                    const gracePeriodDays = prompt("Введите льготный период (дни):");
+                    const statementDay = prompt("Введите день выписки (1-31):");
+                    const paymentDueDay = prompt("Введите день оплаты (1-31):");
+                    
+                    if (cardName && gracePeriodDays && statementDay && paymentDueDay) {
+                        fetch('/api/loan-credit/set-grace-period', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            card_id: null, // Indicates new card
+                            card_name: cardName,
+                            grace_period_days: parseInt(gracePeriodDays),
+                            statement_day: parseInt(statementDay),
+                            payment_due_day: parseInt(paymentDueDay)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`Карта добавлена! ID: ${data.id}`);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error adding credit card:', error);
+                        alert('Ошибка при добавлении карты');
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert(`Карта добавлена! ID: ${data.id}`);
+                            location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Error adding credit card:', error);
+                            alert(`Ошибка: ${error.message}`);
+                        });
+                    } else {
+                        alert('Все поля должны быть заполнены');
+                    }
+                });
+            }
+
             // --- Goal Modal Logic ---
             const setupGoalButton = document.getElementById('setupGoalButton');
             const goalSetupModal = document.getElementById('goalSetupModal');
