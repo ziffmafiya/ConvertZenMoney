@@ -26,12 +26,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No transactions to cluster.' });
     }
 
-    // Filter out transactions without embeddings and prepare data for clustering
-    const transactionsWithEmbeddings = transactions.filter(t => t.description_embedding && Array.isArray(t.description_embedding) && t.description_embedding.length > 0);
+    // Parse description_embedding from string to array of numbers
+    const parsedTransactions = transactions.map(t => {
+      let parsedEmbedding = null;
+      if (typeof t.description_embedding === 'string') {
+        try {
+          parsedEmbedding = JSON.parse(t.description_embedding);
+        } catch (e) {
+          console.error(`Error parsing embedding for transaction ${t.id}:`, e);
+        }
+      } else if (Array.isArray(t.description_embedding)) {
+        parsedEmbedding = t.description_embedding;
+      }
+      return { ...t, description_embedding: parsedEmbedding };
+    });
+
+    // Filter out transactions without valid embeddings and prepare data for clustering
+    const transactionsWithEmbeddings = parsedTransactions.filter(t => t.description_embedding && Array.isArray(t.description_embedding) && t.description_embedding.length > 0);
 
     if (transactionsWithEmbeddings.length === 0) {
       // If no transactions with valid embeddings, return a sample of raw embeddings for debugging
-      const sampleEmbeddings = transactions.slice(0, 5).map(t => ({
+      const sampleEmbeddings = parsedTransactions.slice(0, 5).map(t => ({
         id: t.id,
         description_embedding: t.description_embedding,
         type: typeof t.description_embedding,
