@@ -113,16 +113,33 @@ export default async function handler(req, res) {
 
 
     // 4. Store clustering results in Supabase
-    const { error: updateError } = await supabase
-      .from('transactions')
-      .upsert(updates, { onConflict: 'id' }); // Use upsert to update existing records
+    // Use individual updates to avoid issues with upsert and not-null constraints
+    let successfulUpdates = 0;
+    let updateErrors = [];
 
-    if (updateError) {
-      console.error('Error updating transactions with clusters in Supabase:', updateError);
-      return res.status(500).json({ error: `Failed to update transactions with clusters: ${updateError.message || updateError.toString()}` });
+    for (const update of updates) {
+      const { error: individualUpdateError } = await supabase
+        .from('transactions')
+        .update({ cluster: update.cluster })
+        .eq('id', update.id);
+
+      if (individualUpdateError) {
+        console.error(`Error updating transaction ${update.id} with cluster ${update.cluster}:`, individualUpdateError);
+        updateErrors.push({ id: update.id, error: individualUpdateError.message });
+      } else {
+        successfulUpdates++;
+      }
     }
 
-    res.status(200).json({ message: 'Transactions clustered successfully!', clusters: updates.length });
+    if (updateErrors.length > 0) {
+      console.error('Errors occurred during batch update of transactions with clusters:', updateErrors);
+      return res.status(500).json({
+        error: `Failed to update some transactions with clusters. Total errors: ${updateErrors.length}`,
+        details: updateErrors.slice(0, 5) // Return first 5 errors for brevity
+      });
+    }
+
+    res.status(200).json({ message: `Transactions clustered successfully! Updated ${successfulUpdates} transactions.`, clusters: successfulUpdates });
 
   } catch (error) {
     console.error('Unhandled error during clustering process:', error);
