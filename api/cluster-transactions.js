@@ -11,6 +11,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  const { eps, minPts } = req.body;
+
+  // Validate input parameters
+  if (typeof eps !== 'number' || isNaN(eps) || eps <= 0) {
+    return res.status(400).json({ error: 'Invalid or missing "eps" parameter. Must be a positive number.' });
+  }
+  if (typeof minPts !== 'number' || isNaN(minPts) || minPts <= 0 || !Number.isInteger(minPts)) {
+    return res.status(400).json({ error: 'Invalid or missing "minPts" parameter. Must be a positive integer.' });
+  }
+
   try {
     // 1. Fetch transaction data from Supabase
     const { data: transactions, error: fetchError } = await supabase
@@ -70,14 +80,12 @@ export default async function handler(req, res) {
 
     // 3. Apply DBSCAN Clustering
     // Parameters for DBSCAN: eps (epsilon) and minPts (minimum points)
-    // These values will likely need tuning based on your data and embedding space.
-    // For demonstration, using arbitrary values.
     const dbscan = new DBSCAN();
     // Note: The 'density-clustering' library's DBSCAN expects a distance function
     // if the data is not simple 2D points. For high-dimensional embeddings,
     // a custom distance function (e.g., cosine similarity converted to distance)
     // might be more appropriate. For now, it will use Euclidean distance.
-    const clusters = dbscan.run(data, 0.5, 5); // eps (distance), minPts (min points in cluster)
+    const clusters = dbscan.run(data, eps, minPts); // Use provided eps and minPts
 
     // Map cluster results back to original transactionsWithEmbeddings
     const updates = [];

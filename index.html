@@ -234,6 +234,16 @@
     <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <h2 class="text-2xl font-bold text-white mb-4">Кластеризация транзакций</h2>
         <p class="text-gray-400 mb-4">Запустите кластеризацию транзакций на основе их эмбеддингов. Результаты будут сохранены в Supabase.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="epsInput" class="block mb-2 text-sm font-medium text-gray-300">EPS (расстояние)</label>
+                <input type="number" id="epsInput" value="0.5" step="0.1" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+            <div>
+                <label for="minPtsInput" class="block mb-2 text-sm font-medium text-gray-300">MinPts (мин. точек в кластере)</label>
+                <input type="number" id="minPtsInput" value="5" step="1" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+        </div>
         <button id="clusterTransactionsButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
         <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
             <!-- Clustering results will be displayed here -->
@@ -1717,6 +1727,8 @@
             const clusterTransactionsButton = document.getElementById('clusterTransactionsButton');
             const clusteringResultDiv = document.getElementById('clusteringResult');
             const clusteringLoadingDiv = document.getElementById('clusteringLoading');
+            const epsInput = document.getElementById('epsInput');
+            const minPtsInput = document.getElementById('minPtsInput');
 
             clusterTransactionsButton.addEventListener('click', performClustering);
 
@@ -1726,13 +1738,22 @@
                 clusteringLoadingDiv.classList.remove('hidden');
                 clusteringLoadingDiv.querySelector('p').textContent = 'Кластеризация транзакций, пожалуйста, подождите...';
 
+                const eps = parseFloat(epsInput.value);
+                const minPts = parseInt(minPtsInput.value);
+
+                if (isNaN(eps) || isNaN(minPts)) {
+                    alert('Пожалуйста, введите корректные значения для EPS и MinPts.');
+                    clusteringLoadingDiv.classList.add('hidden');
+                    return;
+                }
+
                 try {
                     const response = await fetch('/api/cluster-transactions', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({}), // No specific body needed for now
+                        body: JSON.stringify({ eps, minPts }),
                     });
 
                     const result = await response.json();
