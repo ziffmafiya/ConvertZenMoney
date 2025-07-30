@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Plotly.js CDN for plotting -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,9 +36,6 @@
                 <div class="flex items-center gap-2" id="quickFilters">
                 </div>
             </div>
-            <button id="tsnePlotButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mr-2">
-                t-SNE Plot
-            </button>
             <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                 Настройки
             </button>
@@ -391,8 +390,16 @@
         </div>
     </div>
 
-    <!-- Секция загрузки данных -->
-    
+    <!-- Секция t-SNE визуализации -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">t-SNE Визуализация Кластеров</h2>
+        <p class="text-gray-400 mb-4">Визуальная оценка плотности кластеров транзакций с использованием t-SNE.</p>
+        <div id="tsnePlot" style="width: 100%; height: 600px; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);"></div>
+        <div id="tsneLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Генерация t-SNE встраиваний и построение графика, пожалуйста, подождите...</p>
+        </div>
+        <button id="refreshTsnePlotButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Обновить t-SNE график</button>
+    </section>
 
     </div>
 
@@ -1637,11 +1644,6 @@
             // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
 
-            const tsnePlotButton = document.getElementById('tsnePlotButton');
-            tsnePlotButton.addEventListener('click', () => {
-                window.open('/public/tsne-plot.html', '_blank');
-            });
-
             const settingsButton = document.getElementById('settingsButton');
             const settingsModal = document.getElementById('settingsModal');
             const closeSettingsModalButton = document.getElementById('closeSettingsModalButton');
@@ -2064,10 +2066,107 @@
                 }
             }
 
+            // --- t-SNE Plotting Logic ---
+            const tsnePlotDiv = document.getElementById('tsnePlot');
+            const tsneLoadingDiv = document.getElementById('tsneLoading');
+            const refreshTsnePlotButton = document.getElementById('refreshTsnePlotButton');
+
+            refreshTsnePlotButton.addEventListener('click', plotTSNE);
+
+            async function fetchTSNEEmbeddings() {
+                try {
+                    tsneLoadingDiv.classList.remove('hidden');
+                    // In a real scenario, you would fetch actual transactions and their cluster labels.
+                    // For this example, we'll use allTransactions which should be populated by fetchAndRenderTransactions.
+                    if (!allTransactions || allTransactions.length === 0) {
+                        tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Нет транзакций для построения t-SNE графика. Загрузите данные.</p>`;
+                        return [];
+                    }
+
+                    const transactionsForTsne = allTransactions.map(t => ({
+                        id: t.id, // Assuming transactions have an ID
+                        amount: t.income > 0 ? t.income : t.outcome,
+                        category: t.categoryName,
+                        payee: t.payee,
+                        cluster: t.cluster // Use actual cluster if available
+                    }));
+
+                    const clusterLabelsForTsne = allTransactions.map(t => t.cluster);
+
+                    const response = await fetch('/api/get-tsne-embeddings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            transactions: transactionsForTsne,
+                            clusterLabels: clusterLabelsForTsne
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.embeddings;
+
+                } catch (error) {
+                    console.error('Error fetching t-SNE embeddings:', error);
+                    tsnePlotDiv.innerHTML = `<p style="color: red; text-align: center;">Ошибка загрузки графика: ${error.message}</p>`;
+                    return [];
+                } finally {
+                    tsneLoadingDiv.classList.add('hidden');
+                }
+            }
+
+            async function plotTSNE() {
+                const embeddings = await fetchTSNEEmbeddings();
+
+                if (embeddings.length === 0) {
+                    return;
+                }
+
+                // Group data by cluster
+                const clusters = {};
+                embeddings.forEach(e => {
+                    const clusterName = e.cluster !== undefined && e.cluster !== null ? `Кластер ${e.cluster}` : 'Без кластера';
+                    if (!clusters[clusterName]) {
+                        clusters[clusterName] = { x: [], y: [], name: clusterName, mode: 'markers', type: 'scatter', marker: { size: 8, opacity: 0.8 } };
+                    }
+                    clusters[clusterName].x.push(e.x);
+                    clusters[clusterName].y.push(e.y);
+                });
+
+                const plotData = Object.values(clusters);
+
+                const layout = {
+                    title: 't-SNE Точечная Диаграмма Кластеров Транзакций',
+                    xaxis: { title: 't-SNE Измерение 1', zeroline: false, showgrid: false },
+                    yaxis: { title: 't-SNE Измерение 2', zeroline: false, showgrid: false },
+                    hovermode: 'closest',
+                    plot_bgcolor: '#161b22', // Background color for the plot area
+                    paper_bgcolor: '#161b22', // Background color for the entire chart area
+                    font: {
+                        color: '#c9d1d9' // Font color for titles and labels
+                    },
+                    legend: {
+                        font: {
+                            color: '#c9d1d9'
+                        }
+                    }
+                };
+
+                Plotly.newPlot('tsnePlot', plotData, layout);
+            }
+
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
-            fetchAndRenderTransactions();
+            fetchAndRenderTransactions().then(() => {
+                // Plot t-SNE after transactions are fetched and rendered
+                plotTSNE();
+            });
         });
     </script>
 
