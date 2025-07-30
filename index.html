@@ -1587,48 +1587,32 @@
                 addCreditCardModal.classList.add('hidden');
             });
 
-                addLoanForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const principal = parseFloat(document.getElementById('loanPrincipal').value);
-                    const interestRate = parseFloat(document.getElementById('loanInterestRate').value);
-                    const termMonths = parseInt(document.getElementById('loanTermMonths').value);
-                    const startDate = document.getElementById('loanStartDate').value;
-                    const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
-                    
-                    const loanData = {
-                        principal: principal,
-                        interest_rate: interestRate,
-                        term_months: termMonths,
-                        start_date: startDate,
-                        monthly_payment: 0, // Will be calculated
-                        remaining_balance: principal - paidAmount,
-                        paid_amount: paidAmount
-                    };
-
-                console.log('Sending loan data:', JSON.stringify(loanData, null, 2));
+            addLoanForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const principal = parseFloat(formData.get('loanPrincipal'));
+                const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
+                const loanData = {
+                    principal: principal,
+                    interest_rate: parseFloat(formData.get('loanInterestRate')),
+                    term_months: parseInt(formData.get('loanTermMonths')),
+                    start_date: formData.get('loanStartDate'),
+                    monthly_payment: 0, // Will be calculated
+                    remaining_balance: principal - paidAmount,
+                    paid_amount: paidAmount
+                };
 
                 try {
-                    const response = await fetch('/api/track-loan', {
+                    const response = await fetch('/api/loan-credit/track-loan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(loanData)
                     });
-
-                    const responseBody = await response.text();
-                    console.log('Received response status:', response.status);
-                    console.log('Received response body:', responseBody);
-
                     if (!response.ok) {
-                        try {
-                            const err = JSON.parse(responseBody);
-                            throw new Error(err.error || `Network response was not ok: ${response.statusText}`);
-                        } catch (jsonError) {
-                            // If the response is not JSON, use the raw text as the error message
-                            throw new Error(responseBody || `Network response was not ok: ${response.statusText}`);
-                        }
+                        const err = await response.json();
+                        throw new Error(err.error || 'Network response was not ok');
                     }
-                    
-                    const data = JSON.parse(responseBody);
+                    const data = await response.json();
                     alert(`Кредит добавлен! ID: ${data.id}`);
                     addLoanModal.classList.add('hidden');
                     location.reload();
