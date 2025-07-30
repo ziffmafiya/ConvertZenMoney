@@ -47,9 +47,10 @@ AS $$
   LIMIT match_count; -- Ограничиваем количество результатов.
 $$;
 
--- Шаг 3: Создаем индекс типа IVFFlat для ускорения векторного поиска.
+-- Шаг 3: Создаем индекс типа HNSW для ускорения векторного поиска.
+-- Используем HNSW вместо IVFFlat, так как IVFFlat ограничен 2000 измерениями для размерности 3072.
 -- Это необязательный, но крайне рекомендуемый шаг для повышения производительности на больших объемах данных.
-CREATE INDEX ON transactions USING ivfflat (description_embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON transactions USING hnsw (description_embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 
 -- Примечание: При изменении размерности вектора (например, с 768 на 3072),
 -- может потребоваться пересоздать столбец 'description_embedding' и переиндексировать данные.

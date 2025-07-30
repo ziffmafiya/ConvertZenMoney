@@ -9,7 +9,8 @@ DROP INDEX IF EXISTS transactions_description_embedding_idx;
 ALTER TABLE transactions ALTER COLUMN description_embedding TYPE vector(3072) USING description_embedding::vector(3072);
 
 -- Шаг 3: Создаем новый индекс для размерности 3072
-CREATE INDEX ON transactions USING ivfflat (description_embedding vector_cosine_ops) WITH (lists = 100);
+-- Используем HNSW индекс, так как IVFFlat ограничен 2000 измерениями
+CREATE INDEX ON transactions USING hnsw (description_embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 
 -- Шаг 4: Обновляем функцию match_transactions
 CREATE OR REPLACE FUNCTION match_transactions(
