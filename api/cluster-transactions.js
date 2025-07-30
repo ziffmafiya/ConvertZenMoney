@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { DBSCAN } from 'density-clustering';
-import { TSNE } from 'tsne-js'; // Import TSNE
+import pkg from 'tsne-js';
+const TSNE = pkg.default; // Import TSNE as default, then access the class
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
