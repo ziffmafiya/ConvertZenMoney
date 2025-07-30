@@ -18,8 +18,8 @@ export default async function handler(req, res) {
       .select('id, amount, description, created_at, description_embedding'); // Include description_embedding column
 
     if (fetchError) {
-      console.error('Error fetching transactions:', fetchError);
-      return res.status(500).json({ error: 'Failed to fetch transactions' });
+      console.error('Error fetching transactions from Supabase:', fetchError);
+      return res.status(500).json({ error: `Failed to fetch transactions: ${fetchError.message || fetchError.toString()}` });
     }
 
     if (!transactions || transactions.length === 0) {
@@ -89,14 +89,14 @@ export default async function handler(req, res) {
       .upsert(updates, { onConflict: 'id' }); // Use upsert to update existing records
 
     if (updateError) {
-      console.error('Error updating transactions with clusters:', updateError);
-      return res.status(500).json({ error: 'Failed to update transactions with clusters' });
+      console.error('Error updating transactions with clusters in Supabase:', updateError);
+      return res.status(500).json({ error: `Failed to update transactions with clusters: ${updateError.message || updateError.toString()}` });
     }
 
     res.status(200).json({ message: 'Transactions clustered successfully!', clusters: updates.length });
 
   } catch (error) {
-    console.error('Unexpected error during clustering:', error);
-    res.status(500).json({ error: 'An unexpected error occurred.' });
+    console.error('Unhandled error during clustering process:', error);
+    res.status(500).json({ error: `An unexpected error occurred: ${error.message || error.toString()}` });
   }
 }
