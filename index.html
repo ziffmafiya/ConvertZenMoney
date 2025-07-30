@@ -248,6 +248,7 @@
         <div class="flex flex-wrap gap-4 mb-4">
             <button id="clusterTransactionsButton" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Кластеризовать транзакции</button>
             <button id="showKDistanceGraphButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Показать график k-расстояний</button>
+            <button id="showScatterPlotButton" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Показать Scatter Plot</button>
         </div>
         <div id="clusteringResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap hidden">
             <!-- Clustering results will be displayed here -->
@@ -261,6 +262,13 @@
                 <canvas id="kDistanceChart"></canvas>
             </div>
             <p class="text-gray-400 text-sm mt-2">Найдите "локоть" на графике, чтобы определить оптимальное значение EPS.</p>
+        </div>
+        <div id="scatterPlotContainer" class="mt-6 p-4 bg-gray-800 rounded-lg hidden">
+            <h3 class="text-xl font-bold text-white mb-4">Scatter Plot транзакций (t-SNE)</h3>
+            <div class="h-96">
+                <canvas id="scatterPlotChart"></canvas>
+            </div>
+            <p class="text-gray-400 text-sm mt-2">Визуализация транзакций в 2D пространстве с помощью t-SNE. Цвета соответствуют кластерам.</p>
         </div>
     </section>
 
