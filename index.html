@@ -2057,7 +2057,7 @@
                 }
 
                 try {
-                    const response = await fetch('/api/add-credit-card', {
+                    const response = await fetch('/api/credit-cards', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2181,7 +2181,7 @@
                 creditCardsList.innerHTML = '';
 
                 try {
-                    const response = await fetch('/api/get-credit-cards');
+                    const response = await fetch('/api/credit-cards');
                     const result = await response.json();
 
                     if (response.ok) {
