@@ -73,10 +73,32 @@ function calculateMonthlyPayment(principal, interestRate, termMonths) {
 // Функция для добавления нового кредита
 async function handleAddLoan(supabase, req, res) {
     const { loan_name, principal, interest_rate, term_months, start_date, paid_amount } = req.body;
+    
+    // Отладочная информация
+    console.log('Received loan data:', {
+        loan_name,
+        principal,
+        interest_rate,
+        term_months,
+        start_date,
+        paid_amount
+    });
 
     // Валидация обязательных полей
-    if (!principal || !interest_rate || !term_months || !start_date) {
-        return res.status(400).json({ error: 'Основная сумма, процентная ставка, срок и дата открытия обязательны для заполнения' });
+    if (principal === undefined || principal === null || principal === '' || parseFloat(principal) <= 0) {
+        return res.status(400).json({ error: 'Основная сумма должна быть больше 0' });
+    }
+    
+    if (interest_rate === undefined || interest_rate === null || interest_rate === '' || parseFloat(interest_rate) < 0) {
+        return res.status(400).json({ error: 'Процентная ставка должна быть неотрицательной' });
+    }
+    
+    if (term_months === undefined || term_months === null || term_months === '' || parseInt(term_months) <= 0) {
+        return res.status(400).json({ error: 'Срок кредита должен быть больше 0 месяцев' });
+    }
+    
+    if (!start_date || start_date.trim() === '') {
+        return res.status(400).json({ error: 'Дата открытия кредита обязательна' });
     }
 
     try {

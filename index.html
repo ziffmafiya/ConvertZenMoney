@@ -1998,6 +1998,21 @@
 
             closeAddLoanModalButton.addEventListener('click', () => {
                 addLoanModal.classList.add('hidden');
+                document.getElementById('addLoanForm').reset();
+            });
+
+            // Обработчик отправки формы по Enter
+            document.getElementById('addLoanForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveLoanButton.click();
+            });
+
+            // Закрытие модального окна по клику вне его
+            addLoanModal.addEventListener('click', (e) => {
+                if (e.target === addLoanModal) {
+                    addLoanModal.classList.add('hidden');
+                    document.getElementById('addLoanForm').reset();
+                }
             });
 
             saveLoanButton.addEventListener('click', async () => {
@@ -2008,8 +2023,41 @@
                 const startDate = document.getElementById('loanStartDate').value;
                 const paidAmount = document.getElementById('loanPaidAmount').value;
 
-                if (!principal || !interestRate || !termMonths || !startDate) {
-                    alert('Пожалуйста, заполните обязательные поля');
+                // Отладочная информация
+                console.log('Form values:', {
+                    loanName: loanName,
+                    principal: principal,
+                    interestRate: interestRate,
+                    termMonths: termMonths,
+                    startDate: startDate,
+                    paidAmount: paidAmount
+                });
+
+                // Проверяем валидность HTML формы
+                const form = document.getElementById('addLoanForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                // Улучшенная валидация с проверкой на пустые строки и нули
+                if (!principal || principal.trim() === '' || parseFloat(principal) <= 0) {
+                    alert('Пожалуйста, введите корректную основную сумму кредита');
+                    return;
+                }
+                
+                if (!interestRate || interestRate.trim() === '' || parseFloat(interestRate) < 0) {
+                    alert('Пожалуйста, введите корректную процентную ставку');
+                    return;
+                }
+                
+                if (!termMonths || termMonths.trim() === '' || parseInt(termMonths) <= 0) {
+                    alert('Пожалуйста, введите корректный срок кредита в месяцах');
+                    return;
+                }
+                
+                if (!startDate || startDate.trim() === '') {
+                    alert('Пожалуйста, выберите дату открытия кредита');
                     return;
                 }
 
@@ -2037,11 +2085,12 @@
                         document.getElementById('addLoanForm').reset();
                         fetchAndRenderLoans();
                     } else {
+                        console.error('Server error:', result);
                         alert(`Ошибка при добавлении кредита: ${result.error}`);
                     }
                 } catch (error) {
-                    console.error('Error adding loan:', error);
-                    alert('Произошла ошибка при добавлении кредита');
+                    console.error('Network error adding loan:', error);
+                    alert('Произошла ошибка сети при добавлении кредита');
                 }
             });
 
@@ -2053,6 +2102,7 @@
 
             closeAddCreditCardModalButton.addEventListener('click', () => {
                 addCreditCardModal.classList.add('hidden');
+                document.getElementById('addCreditCardForm').reset();
             });
 
             saveCreditCardButton.addEventListener('click', async () => {
@@ -2063,8 +2113,31 @@
                 const firstTransactionDate = document.getElementById('firstTransactionDate').value;
                 const unpaidBalance = document.getElementById('unpaidBalance').value;
 
-                if (!cardName || !gracePeriodDays) {
-                    alert('Пожалуйста, заполните обязательные поля');
+                // Отладочная информация
+                console.log('Credit card form values:', {
+                    cardName,
+                    gracePeriodDays,
+                    statementDay,
+                    paymentDueDay,
+                    firstTransactionDate,
+                    unpaidBalance
+                });
+
+                // Проверяем валидность HTML формы
+                const form = document.getElementById('addCreditCardForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                // Улучшенная валидация
+                if (!cardName || cardName.trim() === '') {
+                    alert('Пожалуйста, введите название кредитной карты');
+                    return;
+                }
+
+                if (!gracePeriodDays || gracePeriodDays.trim() === '' || parseInt(gracePeriodDays) <= 0) {
+                    alert('Пожалуйста, введите корректный льготный период');
                     return;
                 }
 
@@ -2092,11 +2165,26 @@
                         document.getElementById('addCreditCardForm').reset();
                         fetchAndRenderCreditCards();
                     } else {
+                        console.error('Server error:', result);
                         alert(`Ошибка при добавлении кредитной карты: ${result.error}`);
                     }
                 } catch (error) {
-                    console.error('Error adding credit card:', error);
-                    alert('Произошла ошибка при добавлении кредитной карты');
+                    console.error('Network error adding credit card:', error);
+                    alert('Произошла ошибка сети при добавлении кредитной карты');
+                }
+            });
+
+            // Обработчик отправки формы кредитной карты по Enter
+            document.getElementById('addCreditCardForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveCreditCardButton.click();
+            });
+
+            // Закрытие модального окна кредитной карты по клику вне его
+            addCreditCardModal.addEventListener('click', (e) => {
+                if (e.target === addCreditCardModal) {
+                    addCreditCardModal.classList.add('hidden');
+                    document.getElementById('addCreditCardForm').reset();
                 }
             });
 
@@ -2116,8 +2204,8 @@
                         loansList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитов</p>';
                     }
                 } catch (error) {
-                    console.error('Error fetching loans:', error);
-                    loansList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитов</p>';
+                    console.error('Network error fetching loans:', error);
+                    loansList.innerHTML = '<p class="text-red-400">Ошибка сети при загрузке кредитов</p>';
                 } finally {
                     loansLoading.classList.add('hidden');
                 }
@@ -2207,8 +2295,8 @@
                         creditCardsList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитных карт</p>';
                     }
                 } catch (error) {
-                    console.error('Error fetching credit cards:', error);
-                    creditCardsList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитных карт</p>';
+                    console.error('Network error fetching credit cards:', error);
+                    creditCardsList.innerHTML = '<p class="text-red-400">Ошибка сети при загрузке кредитных карт</p>';
                 } finally {
                     creditCardsLoading.classList.add('hidden');
                 }
@@ -2243,11 +2331,12 @@
                         paymentInput.value = '';
                         fetchAndRenderLoans();
                     } else {
+                        console.error('Server error:', result);
                         alert(`Ошибка при записи платежа: ${result.error}`);
                     }
                 } catch (error) {
-                    console.error('Error recording payment:', error);
-                    alert('Произошла ошибка при записи платежа');
+                    console.error('Network error recording payment:', error);
+                    alert('Произошла ошибка сети при записи платежа');
                 }
             };
 
@@ -2397,11 +2486,12 @@
                         alert('Кредит успешно удален!');
                         fetchAndRenderLoans();
                     } else {
+                        console.error('Server error:', result);
                         alert(`Ошибка при удалении кредита: ${result.error}`);
                     }
                 } catch (error) {
-                    console.error('Error deleting loan:', error);
-                    alert('Произошла ошибка при удалении кредита');
+                    console.error('Network error deleting loan:', error);
+                    alert('Произошла ошибка сети при удалении кредита');
                 }
             };
 
@@ -2425,11 +2515,12 @@
                         alert('Кредитная карта успешно удалена!');
                         fetchAndRenderCreditCards();
                     } else {
+                        console.error('Server error:', result);
                         alert(`Ошибка при удалении кредитной карты: ${result.error}`);
                     }
                 } catch (error) {
-                    console.error('Error deleting credit card:', error);
-                    alert('Произошла ошибка при удалении кредитной карты');
+                    console.error('Network error deleting credit card:', error);
+                    alert('Произошла ошибка сети при удалении кредитной карты');
                 }
             };
 

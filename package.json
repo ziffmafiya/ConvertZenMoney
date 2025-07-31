@@ -10,5 +10,10 @@
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
     "@supabase/supabase-js": "^2.44.2"
+  },
+  "devDependencies": {
+    "chart.js": "^4.4.0",
+    "chartjs-chart-treemap": "^2.3.0",
+    "chartjs-chart-matrix": "^1.0.0"
   }
 }

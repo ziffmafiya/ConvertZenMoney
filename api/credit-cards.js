@@ -61,10 +61,24 @@ async function handleGetCreditCards(supabase, res) {
 // Функция для добавления новой кредитной карты
 async function handleAddCreditCard(supabase, req, res) {
     const { card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance, first_transaction_date } = req.body;
+    
+    // Отладочная информация
+    console.log('Received credit card data:', {
+        card_name,
+        grace_period_days,
+        statement_day,
+        payment_due_day,
+        first_transaction_date,
+        unpaid_balance
+    });
 
     // Валидация обязательных полей
-    if (!card_name || !grace_period_days) {
-        return res.status(400).json({ error: 'Название карты и льготный период обязательны для заполнения' });
+    if (!card_name || card_name.trim() === '') {
+        return res.status(400).json({ error: 'Название карты обязательно для заполнения' });
+    }
+    
+    if (grace_period_days === undefined || grace_period_days === null || grace_period_days === '' || parseInt(grace_period_days) <= 0) {
+        return res.status(400).json({ error: 'Льготный период должен быть больше 0 дней' });
     }
 
     // Валидация дней (если указаны)
