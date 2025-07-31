@@ -145,28 +145,38 @@ export function createTreemap(canvasId, data, options = {}) {
         return null;
     }
 
-    // Преобразуем данные в формат для Treemap
-    const treemapData = transformDataForTreemap(data);
+    // Проверяем структуру данных
+    if (!data || !data.datasets || !data.datasets[0] || !data.datasets[0].tree) {
+        console.error('Неверная структура данных для Treemap:', data);
+        return null;
+    }
 
     const config = {
         type: 'treemap',
         data: {
             datasets: [{
-                tree: treemapData,
+                tree: data.datasets[0].tree,
                 key: 'value',
-                groups: ['category'],
+                groups: ['category', 'hierarchy'],
                 spacing: 1,
                 backgroundColor: function(ctx) {
                     if (ctx.type !== 'data') return 'transparent';
-                    return ctx.raw.color || '#cccccc';
+                    const value = ctx.raw.v;
+                    if (value && value.trend !== undefined) {
+                        return getTrendColor(value.trend);
+                    }
+                    return '#cccccc';
                 },
                 labels: {
                     display: true,
                     formatter: function(ctx) {
+                        const value = ctx.raw.v;
+                        if (!value) return [ctx.raw.name];
+                        
                         return [
-                            ctx.raw.name,
-                            `${ctx.raw.value.toFixed(2)} ₽`,
-                            ctx.raw.trend ? `Тренд: ${ctx.raw.trend > 0 ? '+' : ''}${ctx.raw.trend.toFixed(1)}%` : ''
+                            value.name,
+                            `${value.totalSpent.toFixed(2)} ₽`,
+                            value.trend !== undefined ? `Тренд: ${value.trend > 0 ? '+' : ''}${value.trend.toFixed(1)}%` : ''
                         ].filter(Boolean);
                     }
                 }
@@ -189,14 +199,17 @@ export function createTreemap(canvasId, data, options = {}) {
                 tooltip: {
                     callbacks: {
                         title: function(context) {
-                            return context[0].raw.name;
+                            const value = context[0].raw.v;
+                            return value ? value.name : context[0].raw.name;
                         },
                         label: function(context) {
-                            const data = context.raw;
+                            const value = context[0].raw.v;
+                            if (!value) return [];
+                            
                             return [
-                                `Сумма: ${data.value.toFixed(2)} ₽`,
-                                `Транзакций: ${data.transactionCount}`,
-                                data.trend ? `Тренд: ${data.trend > 0 ? '+' : ''}${data.trend.toFixed(1)}%` : ''
+                                `Сумма: ${value.totalSpent.toFixed(2)} ₽`,
+                                `Транзакций: ${value.transactionCount}`,
+                                value.trend !== undefined ? `Тренд: ${value.trend > 0 ? '+' : ''}${value.trend.toFixed(1)}%` : ''
                             ].filter(Boolean);
                         }
                     }
@@ -208,40 +221,7 @@ export function createTreemap(canvasId, data, options = {}) {
     return new Chart(ctx, config);
 }
 
-/**
- * Преобразует данные для Treemap формата
- */
-function transformDataForTreemap(data) {
-    const result = {
-        name: data.name,
-        children: []
-    };
 
-    data.children.forEach(category => {
-        const categoryNode = {
-            name: category.name,
-            value: category.totalSpent,
-            category: 'category',
-            transactionCount: category.transactionCount,
-            children: []
-        };
-
-        category.children.forEach(child => {
-            categoryNode.children.push({
-                name: child.name,
-                value: child.value,
-                category: 'child',
-                transactionCount: child.transactionCount,
-                trend: child.trend,
-                color: child.color
-            });
-        });
-
-        result.children.push(categoryNode);
-    });
-
-    return result;
-}
 
 /**
  * Определяет цвет для Heatmap на основе значения
@@ -258,6 +238,19 @@ function getHeatmapColor(value, allValues) {
     const lightness = Math.max(20, 80 - normalizedValue * 60);
     
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+/**
+ * Определяет цвет по тренду для Treemap
+ * @param {number} trend - процент изменения
+ * @returns {string} цвет в формате hex
+ */
+function getTrendColor(trend) {
+    if (trend > 10) return '#ff4444'; // Красный - сильный рост
+    if (trend > 0) return '#ff8888';  // Светло-красный - небольшой рост
+    if (trend < -10) return '#44ff44'; // Зеленый - сильное падение
+    if (trend < 0) return '#88ff88';   // Светло-зеленый - небольшое падение
+    return '#cccccc'; // Серый - без изменений
 }
 
 /**
@@ -285,8 +278,9 @@ export function updateVisualization(chart, newData, type) {
         }));
     } else if (type === 'treemap') {
         // Обновляем данные для Treemap
-        const treemapData = transformDataForTreemap(newData);
-        chart.data.datasets[0].tree = treemapData;
+        if (newData && newData.datasets && newData.datasets[0] && newData.datasets[0].tree) {
+            chart.data.datasets[0].tree = newData.datasets[0].tree;
+        }
     }
 
     chart.update();
