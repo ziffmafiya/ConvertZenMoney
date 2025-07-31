@@ -6,5 +6,6 @@ CREATE TABLE loans (
   start_date DATE NOT NULL,
   monthly_payment NUMERIC(15,2) NOT NULL,
   remaining_balance NUMERIC(15,2) NOT NULL,
+  paid_amount NUMERIC(15,2) NOT NULL DEFAULT 0.00,
   created_at TIMESTAMP DEFAULT NOW()
 );
