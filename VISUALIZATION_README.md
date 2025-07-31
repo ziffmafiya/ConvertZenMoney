@@ -20,8 +20,7 @@
 
 ```
 api/
-├── visualization-data.js    # Серверный API для Vercel
-└── visualization-unified.js # Клиентские функции для браузера
+└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
 
 visualization-demo.html      # Демонстрационная страница
 VISUALIZATION_README.md      # Документация (этот файл)
@@ -74,9 +73,9 @@ const treemapChart = createTreemap('treemapCanvas', treemapData, {
 
 ## 📊 API Reference
 
-### API Endpoint
+### Унифицированный API Endpoint
 
-Все запросы к API выполняются через точку входа: `/api/visualization-data`
+Все запросы к API выполняются через единую точку входа: `/api/visualization-data`
 
 **Параметры запроса:**
 - `type` (string): тип визуализации - `'heatmap'` или `'treemap'`
