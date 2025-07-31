@@ -2622,10 +2622,21 @@
                     return;
                 }
 
+                // Получаем значения из основных фильтров или используем текущую дату
+                const filterMonthInput = document.getElementById('filterMonth');
+                const filterYearInput = document.getElementById('filterYear');
+                const heatmapGroupBySelect = document.getElementById('heatmapGroupBy');
+                const treemapHierarchySelect = document.getElementById('treemapHierarchy');
+                
+                if (!filterMonthInput || !filterYearInput || !heatmapGroupBySelect || !treemapHierarchySelect) {
+                    console.error('Не найдены элементы управления визуализациями');
+                    return;
+                }
+                
                 const month = parseInt(filterMonthInput.value) || new Date().getMonth() + 1;
                 const year = parseInt(filterYearInput.value) || new Date().getFullYear();
-                const heatmapGroupBy = document.getElementById('heatmapGroupBy').value;
-                const treemapHierarchy = document.getElementById('treemapHierarchy').value;
+                const heatmapGroupBy = heatmapGroupBySelect.value;
+                const treemapHierarchy = treemapHierarchySelect.value;
 
                 showVizLoading('heatmap');
                 showVizLoading('treemap');
@@ -2699,17 +2710,31 @@
                 const totalTransactions = treemapData.metadata?.totalTransactions || 0;
                 const totalCategories = heatmapData.metadata?.totalCategories || 0;
                 
-                const daysInMonth = new Date(
-                    parseInt(filterYearInput.value),
-                    parseInt(filterMonthInput.value) || new Date().getMonth() + 1,
-                    0
-                ).getDate();
+                // Получаем значения из основных фильтров или используем текущую дату
+                const filterMonthInput = document.getElementById('filterMonth');
+                const filterYearInput = document.getElementById('filterYear');
+                
+                if (!filterMonthInput || !filterYearInput) {
+                    console.error('Не найдены элементы фильтров для статистики');
+                    return;
+                }
+                
+                const currentMonth = parseInt(filterMonthInput.value) || new Date().getMonth() + 1;
+                const currentYear = parseInt(filterYearInput.value) || new Date().getFullYear();
+                
+                const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
                 const avgPerDay = totalSpent / daysInMonth;
 
-                document.getElementById('vizTotalSpent').textContent = `${totalSpent.toFixed(2)} ₽`;
-                document.getElementById('vizTotalTransactions').textContent = totalTransactions;
-                document.getElementById('vizTotalCategories').textContent = totalCategories;
-                document.getElementById('vizAvgPerDay').textContent = `${avgPerDay.toFixed(2)} ₽`;
+                // Обновляем элементы статистики с проверкой их существования
+                const totalSpentEl = document.getElementById('vizTotalSpent');
+                const totalTransactionsEl = document.getElementById('vizTotalTransactions');
+                const totalCategoriesEl = document.getElementById('vizTotalCategories');
+                const avgPerDayEl = document.getElementById('vizAvgPerDay');
+                
+                if (totalSpentEl) totalSpentEl.textContent = `${totalSpent.toFixed(2)} ₽`;
+                if (totalTransactionsEl) totalTransactionsEl.textContent = totalTransactions;
+                if (totalCategoriesEl) totalCategoriesEl.textContent = totalCategories;
+                if (avgPerDayEl) avgPerDayEl.textContent = `${avgPerDay.toFixed(2)} ₽`;
             }
 
             // Показать загрузку визуализации
@@ -2752,8 +2777,26 @@
                 }
 
                 // Загружаем визуализации при изменении фильтров
-                filterMonthInput.addEventListener('change', loadVisualizations);
-                filterYearInput.addEventListener('change', loadVisualizations);
+                const filterMonthInput = document.getElementById('filterMonth');
+                const filterYearInput = document.getElementById('filterYear');
+                
+                if (filterMonthInput) {
+                    filterMonthInput.addEventListener('change', loadVisualizations);
+                }
+                if (filterYearInput) {
+                    filterYearInput.addEventListener('change', loadVisualizations);
+                }
+                
+                // Добавляем обработчики для элементов управления визуализациями
+                const heatmapGroupBySelect = document.getElementById('heatmapGroupBy');
+                const treemapHierarchySelect = document.getElementById('treemapHierarchy');
+                
+                if (heatmapGroupBySelect) {
+                    heatmapGroupBySelect.addEventListener('change', loadVisualizations);
+                }
+                if (treemapHierarchySelect) {
+                    treemapHierarchySelect.addEventListener('change', loadVisualizations);
+                }
             });
 
             // --- Начальная загрузка ---
