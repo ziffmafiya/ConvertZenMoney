@@ -36,8 +36,6 @@ async function getEmbedding(text) {
     }
 }
 
-
-
 /**
  * Основной обработчик для API-маршрута '/api/upload-transactions'.
  * Обрабатывает входящие запросы на загрузку транзакций в базу данных Supabase.
@@ -45,6 +43,10 @@ async function getEmbedding(text) {
  * @param {object} res - Объект ответа для отправки результата клиенту.
  */
 export default async function handler(req, res) {
+    // Принимаем только POST-запросы, так как этот эндпоинт предназначен для создания данных.
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
 
     // Извлекаем данные из тела запроса: список транзакций и флаги для их обработки.
     const { transactions, excludeDebts, skipEmbedding } = req.body;
