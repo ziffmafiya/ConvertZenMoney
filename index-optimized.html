@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Универсальный Финансовый Отчет</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" as="style">
+    
+    <!-- Critical CSS inline -->
+    <style>
+        /* Critical CSS for above-the-fold content */
+        .font-tektur { font-family: 'Tektur', sans-serif; }
+        body { font-family: 'Montserrat', sans-serif; }
+        h1, h2, h3, h4, h5, h6, button, .tab-button, .font-semibold { font-family: 'Tektur', sans-serif; }
+        
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Optimize paint and layout */
+        .optimize-render {
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        
+        /* Reduce layout shift */
+        .chart-container {
+            min-height: 300px;
+            contain: layout style paint;
+        }
+    </style>
+    
+    <!-- Non-critical CSS loaded asynchronously -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap"></noscript>
+    
+    <!-- Defer non-critical scripts -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
+    <script src="https://unpkg.com/i18next/dist/umd/i18next.min.js" defer></script>
+</head>
+<body class="antialiased bg-[#0D1117] text-[#c9d1d9]">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header with skeleton loading -->
+        <header class="flex flex-wrap justify-between items-center gap-6 mb-8 md:mb-12">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2" id="quickFilters">
+                    <!-- Quick filters will be populated by JS -->
+                </div>
+            </div>
+            <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                Настройки
+            </button>
+        </header>
+
+        <!-- Filters section -->
+        <div class="mb-8 md:mb-12">
+            <div class="flex items-center gap-2 p-4 bg-[#161b22] rounded-lg border border-[#30363d]">
+                <select id="filterMonth" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="">Весь год</option>
+                    <option value="01">Январь</option>
+                    <option value="02">Февраль</option>
+                    <option value="03">Март</option>
+                    <option value="04">Апрель</option>
+                    <option value="05">Май</option>
+                    <option value="06">Июнь</option>
+                    <option value="07">Июль</option>
+                    <option value="08">Август</option>
+                    <option value="09">Сентябрь</option>
+                    <option value="10">Октябрь</option>
+                    <option value="11">Ноябрь</option>
+                    <option value="12">Декабрь</option>
+                </select>
+                <input type="number" id="filterYear" placeholder="Год" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+            </div>
+        </div>
+
+        <!-- Main metrics with skeleton loading -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
+            <!-- Net Balance Card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] optimize-render">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
+                <div id="netBalanceSkeleton" class="skeleton h-12 w-32 rounded mb-2"></div>
+                <p id="headerNetBalance" class="text-4xl font-bold text-white hidden">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="netBalanceChange" class="text-sm font-semibold">Загрузка...</span>
+                    <div class="h-8 w-24"><canvas id="netBalanceSparkline"></canvas></div>
+                </div>
+            </div>
+            
+            <!-- Total Income Card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] optimize-render">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
+                <div id="incomeSkeleton" class="skeleton h-12 w-32 rounded mb-2"></div>
+                <p id="totalIncome" class="text-4xl font-bold text-green-400 hidden">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="incomeChange" class="text-sm font-semibold">Загрузка...</span>
+                    <div class="h-8 w-24"><canvas id="incomeSparkline"></canvas></div>
+                </div>
+            </div>
+            
+            <!-- Total Expenses Card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] optimize-render">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
+                <div id="expensesSkeleton" class="skeleton h-12 w-32 rounded mb-2"></div>
+                <p id="totalExpenses" class="text-4xl font-bold text-red-400 hidden">0.00 грн</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span id="expensesChange" class="text-sm font-semibold">Загрузка...</span>
+                    <div class="h-8 w-24"><canvas id="expensesSparkline"></canvas></div>
+                </div>
+                <p id="expensesToIncomeText" class="text-center text-gray-400 text-sm mt-2"></p>
+            </div>
+            
+            <!-- Theoretical Savings Card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] optimize-render">
+                <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
+                <div id="savingsSkeleton" class="skeleton h-12 w-32 rounded mb-2"></div>
+                <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400 hidden">0.00 грн</p>
+                <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
+            </div>
+        </section>
+
+        <!-- Charts section with lazy loading -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
+            <div class="chart-container">
+                <div id="trendChartSkeleton" class="skeleton h-96 w-full rounded"></div>
+                <canvas id="spendIncomeTrendChart" class="hidden"></canvas>
+            </div>
+        </section>
+
+        <!-- Anomalies section -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
+            <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+            <div id="anomaliesList" class="space-y-3">
+                <div class="skeleton h-16 w-full rounded"></div>
+                <div class="skeleton h-16 w-full rounded"></div>
+                <div class="skeleton h-16 w-full rounded"></div>
+            </div>
+            <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
+                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">Предыдущая</button>
+                <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">Следующая</button>
+            </div>
+        </section>
+
+        <!-- Detailed analysis section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+            <!-- Expenses detail card -->
+            <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
+                <div class="mb-4 border-b border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="expensesTab" role="tablist">
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-blue-500 border-blue-500" id="category-tab" data-tab-target="#category-content" type="button" role="tab">По категориям</button>
+                        </li>
+                        <li role="presentation">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg text-gray-400 border-gray-700 hover:bg-gray-700 hover:border-gray-600" id="store-tab" data-tab-target="#store-content" type="button" role="tab">По магазинам</button>
+                        </li>
+                    </ul>
+                </div>
+                <div id="expensesTabContent">
+                    <div class="tab-content" id="category-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
+                        <div class="relative h-[35vh] w-full max-w-[450px] mx-auto">
+                            <div id="expensesChartSkeleton" class="skeleton h-full w-full rounded"></div>
+                            <canvas id="expensesChart" class="hidden"></canvas>
+                        </div>
+                        <div id="expensesLegend" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4"></div>
+                        <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Найти аномалии в данных</button>
+                    </div>
+                    <div class="tab-content hidden" id="store-content" role="tabpanel">
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
+                        <div class="relative h-[45vh] w-full">
+                            <div id="storesChartSkeleton" class="skeleton h-full w-full rounded"></div>
+                            <canvas id="storesChart" class="hidden"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right column with income and goals -->
+            <div class="flex flex-col gap-8 md:gap-12">
+                <!-- Income sources card -->
+                <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-white">Источники дохода</h3>
+                    <div class="space-y-4" id="incomeList">
+                        <!-- Income bars will be generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Goal progress card -->
+                <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-white">Прогресс по цели</h3>
+                        <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Настроить</button>
+                    </div>
+                    <p id="goalDescription" class="text-gray-400">Цель не задана</p>
+                    <div class="w-full bg-gray-600 rounded-full h-4 mt-4">
+                        <div id="goalProgressBar" class="bg-blue-500 h-4 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                    </div>
+                    <div class="flex justify-between text-sm font-semibold mt-2">
+                        <span id="goalProgressText" class="text-white">0%</span>
+                        <span id="goalTargetText" class="text-gray-400">Цель: -</span>
+                    </div>
+                    <p id="comparisonMonthText" class="text-sm text-gray-400 mt-1"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions table with virtual scrolling -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Дата</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Категория</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Skeleton loading -->
+                        <tr><td colspan="5" class="p-4"><div class="skeleton h-8 w-full rounded"></div></td></tr>
+                        <tr><td colspan="5" class="p-4"><div class="skeleton h-8 w-full rounded"></div></td></tr>
+                        <tr><td colspan="5" class="p-4"><div class="skeleton h-8 w-full rounded"></div></td></tr>
+                        <tr><td colspan="5" class="p-4"><div class="skeleton h-8 w-full rounded"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
+                <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">Предыдущая</button>
+                <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">Следующая</button>
+            </div>
+        </section>
+
+        <!-- Additional sections with lazy loading -->
+        <div id="additionalSections" class="space-y-8 md:space-y-12">
+            <!-- Deep analysis, habits, loans, credit cards sections will be loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalsContainer">
+        <!-- All modals will be loaded here -->
+    </div>
+
+    <!-- Optimized JavaScript -->
+    <script type="module">
+        // Main application module
+        import { initializeApp } from './js/app.js';
+        
+        // Initialize app when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+
+    <!-- Service Worker for caching -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html> 

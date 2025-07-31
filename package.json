@@ -1,14 +1,42 @@
 {
-  "name": "converter-vercel-app",
-  "version": "1.0.0",
-  "description": "A Vercel app for financial data conversion and Supabase upload.",
-  "main": "api/upload-transactions.js",
+  "name": "finance-analyzer-optimized",
+  "version": "2.0.0",
+  "description": "Optimized financial analysis application for Vercel deployment",
+  "main": "index-optimized.html",
   "type": "module",
   "scripts": {
-    "start": "vercel dev"
+    "start": "vercel dev",
+    "build": "npm run optimize-assets",
+    "optimize-assets": "node scripts/optimize-assets.js",
+    "analyze-bundle": "node scripts/analyze-bundle.js",
+    "lighthouse": "lighthouse http://localhost:3000 --output=json --output-path=./lighthouse-report.json",
+    "test-performance": "npm run lighthouse && node scripts/analyze-performance.js",
+    "deploy": "vercel --prod",
+    "dev": "vercel dev",
+    "clean": "rm -rf .vercel && rm -rf node_modules/.cache"
   },
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
     "@supabase/supabase-js": "^2.44.2"
-  }
+  },
+  "devDependencies": {
+    "lighthouse": "^11.0.0",
+    "puppeteer": "^21.0.0",
+    "terser": "^5.24.0",
+    "cssnano": "^6.0.0",
+    "imagemin": "^8.0.0",
+    "imagemin-webp": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "finance",
+    "analysis",
+    "vercel",
+    "performance",
+    "optimization"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
 }
