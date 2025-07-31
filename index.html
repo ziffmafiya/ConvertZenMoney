@@ -328,6 +328,10 @@
             <h2 class="text-2xl font-bold text-white mb-4">Добавить кредит</h2>
             <form id="addLoanForm" class="space-y-4">
                 <div>
+                    <label for="loanName" class="block mb-2 text-sm font-medium text-gray-300">Название кредита</label>
+                    <input type="text" id="loanName" placeholder="Например: Ипотека, Автокредит" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
                     <label for="loanPrincipal" class="block mb-2 text-sm font-medium text-gray-300">Основная сумма (грн)</label>
                     <input type="number" id="loanPrincipal" step="0.01" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                 </div>
@@ -375,6 +379,11 @@
                 <div>
                     <label for="paymentDueDay" class="block mb-2 text-sm font-medium text-gray-300">День платежа (1-31, опционально)</label>
                     <input type="number" id="paymentDueDay" min="1" max="31" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="firstTransactionDate" class="block mb-2 text-sm font-medium text-gray-300">Дата первой операции</label>
+                    <input type="date" id="firstTransactionDate" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <p class="text-xs text-gray-400 mt-1">Дата первой покупки по карте (для расчета льготного периода)</p>
                 </div>
                 <div>
                     <label for="unpaidBalance" class="block mb-2 text-sm font-medium text-gray-300">Текущая задолженность (грн)</label>
@@ -1992,6 +2001,7 @@
             });
 
             saveLoanButton.addEventListener('click', async () => {
+                const loanName = document.getElementById('loanName').value;
                 const principal = document.getElementById('loanPrincipal').value;
                 const interestRate = document.getElementById('loanInterestRate').value;
                 const termMonths = document.getElementById('loanTermMonths').value;
@@ -2010,6 +2020,7 @@
                              'Content-Type': 'application/json',
                          },
                          body: JSON.stringify({
+                             loan_name: loanName,
                              principal: parseFloat(principal),
                              interest_rate: parseFloat(interestRate),
                              term_months: parseInt(termMonths),
@@ -2049,6 +2060,7 @@
                 const gracePeriodDays = document.getElementById('gracePeriodDays').value;
                 const statementDay = document.getElementById('statementDay').value;
                 const paymentDueDay = document.getElementById('paymentDueDay').value;
+                const firstTransactionDate = document.getElementById('firstTransactionDate').value;
                 const unpaidBalance = document.getElementById('unpaidBalance').value;
 
                 if (!cardName || !gracePeriodDays) {
@@ -2067,6 +2079,7 @@
                             grace_period_days: parseInt(gracePeriodDays),
                             statement_day: statementDay ? parseInt(statementDay) : null,
                             payment_due_day: paymentDueDay ? parseInt(paymentDueDay) : null,
+                            first_transaction_date: firstTransactionDate || null,
                             unpaid_balance: parseFloat(unpaidBalance || 0)
                         }),
                     });
@@ -2124,7 +2137,7 @@
                     return `
                         <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
                             <div class="flex justify-between items-start mb-3">
-                                <h3 class="text-lg font-semibold text-white">Кредит #${loan.id}</h3>
+                                <h3 class="text-lg font-semibold text-white">${loan.loan_name || `Кредит #${loan.id}`}</h3>
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm text-gray-400">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
                                     <button onclick="deleteLoan(${loan.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Удалить</button>
@@ -2247,8 +2260,49 @@
 
                 creditCardsList.innerHTML = creditCards.map(card => {
                     const today = new Date();
-                    const currentDay = today.getDate();
                     
+                    // Функция для расчета льготного периода по новой логике
+                    function calculateGracePeriod(card) {
+                        if (!card.first_transaction_date) {
+                            return { status: 'Неизвестно', class: 'text-gray-400', daysLeft: null };
+                        }
+
+                        const firstTransaction = new Date(card.first_transaction_date);
+                        const today = new Date();
+                        
+                        // Находим начало расчетного периода (месяц первой операции)
+                        const billingPeriodStart = new Date(firstTransaction.getFullYear(), firstTransaction.getMonth(), 1);
+                        
+                        // Конец расчетного периода - конец месяца первой операции
+                        const billingPeriodEnd = new Date(firstTransaction.getFullYear(), firstTransaction.getMonth() + 1, 0);
+                        
+                        // Конец льготного периода - конец следующего месяца после расчетного периода
+                        const gracePeriodEnd = new Date(billingPeriodEnd.getFullYear(), billingPeriodEnd.getMonth() + 1, billingPeriodEnd.getDate());
+                        
+                        // Вычисляем дни до конца льготного периода
+                        const daysUntilGraceEnd = Math.ceil((gracePeriodEnd - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (daysUntilGraceEnd > 0) {
+                            return { 
+                                status: `Льготный период активен (${daysUntilGraceEnd} дн.)`, 
+                                class: 'text-green-400', 
+                                daysLeft: daysUntilGraceEnd 
+                            };
+                        } else if (daysUntilGraceEnd === 0) {
+                            return { 
+                                status: 'Последний день льготного периода', 
+                                class: 'text-yellow-400', 
+                                daysLeft: 0 
+                            };
+                        } else {
+                            return { 
+                                status: 'Льготный период истек', 
+                                class: 'text-red-400', 
+                                daysLeft: null 
+                            };
+                        }
+                    }
+
                     // Вычисляем даты выписки и платежа для текущего месяца
                     const statementDate = card.statement_day ? new Date(today.getFullYear(), today.getMonth(), card.statement_day) : null;
                     const paymentDueDate = card.payment_due_day ? new Date(today.getFullYear(), today.getMonth(), card.payment_due_day) : null;
@@ -2268,22 +2322,8 @@
                         daysUntilPayment = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     }
 
-                    // Определяем статус льготного периода
-                    let gracePeriodStatus = 'Неизвестно';
-                    let gracePeriodClass = 'text-gray-400';
-                    
-                    if (daysUntilPayment !== null) {
-                        if (daysUntilPayment > card.grace_period_days) {
-                            gracePeriodStatus = 'Льготный период истек';
-                            gracePeriodClass = 'text-red-400';
-                        } else if (daysUntilPayment > 0) {
-                            gracePeriodStatus = `Льготный период активен (${daysUntilPayment} дн.)`;
-                            gracePeriodClass = 'text-green-400';
-                        } else {
-                            gracePeriodStatus = 'Платеж просрочен';
-                            gracePeriodClass = 'text-red-600';
-                        }
-                    }
+                    // Определяем статус льготного периода по новой логике
+                    const gracePeriodInfo = calculateGracePeriod(card);
 
                     return `
                         <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
@@ -2299,6 +2339,12 @@
                                     <span class="text-gray-400">Льготный период:</span>
                                     <span class="text-white">${card.grace_period_days} дн.</span>
                                 </div>
+                                ${card.first_transaction_date ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Первая операция:</span>
+                                    <span class="text-white">${new Date(card.first_transaction_date).toLocaleDateString('ru-RU')}</span>
+                                </div>
+                                ` : ''}
                                 ${card.statement_day ? `
                                 <div class="flex justify-between">
                                     <span class="text-gray-400">День выписки:</span>
@@ -2316,8 +2362,8 @@
                                     <span class="text-red-400">${card.unpaid_balance.toLocaleString('ru-RU')} грн</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-400">Статус:</span>
-                                    <span class="${gracePeriodClass}">${gracePeriodStatus}</span>
+                                    <span class="text-gray-400">Статус льготного периода:</span>
+                                    <span class="${gracePeriodInfo.class}">${gracePeriodInfo.status}</span>
                                 </div>
                                 ${daysUntilPayment !== null ? `
                                 <div class="flex justify-between">

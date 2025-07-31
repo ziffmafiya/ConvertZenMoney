@@ -72,7 +72,7 @@ function calculateMonthlyPayment(principal, interestRate, termMonths) {
 
 // Функция для добавления нового кредита
 async function handleAddLoan(supabase, req, res) {
-    const { principal, interest_rate, term_months, start_date, paid_amount } = req.body;
+    const { loan_name, principal, interest_rate, term_months, start_date, paid_amount } = req.body;
 
     // Валидация обязательных полей
     if (!principal || !interest_rate || !term_months || !start_date) {
@@ -91,6 +91,7 @@ async function handleAddLoan(supabase, req, res) {
         const { data, error } = await supabase
             .from('loans')
             .insert([{
+                loan_name: loan_name || `Кредит #${Date.now()}`,
                 principal: parseFloat(principal),
                 interest_rate: parseFloat(interest_rate),
                 term_months: parseInt(term_months),

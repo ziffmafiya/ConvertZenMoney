@@ -60,7 +60,7 @@ async function handleGetCreditCards(supabase, res) {
 
 // Функция для добавления новой кредитной карты
 async function handleAddCreditCard(supabase, req, res) {
-    const { card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance } = req.body;
+    const { card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance, first_transaction_date } = req.body;
 
     // Валидация обязательных полей
     if (!card_name || !grace_period_days) {
@@ -87,6 +87,7 @@ async function handleAddCreditCard(supabase, req, res) {
         // Добавляем опциональные поля
         if (statement_day) cardData.statement_day = parseInt(statement_day);
         if (payment_due_day) cardData.payment_due_day = parseInt(payment_due_day);
+        if (first_transaction_date) cardData.first_transaction_date = first_transaction_date;
 
         // Вставляем новую кредитную карту в таблицу 'credit_cards'
         const { data, error } = await supabase
@@ -111,7 +112,7 @@ async function handleAddCreditCard(supabase, req, res) {
 
 // Функция для обновления кредитной карты
 async function handleUpdateCreditCard(supabase, req, res) {
-    const { id, card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance } = req.body;
+    const { id, card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance, first_transaction_date } = req.body;
 
     // Валидация обязательных полей
     if (!id) {
@@ -135,6 +136,7 @@ async function handleUpdateCreditCard(supabase, req, res) {
         if (statement_day !== undefined) updateData.statement_day = statement_day ? parseInt(statement_day) : null;
         if (payment_due_day !== undefined) updateData.payment_due_day = payment_due_day ? parseInt(payment_due_day) : null;
         if (unpaid_balance !== undefined) updateData.unpaid_balance = parseFloat(unpaid_balance);
+        if (first_transaction_date !== undefined) updateData.first_transaction_date = first_transaction_date;
 
         // Обновляем кредитную карту в таблице 'credit_cards'
         const { data, error } = await supabase
