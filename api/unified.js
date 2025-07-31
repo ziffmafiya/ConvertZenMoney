@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * API для получения данных визуализаций
- * Серверная часть для Vercel
+ * Универсальный API для всех функций приложения
+ * Обрабатывает все запросы через один endpoint для экономии лимита Vercel
  */
+
+// ============================================================================
+// ВИЗУАЛИЗАЦИИ
+// ============================================================================
 
 /**
  * Получает данные для Heatmap визуализации
- * Группирует траты по дням и категориям
  */
 async function getHeatmapData(month, year, groupBy = 'day') {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -38,9 +41,6 @@ async function getHeatmapData(month, year, groupBy = 'day') {
 
 /**
  * Получает данные для Treemap визуализации
- * Иерархия: Категория → Cluster или Тип привычки
- * Размер блока: общая сумма трат
- * Цвет: направление тренда (рост/падение)
  */
 async function getTreemapData(month, year, hierarchyType = 'cluster') {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -98,6 +98,88 @@ async function getTreemapData(month, year, hierarchyType = 'cluster') {
         habitsData
     );
 }
+
+// ============================================================================
+// ТРАНЗАКЦИИ
+// ============================================================================
+
+/**
+ * Получает транзакции с фильтрацией
+ */
+async function getTransactions(month, year, category = null, search = null) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL or Anon Key not configured');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = `${year}-${month.padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+    
+    let query = supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: false });
+
+    if (category && category !== 'all') {
+        query = query.eq('category', category);
+    }
+
+    if (search) {
+        query = query.or(`description.ilike.%${search}%,payee.ilike.%${search}%`);
+    }
+
+    const { data: transactions, error } = await query;
+
+    if (error) {
+        throw new Error(`Supabase select error: ${error.message}`);
+    }
+
+    return transactions;
+}
+
+// ============================================================================
+// АНАЛИЗ
+// ============================================================================
+
+/**
+ * Анализирует привычки
+ */
+async function analyzeHabits(month, year) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL or Anon Key not configured');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = `${year}-${month.padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+    
+    const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .not('description_embedding', 'is', null);
+
+    if (error) {
+        throw new Error(`Supabase select error: ${error.message}`);
+    }
+
+    return await analyzeHabitsForTreemap(transactions, supabase);
+}
+
+// ============================================================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================================================
 
 /**
  * Группирует транзакции для Heatmap
@@ -433,7 +515,7 @@ function transformDataForTreemap(grouped, trends) {
 }
 
 // ============================================================================
-// VERCEL API HANDLER
+// УНИВЕРСАЛЬНЫЙ API HANDLER
 // ============================================================================
 
 export default async function handler(req, res) {
@@ -442,30 +524,72 @@ export default async function handler(req, res) {
     }
     
     try {
-        const { type, month, year, groupBy, hierarchyType } = req.query;
+        const { 
+            service, 
+            type, 
+            month, 
+            year, 
+            groupBy, 
+            hierarchyType, 
+            category, 
+            search 
+        } = req.query;
         
-        if (!type || !month || !year) {
+        if (!service) {
             return res.status(400).json({ 
-                error: 'Missing required parameters: type, month, year' 
+                error: 'Missing required parameter: service' 
             });
         }
         
         let data;
         
-        if (type === 'heatmap') {
-            data = await getHeatmapData(month, year, groupBy || 'day');
-        } else if (type === 'treemap') {
-            data = await getTreemapData(month, year, hierarchyType || 'cluster');
-        } else {
-            return res.status(400).json({ 
-                error: 'Invalid type. Must be "heatmap" or "treemap"' 
-            });
+        switch (service) {
+            case 'visualization':
+                if (!type || !month || !year) {
+                    return res.status(400).json({ 
+                        error: 'Missing required parameters: type, month, year' 
+                    });
+                }
+                
+                if (type === 'heatmap') {
+                    data = await getHeatmapData(month, year, groupBy || 'day');
+                } else if (type === 'treemap') {
+                    data = await getTreemapData(month, year, hierarchyType || 'cluster');
+                } else {
+                    return res.status(400).json({ 
+                        error: 'Invalid type. Must be "heatmap" or "treemap"' 
+                    });
+                }
+                break;
+                
+            case 'transactions':
+                if (!month || !year) {
+                    return res.status(400).json({ 
+                        error: 'Missing required parameters: month, year' 
+                    });
+                }
+                data = await getTransactions(month, year, category, search);
+                break;
+                
+            case 'analysis':
+                if (!month || !year) {
+                    return res.status(400).json({ 
+                        error: 'Missing required parameters: month, year' 
+                    });
+                }
+                data = await analyzeHabits(month, year);
+                break;
+                
+            default:
+                return res.status(400).json({ 
+                    error: 'Invalid service. Must be "visualization", "transactions", or "analysis"' 
+                });
         }
         
         res.status(200).json(data);
         
     } catch (error) {
-        console.error('Visualization API error:', error);
+        console.error('Unified API error:', error);
         res.status(500).json({ 
             error: 'Internal server error',
             details: error.message 
