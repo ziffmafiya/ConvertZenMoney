@@ -101,24 +101,6 @@
             </div>
         </section>
 
-        <!-- Секция отслеживания кредитов -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-4">Отслеживание кредитов</h3>
-            <div id="loansList" class="space-y-4">
-                <!-- Loans will be listed here -->
-            </div>
-            <button id="addLoanButton" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Добавить кредит</button>
-        </section>
-
-        <!-- Секция отслеживания кредитных карт -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-4">Отслеживание кредитных карт</h3>
-            <div id="creditCardsList" class="space-y-4">
-                <!-- Credit cards will be listed here -->
-            </div>
-            <button id="addCreditCardButton" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Добавить кредитную карту</button>
-        </section>
-
         <!-- Секция графика "Траты vs. Доходы" -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
@@ -368,68 +350,6 @@
             <div class="flex justify-end gap-4 mt-6">
                 <button id="closeGoalModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Закрыть</button>
                 <button id="saveGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно добавления кредита -->
-    <div id="addLoanModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
-            <h2 class="text-2xl font-bold text-white mb-4">Добавить новый кредит</h2>
-            <form id="addLoanForm" class="space-y-4">
-                <div>
-                    <label for="loanPrincipal" class="block mb-2 text-sm font-medium text-gray-300">Сумма кредита (грн)</label>
-                    <input type="number" id="loanPrincipal" placeholder="Например: 50000" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="loanInterestRate" class="block mb-2 text-sm font-medium text-gray-300">Процентная ставка (%)</label>
-                    <input type="number" step="0.01" id="loanInterestRate" placeholder="Например: 15.5" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="loanTermMonths" class="block mb-2 text-sm font-medium text-gray-300">Срок (в месяцах)</label>
-                    <input type="number" id="loanTermMonths" placeholder="Например: 24" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="loanStartDate" class="block mb-2 text-sm font-medium text-gray-300">Дата начала</label>
-                    <input type="date" id="loanStartDate" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="loanPaidAmount" class="block mb-2 text-sm font-medium text-gray-300">Сумма уже выплачена (грн)</label>
-                    <input type="number" id="loanPaidAmount" placeholder="Например: 10000" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value="0">
-                </div>
-            </form>
-            <div class="flex justify-end gap-4 mt-6">
-                <button id="closeLoanModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
-                <button id="saveLoanButton" type="submit" form="addLoanForm" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно добавления кредитной карты -->
-    <div id="addCreditCardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
-            <h2 class="text-2xl font-bold text-white mb-4">Добавить кредитную карту</h2>
-            <form id="addCreditCardForm" class="space-y-4">
-                <div>
-                    <label for="cardName" class="block mb-2 text-sm font-medium text-gray-300">Название карты</label>
-                    <input type="text" id="cardName" placeholder="Например: Gold" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="gracePeriodDays" class="block mb-2 text-sm font-medium text-gray-300">Льготный период (дни)</label>
-                    <input type="number" id="gracePeriodDays" placeholder="Например: 55" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="statementDay" class="block mb-2 text-sm font-medium text-gray-300">День выписки (1-31)</label>
-                    <input type="number" id="statementDay" min="1" max="31" placeholder="Например: 25" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-                <div>
-                    <label for="paymentDueDay" class="block mb-2 text-sm font-medium text-gray-300">День оплаты (1-31)</label>
-                    <input type="number" id="paymentDueDay" min="1" max="31" placeholder="Например: 15" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                </div>
-            </form>
-            <div class="flex justify-end gap-4 mt-6">
-                <button id="closeCreditCardModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
-                <button id="saveCreditCardButton" type="submit" form="addCreditCardForm" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
             </div>
         </div>
     </div>
@@ -1562,110 +1482,6 @@
                     document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
                     target.classList.remove('hidden');
                 });
-            });
-
-            // --- Loan and Credit Card Functionality ---
-            const addLoanButton = document.getElementById('addLoanButton');
-            const addCreditCardButton = document.getElementById('addCreditCardButton');
-            const addLoanModal = document.getElementById('addLoanModal');
-            const addCreditCardModal = document.getElementById('addCreditCardModal');
-            const closeLoanModalButton = document.getElementById('closeLoanModalButton');
-            const closeCreditCardModalButton = document.getElementById('closeCreditCardModalButton');
-            const addLoanForm = document.getElementById('addLoanForm');
-            const addCreditCardForm = document.getElementById('addCreditCardForm');
-
-            addLoanButton.addEventListener('click', () => {
-                addLoanModal.classList.remove('hidden');
-            });
-            closeLoanModalButton.addEventListener('click', () => {
-                addLoanModal.classList.add('hidden');
-            });
-            addCreditCardButton.addEventListener('click', () => {
-                addCreditCardModal.classList.remove('hidden');
-            });
-            closeCreditCardModalButton.addEventListener('click', () => {
-                addCreditCardModal.classList.add('hidden');
-            });
-
-            addLoanForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const principal = parseFloat(formData.get('loanPrincipal'));
-                const paidAmount = parseFloat(document.getElementById('loanPaidAmount').value) || 0;
-                const loanData = {
-                    principal: principal,
-                    interest_rate: parseFloat(formData.get('loanInterestRate')),
-                    term_months: parseInt(formData.get('loanTermMonths')),
-                    start_date: formData.get('loanStartDate'),
-                    monthly_payment: 0, // Will be calculated
-                    remaining_balance: principal - paidAmount,
-                    paid_amount: paidAmount
-                };
-
-                console.log('Sending loan data:', loanData);
-
-                try {
-                    const response = await fetch('/api/loan-credit/track-loan', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(loanData)
-                    });
-
-                    console.log('Response status:', response.status);
-                    
-                    if (!response.ok) {
-                        // Log response text for debugging
-                        const responseText = await response.text();
-                        console.error('Server error response:', responseText);
-                        
-                        try {
-                            const err = JSON.parse(responseText);
-                            throw new Error(err.error || 'Network response was not ok');
-                        } catch (parseError) {
-                            throw new Error(`Server error: ${response.status} - ${responseText.slice(0, 100)}`);
-                        }
-                    }
-                    
-                    const data = await response.json();
-                    console.log('Loan created:', data);
-                    alert(`Кредит добавлен! ID: ${data.id}`);
-                    addLoanModal.classList.add('hidden');
-                    location.reload();
-                } catch (error) {
-                    console.error('Error adding loan:', error);
-                    alert(`Ошибка при добавлении кредита: ${error.message}`);
-                }
-            });
-
-            addCreditCardForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const cardData = {
-                    card_id: null, // Indicates new card
-                    card_name: formData.get('cardName'),
-                    grace_period_days: parseInt(formData.get('gracePeriodDays')),
-                    statement_day: parseInt(formData.get('statementDay')),
-                    payment_due_day: parseInt(formData.get('paymentDueDay'))
-                };
-
-                try {
-                    const response = await fetch('/api/loan-credit/set-grace-period', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cardData)
-                    });
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Network response was not ok');
-                    }
-                    const data = await response.json();
-                    alert(`Карта добавлена! ID: ${data.id}`);
-                    addCreditCardModal.classList.add('hidden');
-                    location.reload();
-                } catch (error) {
-                    console.error('Error adding credit card:', error);
-                    alert(`Ошибка при добавлении карты: ${error.message}`);
-                }
             });
 
             // --- Goal Modal Logic ---
