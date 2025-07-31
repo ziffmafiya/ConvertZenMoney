@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.0.0"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Tektur:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -289,6 +291,78 @@
             <button id="prevHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
             <span id="habitPageInfo" class="text-gray-400">Страница 1 из 1</span>
             <button id="nextHabitPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        </div>
+    </section>
+
+    <!-- Секция визуализаций -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">📊 Визуализации финансовых данных</h2>
+        <p class="text-gray-400 mb-6">Интерактивные графики для анализа трат по времени и категориям</p>
+        
+        <!-- Контролы для визуализаций -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="flex flex-col">
+                <label class="text-sm font-medium text-gray-300 mb-2">Группировка Heatmap:</label>
+                <select id="heatmapGroupBy" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                    <option value="day">По дням</option>
+                    <option value="hour">По часам</option>
+                </select>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm font-medium text-gray-300 mb-2">Иерархия Treemap:</label>
+                <select id="treemapHierarchy" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                    <option value="cluster">По кластерам</option>
+                    <option value="habit">По привычкам</option>
+                </select>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm font-medium text-gray-300 mb-2">Обновить:</label>
+                <button id="updateVisualizationsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition duration-300">
+                    🔄 Обновить
+                </button>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-white" id="vizTotalSpent">-</div>
+                <div class="text-sm text-gray-400">Общая сумма трат</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-white" id="vizTotalTransactions">-</div>
+                <div class="text-sm text-gray-400">Транзакций</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-white" id="vizTotalCategories">-</div>
+                <div class="text-sm text-gray-400">Категорий</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+                <div class="text-2xl font-bold text-white" id="vizAvgPerDay">-</div>
+                <div class="text-sm text-gray-400">Среднее в день</div>
+            </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">🔥 Heatmap трат</h3>
+            <p class="text-gray-400 text-sm mb-4">Интенсивность трат по дням/часам и категориям. Чем темнее цвет, тем больше сумма трат.</p>
+            <div class="bg-gray-800 rounded-lg p-4 h-96">
+                <div class="loading text-center text-gray-400" id="heatmapLoading">Загрузка данных...</div>
+                <canvas id="heatmapChart" style="display: none;"></canvas>
+                <div class="error text-center text-red-400" id="heatmapError" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Treemap -->
+        <div>
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">🌳 Treemap трат</h3>
+            <p class="text-gray-400 text-sm mb-4">Иерархическая структура трат: категория → кластер/привычка. Размер блока = сумма трат, цвет = тренд.</p>
+            <div class="bg-gray-800 rounded-lg p-4 h-96">
+                <div class="loading text-center text-gray-400" id="treemapLoading">Загрузка данных...</div>
+                <canvas id="treemapChart" style="display: none;"></canvas>
+                <div class="error text-center text-red-400" id="treemapError" style="display: none;"></div>
+            </div>
         </div>
     </section>
 
@@ -2524,12 +2598,173 @@
                 }
             };
 
+            // --- Визуализации ---
+            let heatmapChart = null;
+            let treemapChart = null;
+
+            // Импорт функций визуализации
+            async function loadVisualizationModule() {
+                try {
+                    const module = await import('./api/visualization-unified.js');
+                    return module;
+                } catch (error) {
+                    console.error('Ошибка загрузки модуля визуализации:', error);
+                    return null;
+                }
+            }
+
+            // Загрузка визуализаций
+            async function loadVisualizations() {
+                const vizModule = await loadVisualizationModule();
+                if (!vizModule) {
+                    showVizError('heatmap', 'Ошибка загрузки модуля визуализации');
+                    showVizError('treemap', 'Ошибка загрузки модуля визуализации');
+                    return;
+                }
+
+                const month = parseInt(filterMonthInput.value) || new Date().getMonth() + 1;
+                const year = parseInt(filterYearInput.value) || new Date().getFullYear();
+                const heatmapGroupBy = document.getElementById('heatmapGroupBy').value;
+                const treemapHierarchy = document.getElementById('treemapHierarchy').value;
+
+                showVizLoading('heatmap');
+                showVizLoading('treemap');
+
+                try {
+                    const [heatmapData, treemapData] = await Promise.all([
+                        vizModule.getHeatmapData(month, year, heatmapGroupBy),
+                        vizModule.getTreemapData(month, year, treemapHierarchy)
+                    ]);
+
+                    updateVizStats(heatmapData, treemapData);
+                    createHeatmapVisualization(heatmapData, month, year, vizModule);
+                    createTreemapVisualization(treemapData, month, year, vizModule);
+
+                } catch (error) {
+                    console.error('Error loading visualizations:', error);
+                    showVizError('heatmap', 'Ошибка загрузки данных Heatmap');
+                    showVizError('treemap', 'Ошибка загрузки данных Treemap');
+                }
+            }
+
+            // Создание Heatmap визуализации
+            function createHeatmapVisualization(data, month, year, vizModule) {
+                const canvas = document.getElementById('heatmapChart');
+                const loading = document.getElementById('heatmapLoading');
+                const error = document.getElementById('heatmapError');
+
+                loading.style.display = 'none';
+                error.style.display = 'none';
+                canvas.style.display = 'block';
+
+                if (heatmapChart) {
+                    vizModule.destroyVisualization(heatmapChart);
+                }
+
+                heatmapChart = vizModule.createHeatmap('heatmapChart', data, {
+                    month: `${getMonthName(month)} ${year}`
+                });
+
+                if (!heatmapChart) {
+                    showVizError('heatmap', 'Ошибка создания Heatmap');
+                }
+            }
+
+            // Создание Treemap визуализации
+            function createTreemapVisualization(data, month, year, vizModule) {
+                const canvas = document.getElementById('treemapChart');
+                const loading = document.getElementById('treemapLoading');
+                const error = document.getElementById('treemapError');
+
+                loading.style.display = 'none';
+                error.style.display = 'none';
+                canvas.style.display = 'block';
+
+                if (treemapChart) {
+                    vizModule.destroyVisualization(treemapChart);
+                }
+
+                treemapChart = vizModule.createTreemap('treemapChart', data, {
+                    month: `${getMonthName(month)} ${year}`
+                });
+
+                if (!treemapChart) {
+                    showVizError('treemap', 'Ошибка создания Treemap');
+                }
+            }
+
+            // Обновление статистики визуализаций
+            function updateVizStats(heatmapData, treemapData) {
+                const totalSpent = treemapData.metadata?.totalSpent || 0;
+                const totalTransactions = treemapData.metadata?.totalTransactions || 0;
+                const totalCategories = heatmapData.metadata?.totalCategories || 0;
+                
+                const daysInMonth = new Date(
+                    parseInt(filterYearInput.value),
+                    parseInt(filterMonthInput.value) || new Date().getMonth() + 1,
+                    0
+                ).getDate();
+                const avgPerDay = totalSpent / daysInMonth;
+
+                document.getElementById('vizTotalSpent').textContent = `${totalSpent.toFixed(2)} ₽`;
+                document.getElementById('vizTotalTransactions').textContent = totalTransactions;
+                document.getElementById('vizTotalCategories').textContent = totalCategories;
+                document.getElementById('vizAvgPerDay').textContent = `${avgPerDay.toFixed(2)} ₽`;
+            }
+
+            // Показать загрузку визуализации
+            function showVizLoading(type) {
+                const loading = document.getElementById(`${type}Loading`);
+                const canvas = document.getElementById(`${type}Chart`);
+                const error = document.getElementById(`${type}Error`);
+
+                loading.style.display = 'flex';
+                canvas.style.display = 'none';
+                error.style.display = 'none';
+            }
+
+            // Показать ошибку визуализации
+            function showVizError(type, message) {
+                const loading = document.getElementById(`${type}Loading`);
+                const canvas = document.getElementById(`${type}Chart`);
+                const error = document.getElementById(`${type}Error`);
+
+                loading.style.display = 'none';
+                canvas.style.display = 'none';
+                error.style.display = 'flex';
+                error.textContent = message;
+            }
+
+            // Получить название месяца
+            function getMonthName(month) {
+                const months = [
+                    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+                ];
+                return months[month - 1];
+            }
+
+            // Обработчики событий для визуализаций
+            document.addEventListener('DOMContentLoaded', function() {
+                const updateVizBtn = document.getElementById('updateVisualizationsBtn');
+                if (updateVizBtn) {
+                    updateVizBtn.addEventListener('click', loadVisualizations);
+                }
+
+                // Загружаем визуализации при изменении фильтров
+                filterMonthInput.addEventListener('change', loadVisualizations);
+                filterYearInput.addEventListener('change', loadVisualizations);
+            });
+
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
             fetchAndRenderLoans();
             fetchAndRenderCreditCards();
+            
+            // Загружаем визуализации после основной загрузки
+            setTimeout(loadVisualizations, 1000);
         });
     </script>
 
