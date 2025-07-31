@@ -29,6 +29,9 @@ export default async function handler(req, res) {
             case 'PATCH':
                 return await handleRecordPayment(supabase, req, res);
             
+            case 'DELETE':
+                return await handleDeleteLoan(supabase, req, res);
+            
             default:
                 return res.status(405).json({ error: 'Method Not Allowed' });
         }
@@ -58,18 +61,31 @@ async function handleGetLoans(supabase, res) {
     }
 }
 
+// Функция для расчета ежемесячного платежа
+function calculateMonthlyPayment(principal, interestRate, termMonths) {
+    const monthlyRate = interestRate / 100 / 12;
+    if (monthlyRate === 0) {
+        return principal / termMonths;
+    }
+    return principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
+}
+
 // Функция для добавления нового кредита
 async function handleAddLoan(supabase, req, res) {
-    const { principal, interest_rate, term_months, start_date, monthly_payment } = req.body;
+    const { principal, interest_rate, term_months, start_date, paid_amount } = req.body;
 
     // Валидация обязательных полей
-    if (!principal || !interest_rate || !term_months || !start_date || !monthly_payment) {
-        return res.status(400).json({ error: 'Все поля обязательны для заполнения' });
+    if (!principal || !interest_rate || !term_months || !start_date) {
+        return res.status(400).json({ error: 'Основная сумма, процентная ставка, срок и дата открытия обязательны для заполнения' });
     }
 
     try {
-        // Вычисляем оставшийся баланс (равен основной сумме в начале)
-        const remaining_balance = parseFloat(principal);
+        // Автоматически рассчитываем ежемесячный платеж
+        const monthly_payment = calculateMonthlyPayment(parseFloat(principal), parseFloat(interest_rate), parseInt(term_months));
+        
+        // Вычисляем оставшийся баланс (основная сумма минус уже выплаченная)
+        const initialPaidAmount = paid_amount ? parseFloat(paid_amount) : 0.00;
+        const remaining_balance = Math.max(0, parseFloat(principal) - initialPaidAmount);
 
         // Вставляем новый кредит в таблицу 'loans'
         const { data, error } = await supabase
@@ -79,9 +95,9 @@ async function handleAddLoan(supabase, req, res) {
                 interest_rate: parseFloat(interest_rate),
                 term_months: parseInt(term_months),
                 start_date: start_date,
-                monthly_payment: parseFloat(monthly_payment),
+                monthly_payment: monthly_payment,
                 remaining_balance: remaining_balance,
-                paid_amount: 0.00
+                paid_amount: initialPaidAmount
             }])
             .select();
 
@@ -194,6 +210,36 @@ async function handleRecordPayment(supabase, req, res) {
         });
     } catch (error) {
         console.error('Error in handleRecordPayment:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// Функция для удаления кредита
+async function handleDeleteLoan(supabase, req, res) {
+    const { id } = req.query;
+
+    // Валидация обязательных полей
+    if (!id) {
+        return res.status(400).json({ error: 'ID кредита обязателен' });
+    }
+
+    try {
+        // Удаляем кредит из таблицы 'loans'
+        const { error } = await supabase
+            .from('loans')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Supabase delete error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.status(200).json({ 
+            message: 'Кредит успешно удален'
+        });
+    } catch (error) {
+        console.error('Error in handleDeleteLoan:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 } 

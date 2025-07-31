@@ -344,8 +344,8 @@
                     <input type="date" id="loanStartDate" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                 </div>
                 <div>
-                    <label for="loanMonthlyPayment" class="block mb-2 text-sm font-medium text-gray-300">Ежемесячный платеж (грн)</label>
-                    <input type="number" id="loanMonthlyPayment" step="0.01" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <label for="loanPaidAmount" class="block mb-2 text-sm font-medium text-gray-300">Уже выплачено (грн)</label>
+                    <input type="number" id="loanPaidAmount" step="0.01" value="0" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                 </div>
             </form>
             <div class="flex justify-end gap-4 mt-6">
@@ -1996,10 +1996,10 @@
                 const interestRate = document.getElementById('loanInterestRate').value;
                 const termMonths = document.getElementById('loanTermMonths').value;
                 const startDate = document.getElementById('loanStartDate').value;
-                const monthlyPayment = document.getElementById('loanMonthlyPayment').value;
+                const paidAmount = document.getElementById('loanPaidAmount').value;
 
-                if (!principal || !interestRate || !termMonths || !startDate || !monthlyPayment) {
-                    alert('Пожалуйста, заполните все поля');
+                if (!principal || !interestRate || !termMonths || !startDate) {
+                    alert('Пожалуйста, заполните обязательные поля');
                     return;
                 }
 
@@ -2014,7 +2014,7 @@
                              interest_rate: parseFloat(interestRate),
                              term_months: parseInt(termMonths),
                              start_date: startDate,
-                             monthly_payment: parseFloat(monthlyPayment)
+                             paid_amount: parseFloat(paidAmount || 0)
                          }),
                      });
 
@@ -2125,7 +2125,10 @@
                         <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
                             <div class="flex justify-between items-start mb-3">
                                 <h3 class="text-lg font-semibold text-white">Кредит #${loan.id}</h3>
-                                <span class="text-sm text-gray-400">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-400">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
+                                    <button onclick="deleteLoan(${loan.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Удалить</button>
+                                </div>
                             </div>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
@@ -2286,7 +2289,10 @@
                         <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
                             <div class="flex justify-between items-start mb-3">
                                 <h3 class="text-lg font-semibold text-white">${card.card_name}</h3>
-                                <span class="text-sm text-gray-400">#${card.id}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-400">#${card.id}</span>
+                                    <button onclick="deleteCreditCard(${card.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Удалить</button>
+                                </div>
                             </div>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
@@ -2324,6 +2330,62 @@
                     `;
                 }).join('');
             }
+
+            // Глобальная функция для удаления кредита
+            window.deleteLoan = async function(loanId) {
+                if (!confirm('Вы уверены, что хотите удалить этот кредит?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/loans?id=${loanId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Кредит успешно удален!');
+                        fetchAndRenderLoans();
+                    } else {
+                        alert(`Ошибка при удалении кредита: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting loan:', error);
+                    alert('Произошла ошибка при удалении кредита');
+                }
+            };
+
+            // Глобальная функция для удаления кредитной карты
+            window.deleteCreditCard = async function(cardId) {
+                if (!confirm('Вы уверены, что хотите удалить эту кредитную карту?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/credit-cards?id=${cardId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Кредитная карта успешно удалена!');
+                        fetchAndRenderCreditCards();
+                    } else {
+                        alert(`Ошибка при удалении кредитной карты: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting credit card:', error);
+                    alert('Произошла ошибка при удалении кредитной карты');
+                }
+            };
 
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных

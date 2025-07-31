@@ -26,6 +26,9 @@ export default async function handler(req, res) {
             case 'PUT':
                 return await handleUpdateCreditCard(supabase, req, res);
 
+            case 'DELETE':
+                return await handleDeleteCreditCard(supabase, req, res);
+
             default:
                 return res.status(405).json({ error: 'Method Not Allowed' });
         }
@@ -156,6 +159,36 @@ async function handleUpdateCreditCard(supabase, req, res) {
         });
     } catch (error) {
         console.error('Error in handleUpdateCreditCard:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// Функция для удаления кредитной карты
+async function handleDeleteCreditCard(supabase, req, res) {
+    const { id } = req.query;
+
+    // Валидация обязательных полей
+    if (!id) {
+        return res.status(400).json({ error: 'ID кредитной карты обязателен' });
+    }
+
+    try {
+        // Удаляем кредитную карту из таблицы 'credit_cards'
+        const { error } = await supabase
+            .from('credit_cards')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Supabase delete error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.status(200).json({ 
+            message: 'Кредитная карта успешно удалена'
+        });
+    } catch (error) {
+        console.error('Error in handleDeleteCreditCard:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 } 
