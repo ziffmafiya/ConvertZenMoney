@@ -20,8 +20,7 @@
 
 ```
 api/
-├── visualization-data.js    # Унифицированный API для получения данных визуализаций
-└── visualization-client.js  # Клиентские функции для работы с визуализациями
+└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
 
 visualization-demo.html      # Демонстрационная страница
 VISUALIZATION_README.md      # Документация (этот файл)
@@ -52,7 +51,7 @@ import {
     createTreemap, 
     updateVisualization, 
     destroyVisualization 
-} from './api/visualization-client.js';
+} from './api/visualization-unified.js';
 ```
 
 ### 3. Создание визуализаций
@@ -283,7 +282,7 @@ try {
     <canvas id="treemap" width="800" height="500"></canvas>
     
     <script type="module">
-        import { getHeatmapData, getTreemapData, createHeatmap, createTreemap } from './api/visualization-client.js';
+        import { getHeatmapData, getTreemapData, createHeatmap, createTreemap } from './api/visualization-unified.js';
         
         async function init() {
             const heatmapData = await getHeatmapData(12, 2024, 'day');
