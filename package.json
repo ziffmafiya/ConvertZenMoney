@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
-    "@supabase/supabase-js": "^2.44.2"
+    "@supabase/supabase-js": "^2.44.2",
+    "aspose-ocr-cloud": "^23.12.0"
   }
 }

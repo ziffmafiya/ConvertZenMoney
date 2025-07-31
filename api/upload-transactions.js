@@ -36,6 +36,8 @@ async function getEmbedding(text) {
     }
 }
 
+
+
 /**
  * Основной обработчик для API-маршрута '/api/upload-transactions'.
  * Обрабатывает входящие запросы на загрузку транзакций в базу данных Supabase.
