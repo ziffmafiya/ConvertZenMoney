@@ -19,24 +19,28 @@
 - `liabilities` - для хранения обязательств  
 - `net_worth_history` - для отслеживания истории изменений
 
-### 2. API Endpoints
+### 2. API Endpoint
 
-#### Основной API для Net Worth (`api/net-worth.js`)
-- **GET** `/api/net-worth?action=summary` - получение сводки
-- **GET** `/api/net-worth?action=history&period=6months` - получение истории
-- **GET** `/api/net-worth?action=assets` - получение активов
-- **GET** `/api/net-worth?action=liabilities` - получение обязательств
-- **GET** `/api/net-worth?action=detailed` - получение детальной информации
-- **POST** `/api/net-worth` - добавление актива или обязательства
-- **PUT** `/api/net-worth` - обновление актива или обязательства
-- **DELETE** `/api/net-worth?type=asset&id=1` - удаление актива
-- **DELETE** `/api/net-worth?type=liability&id=1` - удаление обязательства
+#### Объединенный API для Net Worth (`api/net-worth-unified.js`)
+Этот файл содержит всю функциональность для работы с Net Worth:
 
-#### API для синхронизации (`api/sync-net-worth.js`)
-- **POST** `/api/sync-net-worth` - синхронизация кредитов и кредитных карт
+**GET запросы:**
+- **GET** `/api/net-worth-unified?action=summary` - получение сводки
+- **GET** `/api/net-worth-unified?action=history&period=6months` - получение истории
+- **GET** `/api/net-worth-unified?action=assets` - получение активов
+- **GET** `/api/net-worth-unified?action=liabilities` - получение обязательств
+- **GET** `/api/net-worth-unified?action=detailed` - получение детальной информации
 
-#### API для интеграции с существующими кредитами (`api/sync-existing-loans.js`)
-- **POST** `/api/sync-existing-loans` - синхронизация существующих кредитов и получение сводки
+**POST запросы:**
+- **POST** `/api/net-worth-unified` - добавление актива или обязательства
+- **POST** `/api/net-worth-unified` - синхронизация данных (с параметром `action`)
+
+**PUT запросы:**
+- **PUT** `/api/net-worth-unified` - обновление актива или обязательства
+
+**DELETE запросы:**
+- **DELETE** `/api/net-worth-unified?type=asset&id=1` - удаление актива
+- **DELETE** `/api/net-worth-unified?type=liability&id=1` - удаление обязательства
 
 ### 3. UI Компоненты
 
@@ -159,22 +163,22 @@ Net Worth рассчитывается автоматически как: `Об�
 
 ```javascript
 // Сводка Net Worth
-fetch('/api/net-worth?action=summary')
+fetch('/api/net-worth-unified?action=summary')
 
 // История Net Worth
-fetch('/api/net-worth?action=history&period=6months')
+fetch('/api/net-worth-unified?action=history&period=6months')
 
 // Все активы
-fetch('/api/net-worth?action=assets')
+fetch('/api/net-worth-unified?action=assets')
 
 // Все обязательства
-fetch('/api/net-worth?action=liabilities')
+fetch('/api/net-worth-unified?action=liabilities')
 
 // Детальная информация
-fetch('/api/net-worth?action=detailed')
+fetch('/api/net-worth-unified?action=detailed')
 
 // Сводка по существующим кредитам
-fetch('/api/sync-existing-loans', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'get_loans_summary' })
@@ -185,7 +189,7 @@ fetch('/api/sync-existing-loans', {
 
 ```javascript
 // Добавление актива
-fetch('/api/net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -200,7 +204,7 @@ fetch('/api/net-worth', {
 })
 
 // Добавление обязательства
-fetch('/api/net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -218,7 +222,7 @@ fetch('/api/net-worth', {
 ### Обновление
 
 ```javascript
-fetch('/api/net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -236,38 +240,38 @@ fetch('/api/net-worth', {
 
 ```javascript
 // Удаление актива
-fetch('/api/net-worth?type=asset&id=1', { method: 'DELETE' })
+fetch('/api/net-worth-unified?type=asset&id=1', { method: 'DELETE' })
 
 // Удаление обязательства
-fetch('/api/net-worth?type=liability&id=1', { method: 'DELETE' })
+fetch('/api/net-worth-unified?type=liability&id=1', { method: 'DELETE' })
 ```
 
 ### Синхронизация
 
 ```javascript
 // Синхронизация существующих кредитов
-fetch('/api/sync-existing-loans', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'sync_existing_loans' })
 })
 
 // Синхронизация кредитов
-fetch('/api/sync-net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'sync_loans' })
 })
 
 // Синхронизация кредитных карт
-fetch('/api/sync-net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'sync_credit_cards' })
 })
 
 // Синхронизация всех данных
-fetch('/api/sync-net-worth', {
+fetch('/api/net-worth-unified', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'sync_all' })
@@ -369,6 +373,22 @@ CREATE TABLE net_worth_history (
 - Срок кредита
 - Ежемесячный платеж
 - Идентификатор исходного кредита для связи
+
+## Архитектура API
+
+### Объединенный подход
+Все функции Net Worth объединены в одном файле `api/net-worth-unified.js` для упрощения:
+- **Меньше файлов** - проще управление и развертывание
+- **Единая точка входа** - все запросы идут через один endpoint
+- **Консистентность** - единый стиль обработки ошибок и логирования
+- **Простота отладки** - все функции в одном месте
+
+### Структура функций
+API организован по функциональным блокам:
+- **Основные функции Net Worth** - CRUD операции с активами и обязательствами
+- **Операции с данными** - добавление, обновление, удаление
+- **Синхронизация с существующими данными** - интеграция с кредитами и кредитными картами
+- **Вспомогательные функции** - обновление истории, расчеты
 
 ## Возможные улучшения
 

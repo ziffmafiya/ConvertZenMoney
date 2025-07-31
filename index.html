@@ -2628,7 +2628,7 @@
             // Функция загрузки и отображения Net Worth
             async function fetchAndRenderNetWorth() {
                 try {
-                    const response = await fetch('/api/net-worth?action=detailed');
+                    const response = await fetch('/api/net-worth-unified?action=detailed');
                     const data = await response.json();
                     
                     if (response.ok) {
@@ -2742,7 +2742,7 @@
             // Отображение графика истории Net Worth
             async function renderNetWorthHistoryChart(period = '6months') {
                 try {
-                    const response = await fetch(`/api/net-worth?action=history&period=${period}`);
+                    const response = await fetch(`/api/net-worth-unified?action=history&period=${period}`);
                     const historyData = await response.json();
                     
                     if (response.ok && historyData.length > 0) {
@@ -2851,7 +2851,7 @@
                 }
 
                 try {
-                    const response = await fetch(`/api/net-worth?type=asset&id=${assetId}`, {
+                    const response = await fetch(`/api/net-worth-unified?type=asset&id=${assetId}`, {
                         method: 'DELETE'
                     });
 
@@ -2888,7 +2888,7 @@
                 }
 
                 try {
-                    const response = await fetch(`/api/net-worth?type=liability&id=${liabilityId}`, {
+                    const response = await fetch(`/api/net-worth-unified?type=liability&id=${liabilityId}`, {
                         method: 'DELETE'
                     });
 
@@ -2941,26 +2941,26 @@
                     document.getElementById('editLiabilityModal').classList.remove('flex');
                 });
 
-                // Сохранение актива
-                document.getElementById('saveAssetButton').addEventListener('click', async function() {
-                    const formData = {
-                        name: document.getElementById('assetName').value,
-                        type: document.getElementById('assetType').value,
-                        value: document.getElementById('assetValue').value,
-                        description: document.getElementById('assetDescription').value
-                    };
+                                    // Сохранение актива
+                    document.getElementById('saveAssetButton').addEventListener('click', async function() {
+                        const formData = {
+                            name: document.getElementById('assetName').value,
+                            type: document.getElementById('assetType').value,
+                            value: document.getElementById('assetValue').value,
+                            description: document.getElementById('assetDescription').value
+                        };
 
-                    try {
-                        const response = await fetch('/api/net-worth', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                type: 'asset',
-                                data: formData
-                            })
-                        });
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    type: 'asset',
+                                    data: formData
+                                })
+                            });
 
                         if (response.ok) {
                             alert('Актив успешно добавлен!');
@@ -2978,26 +2978,26 @@
                     }
                 });
 
-                // Сохранение обязательства
-                document.getElementById('saveLiabilityButton').addEventListener('click', async function() {
-                    const formData = {
-                        name: document.getElementById('liabilityName').value,
-                        type: document.getElementById('liabilityType').value,
-                        amount: document.getElementById('liabilityAmount').value,
-                        description: document.getElementById('liabilityDescription').value
-                    };
+                                    // Сохранение обязательства
+                    document.getElementById('saveLiabilityButton').addEventListener('click', async function() {
+                        const formData = {
+                            name: document.getElementById('liabilityName').value,
+                            type: document.getElementById('liabilityType').value,
+                            amount: document.getElementById('liabilityAmount').value,
+                            description: document.getElementById('liabilityDescription').value
+                        };
 
-                    try {
-                        const response = await fetch('/api/net-worth', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                type: 'liability',
-                                data: formData
-                            })
-                        });
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    type: 'liability',
+                                    data: formData
+                                })
+                            });
 
                         if (response.ok) {
                             alert('Обязательство успешно добавлено!');
@@ -3015,28 +3015,28 @@
                     }
                 });
 
-                // Сохранение изменений актива
-                document.getElementById('saveEditAssetButton').addEventListener('click', async function() {
-                    const assetId = document.getElementById('editAssetId').value;
-                    const formData = {
-                        name: document.getElementById('editAssetName').value,
-                        type: document.getElementById('editAssetType').value,
-                        value: document.getElementById('editAssetValue').value,
-                        description: document.getElementById('editAssetDescription').value
-                    };
+                                    // Сохранение изменений актива
+                    document.getElementById('saveEditAssetButton').addEventListener('click', async function() {
+                        const assetId = document.getElementById('editAssetId').value;
+                        const formData = {
+                            name: document.getElementById('editAssetName').value,
+                            type: document.getElementById('editAssetType').value,
+                            value: document.getElementById('editAssetValue').value,
+                            description: document.getElementById('editAssetDescription').value
+                        };
 
-                    try {
-                        const response = await fetch('/api/net-worth', {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                type: 'asset',
-                                id: assetId,
-                                data: formData
-                            })
-                        });
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    type: 'asset',
+                                    id: assetId,
+                                    data: formData
+                                })
+                            });
 
                         if (response.ok) {
                             alert('Актив успешно обновлен!');
@@ -3053,28 +3053,28 @@
                     }
                 });
 
-                // Сохранение изменений обязательства
-                document.getElementById('saveEditLiabilityButton').addEventListener('click', async function() {
-                    const liabilityId = document.getElementById('editLiabilityId').value;
-                    const formData = {
-                        name: document.getElementById('editLiabilityName').value,
-                        type: document.getElementById('editLiabilityType').value,
-                        amount: document.getElementById('editLiabilityAmount').value,
-                        description: document.getElementById('editLiabilityDescription').value
-                    };
+                                    // Сохранение изменений обязательства
+                    document.getElementById('saveEditLiabilityButton').addEventListener('click', async function() {
+                        const liabilityId = document.getElementById('editLiabilityId').value;
+                        const formData = {
+                            name: document.getElementById('editLiabilityName').value,
+                            type: document.getElementById('editLiabilityType').value,
+                            amount: document.getElementById('editLiabilityAmount').value,
+                            description: document.getElementById('editLiabilityDescription').value
+                        };
 
-                    try {
-                        const response = await fetch('/api/net-worth', {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                type: 'liability',
-                                id: liabilityId,
-                                data: formData
-                            })
-                        });
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    type: 'liability',
+                                    id: liabilityId,
+                                    data: formData
+                                })
+                            });
 
                         if (response.ok) {
                             alert('Обязательство успешно обновлено!');
@@ -3112,7 +3112,7 @@
                 document.getElementById('syncExistingLoansButton').addEventListener('click', async function() {
                     if (confirm('Синхронизировать существующие кредиты с Net Worth? Это добавит все ваши кредиты как обязательства.')) {
                         try {
-                            const response = await fetch('/api/sync-existing-loans', {
+                            const response = await fetch('/api/net-worth-unified', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -3148,18 +3148,18 @@
                     document.getElementById('syncResults').classList.add('hidden');
                 });
 
-                // Синхронизация кредитов
-                document.getElementById('syncLoansButton').addEventListener('click', async function() {
-                    try {
-                        const response = await fetch('/api/sync-net-worth', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                action: 'sync_loans'
-                            })
-                        });
+                                    // Синхронизация кредитов
+                    document.getElementById('syncLoansButton').addEventListener('click', async function() {
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    action: 'sync_loans'
+                                })
+                            });
 
                         const result = await response.json();
                         
@@ -3175,18 +3175,18 @@
                     }
                 });
 
-                // Синхронизация кредитных карт
-                document.getElementById('syncCreditCardsButton').addEventListener('click', async function() {
-                    try {
-                        const response = await fetch('/api/sync-net-worth', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                action: 'sync_credit_cards'
-                            })
-                        });
+                                    // Синхронизация кредитных карт
+                    document.getElementById('syncCreditCardsButton').addEventListener('click', async function() {
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    action: 'sync_credit_cards'
+                                })
+                            });
 
                         const result = await response.json();
                         
@@ -3202,18 +3202,18 @@
                     }
                 });
 
-                // Синхронизация всех данных
-                document.getElementById('syncAllButton').addEventListener('click', async function() {
-                    try {
-                        const response = await fetch('/api/sync-net-worth', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                action: 'sync_all'
-                            })
-                        });
+                                    // Синхронизация всех данных
+                    document.getElementById('syncAllButton').addEventListener('click', async function() {
+                        try {
+                            const response = await fetch('/api/net-worth-unified', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    action: 'sync_all'
+                                })
+                            });
 
                         const result = await response.json();
                         
@@ -3268,7 +3268,7 @@
             // Функция загрузки и отображения сводки по кредитам
             async function fetchAndRenderLoansSummary() {
                 try {
-                    const response = await fetch('/api/sync-existing-loans', {
+                    const response = await fetch('/api/net-worth-unified', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
