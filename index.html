@@ -292,6 +292,102 @@
         </div>
     </section>
 
+    <!-- Секция кредитов -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Мои кредиты</h2>
+            <button id="addLoanButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Добавить кредит</button>
+        </div>
+        <p class="text-gray-400 mb-4">Отслеживайте ваши кредиты, платежи и остатки задолженности.</p>
+        <div id="loansList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Кредиты будут отображаться здесь -->
+        </div>
+        <div id="loansLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Загрузка кредитов, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
+    <!-- Секция кредитных карт -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Кредитные карты</h2>
+            <button id="addCreditCardButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Добавить карту</button>
+        </div>
+        <p class="text-gray-400 mb-4">Управляйте льготными периодами и отслеживайте задолженность по кредитным картам.</p>
+        <div id="creditCardsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Кредитные карты будут отображаться здесь -->
+        </div>
+        <div id="creditCardsLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Загрузка кредитных карт, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
+    <!-- Модальное окно добавления кредита -->
+    <div id="addLoanModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+            <h2 class="text-2xl font-bold text-white mb-4">Добавить кредит</h2>
+            <form id="addLoanForm" class="space-y-4">
+                <div>
+                    <label for="loanPrincipal" class="block mb-2 text-sm font-medium text-gray-300">Основная сумма (грн)</label>
+                    <input type="number" id="loanPrincipal" step="0.01" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="loanInterestRate" class="block mb-2 text-sm font-medium text-gray-300">Процентная ставка (%)</label>
+                    <input type="number" id="loanInterestRate" step="0.01" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="loanTermMonths" class="block mb-2 text-sm font-medium text-gray-300">Срок в месяцах</label>
+                    <input type="number" id="loanTermMonths" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="loanStartDate" class="block mb-2 text-sm font-medium text-gray-300">Дата открытия</label>
+                    <input type="date" id="loanStartDate" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="loanMonthlyPayment" class="block mb-2 text-sm font-medium text-gray-300">Ежемесячный платеж (грн)</label>
+                    <input type="number" id="loanMonthlyPayment" step="0.01" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+            </form>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeAddLoanModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
+                <button id="saveLoanButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления кредитной карты -->
+    <div id="addCreditCardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
+            <h2 class="text-2xl font-bold text-white mb-4">Добавить кредитную карту</h2>
+            <form id="addCreditCardForm" class="space-y-4">
+                <div>
+                    <label for="cardName" class="block mb-2 text-sm font-medium text-gray-300">Название карты</label>
+                    <input type="text" id="cardName" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="gracePeriodDays" class="block mb-2 text-sm font-medium text-gray-300">Льготный период (дней)</label>
+                    <input type="number" id="gracePeriodDays" required class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="statementDay" class="block mb-2 text-sm font-medium text-gray-300">День выписки (1-31, опционально)</label>
+                    <input type="number" id="statementDay" min="1" max="31" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="paymentDueDay" class="block mb-2 text-sm font-medium text-gray-300">День платежа (1-31, опционально)</label>
+                    <input type="number" id="paymentDueDay" min="1" max="31" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+                <div>
+                    <label for="unpaidBalance" class="block mb-2 text-sm font-medium text-gray-300">Текущая задолженность (грн)</label>
+                    <input type="number" id="unpaidBalance" step="0.01" value="0" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                </div>
+            </form>
+            <div class="flex justify-end gap-4 mt-6">
+                <button id="closeAddCreditCardModalButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Отмена</button>
+                <button id="saveCreditCardButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно деталей привычки -->
     <div id="habitDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-[#1f2937] p-6 rounded-lg border border-[#374151] max-w-2xl w-full">
@@ -1867,10 +1963,374 @@
                 }
             }
 
+            // --- Функциональность кредитов и кредитных карт ---
+            
+            // Элементы для кредитов
+            const addLoanButton = document.getElementById('addLoanButton');
+            const addLoanModal = document.getElementById('addLoanModal');
+            const closeAddLoanModalButton = document.getElementById('closeAddLoanModalButton');
+            const saveLoanButton = document.getElementById('saveLoanButton');
+            const loansList = document.getElementById('loansList');
+            const loansLoading = document.getElementById('loansLoading');
+            
+            // Элементы для кредитных карт
+            const addCreditCardButton = document.getElementById('addCreditCardButton');
+            const addCreditCardModal = document.getElementById('addCreditCardModal');
+            const closeAddCreditCardModalButton = document.getElementById('closeAddCreditCardModalButton');
+            const saveCreditCardButton = document.getElementById('saveCreditCardButton');
+            const creditCardsList = document.getElementById('creditCardsList');
+            const creditCardsLoading = document.getElementById('creditCardsLoading');
+
+            // Обработчики событий для кредитов
+            addLoanButton.addEventListener('click', () => {
+                addLoanModal.classList.remove('hidden');
+                addLoanModal.classList.add('flex');
+            });
+
+            closeAddLoanModalButton.addEventListener('click', () => {
+                addLoanModal.classList.add('hidden');
+            });
+
+            saveLoanButton.addEventListener('click', async () => {
+                const principal = document.getElementById('loanPrincipal').value;
+                const interestRate = document.getElementById('loanInterestRate').value;
+                const termMonths = document.getElementById('loanTermMonths').value;
+                const startDate = document.getElementById('loanStartDate').value;
+                const monthlyPayment = document.getElementById('loanMonthlyPayment').value;
+
+                if (!principal || !interestRate || !termMonths || !startDate || !monthlyPayment) {
+                    alert('Пожалуйста, заполните все поля');
+                    return;
+                }
+
+                                 try {
+                     const response = await fetch('/api/loans', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                         },
+                         body: JSON.stringify({
+                             principal: parseFloat(principal),
+                             interest_rate: parseFloat(interestRate),
+                             term_months: parseInt(termMonths),
+                             start_date: startDate,
+                             monthly_payment: parseFloat(monthlyPayment)
+                         }),
+                     });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Кредит успешно добавлен!');
+                        addLoanModal.classList.add('hidden');
+                        document.getElementById('addLoanForm').reset();
+                        fetchAndRenderLoans();
+                    } else {
+                        alert(`Ошибка при добавлении кредита: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error adding loan:', error);
+                    alert('Произошла ошибка при добавлении кредита');
+                }
+            });
+
+            // Обработчики событий для кредитных карт
+            addCreditCardButton.addEventListener('click', () => {
+                addCreditCardModal.classList.remove('hidden');
+                addCreditCardModal.classList.add('flex');
+            });
+
+            closeAddCreditCardModalButton.addEventListener('click', () => {
+                addCreditCardModal.classList.add('hidden');
+            });
+
+            saveCreditCardButton.addEventListener('click', async () => {
+                const cardName = document.getElementById('cardName').value;
+                const gracePeriodDays = document.getElementById('gracePeriodDays').value;
+                const statementDay = document.getElementById('statementDay').value;
+                const paymentDueDay = document.getElementById('paymentDueDay').value;
+                const unpaidBalance = document.getElementById('unpaidBalance').value;
+
+                if (!cardName || !gracePeriodDays) {
+                    alert('Пожалуйста, заполните обязательные поля');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/add-credit-card', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            card_name: cardName,
+                            grace_period_days: parseInt(gracePeriodDays),
+                            statement_day: statementDay ? parseInt(statementDay) : null,
+                            payment_due_day: paymentDueDay ? parseInt(paymentDueDay) : null,
+                            unpaid_balance: parseFloat(unpaidBalance || 0)
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('Кредитная карта успешно добавлена!');
+                        addCreditCardModal.classList.add('hidden');
+                        document.getElementById('addCreditCardForm').reset();
+                        fetchAndRenderCreditCards();
+                    } else {
+                        alert(`Ошибка при добавлении кредитной карты: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error adding credit card:', error);
+                    alert('Произошла ошибка при добавлении кредитной карты');
+                }
+            });
+
+            // Функция загрузки кредитов
+            async function fetchAndRenderLoans() {
+                loansLoading.classList.remove('hidden');
+                loansList.innerHTML = '';
+
+                                 try {
+                     const response = await fetch('/api/loans');
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        renderLoans(result.loans);
+                    } else {
+                        console.error('Error fetching loans:', result.error);
+                        loansList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитов</p>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching loans:', error);
+                    loansList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитов</p>';
+                } finally {
+                    loansLoading.classList.add('hidden');
+                }
+            }
+
+            // Функция отображения кредитов
+            function renderLoans(loans) {
+                if (loans.length === 0) {
+                    loansList.innerHTML = '<p class="text-gray-500 col-span-full text-center">Кредиты не найдены</p>';
+                    return;
+                }
+
+                loansList.innerHTML = loans.map(loan => {
+                    const progressPercent = ((loan.paid_amount / loan.principal) * 100).toFixed(1);
+                    const remainingMonths = Math.ceil(loan.remaining_balance / loan.monthly_payment);
+                    
+                    return `
+                        <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-semibold text-white">Кредит #${loan.id}</h3>
+                                <span class="text-sm text-gray-400">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Основная сумма:</span>
+                                    <span class="text-white">${loan.principal.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Ставка:</span>
+                                    <span class="text-white">${loan.interest_rate}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Срок:</span>
+                                    <span class="text-white">${loan.term_months} мес.</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Ежемесячный платеж:</span>
+                                    <span class="text-white">${loan.monthly_payment.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Оплачено:</span>
+                                    <span class="text-green-400">${loan.paid_amount.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Остаток:</span>
+                                    <span class="text-red-400">${loan.remaining_balance.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Прогресс:</span>
+                                    <span class="text-blue-400">${progressPercent}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Осталось месяцев:</span>
+                                    <span class="text-yellow-400">~${remainingMonths}</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-600 rounded-full h-2 mt-3">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: ${progressPercent}%"></div>
+                            </div>
+                            ${loan.remaining_balance > 0 ? `
+                            <div class="mt-4 flex gap-2">
+                                <input type="number" id="payment-${loan.id}" placeholder="Сумма платежа" step="0.01" class="flex-1 bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2">
+                                <button onclick="recordLoanPayment(${loan.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Записать платеж</button>
+                            </div>
+                            ` : '<div class="mt-4 text-center text-green-400 font-semibold">Кредит полностью погашен!</div>'}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Функция загрузки кредитных карт
+            async function fetchAndRenderCreditCards() {
+                creditCardsLoading.classList.remove('hidden');
+                creditCardsList.innerHTML = '';
+
+                try {
+                    const response = await fetch('/api/get-credit-cards');
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        renderCreditCards(result.creditCards);
+                    } else {
+                        console.error('Error fetching credit cards:', result.error);
+                        creditCardsList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитных карт</p>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching credit cards:', error);
+                    creditCardsList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитных карт</p>';
+                } finally {
+                    creditCardsLoading.classList.add('hidden');
+                }
+            }
+
+            // Глобальная функция для записи платежа по кредиту
+            window.recordLoanPayment = async function(loanId) {
+                const paymentInput = document.getElementById(`payment-${loanId}`);
+                const paymentAmount = paymentInput.value;
+
+                if (!paymentAmount || paymentAmount <= 0) {
+                    alert('Пожалуйста, введите корректную сумму платежа');
+                    return;
+                }
+
+                                 try {
+                     const response = await fetch('/api/loans', {
+                         method: 'PATCH',
+                         headers: {
+                             'Content-Type': 'application/json',
+                         },
+                         body: JSON.stringify({
+                             loan_id: loanId,
+                             payment_amount: parseFloat(paymentAmount)
+                         }),
+                     });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert(`Платеж в размере ${paymentAmount} грн успешно записан!`);
+                        paymentInput.value = '';
+                        fetchAndRenderLoans();
+                    } else {
+                        alert(`Ошибка при записи платежа: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error recording payment:', error);
+                    alert('Произошла ошибка при записи платежа');
+                }
+            };
+
+            // Функция отображения кредитных карт
+            function renderCreditCards(creditCards) {
+                if (creditCards.length === 0) {
+                    creditCardsList.innerHTML = '<p class="text-gray-500 col-span-full text-center">Кредитные карты не найдены</p>';
+                    return;
+                }
+
+                creditCardsList.innerHTML = creditCards.map(card => {
+                    const today = new Date();
+                    const currentDay = today.getDate();
+                    
+                    // Вычисляем даты выписки и платежа для текущего месяца
+                    const statementDate = card.statement_day ? new Date(today.getFullYear(), today.getMonth(), card.statement_day) : null;
+                    const paymentDueDate = card.payment_due_day ? new Date(today.getFullYear(), today.getMonth(), card.payment_due_day) : null;
+                    
+                    // Если день выписки/платежа уже прошел в этом месяце, берем следующий месяц
+                    if (statementDate && statementDate < today) {
+                        statementDate.setMonth(statementDate.getMonth() + 1);
+                    }
+                    if (paymentDueDate && paymentDueDate < today) {
+                        paymentDueDate.setMonth(paymentDueDate.getMonth() + 1);
+                    }
+
+                    // Вычисляем количество дней до платежа
+                    let daysUntilPayment = null;
+                    if (paymentDueDate) {
+                        const diffTime = paymentDueDate - today;
+                        daysUntilPayment = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    }
+
+                    // Определяем статус льготного периода
+                    let gracePeriodStatus = 'Неизвестно';
+                    let gracePeriodClass = 'text-gray-400';
+                    
+                    if (daysUntilPayment !== null) {
+                        if (daysUntilPayment > card.grace_period_days) {
+                            gracePeriodStatus = 'Льготный период истек';
+                            gracePeriodClass = 'text-red-400';
+                        } else if (daysUntilPayment > 0) {
+                            gracePeriodStatus = `Льготный период активен (${daysUntilPayment} дн.)`;
+                            gracePeriodClass = 'text-green-400';
+                        } else {
+                            gracePeriodStatus = 'Платеж просрочен';
+                            gracePeriodClass = 'text-red-600';
+                        }
+                    }
+
+                    return `
+                        <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-semibold text-white">${card.card_name}</h3>
+                                <span class="text-sm text-gray-400">#${card.id}</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Льготный период:</span>
+                                    <span class="text-white">${card.grace_period_days} дн.</span>
+                                </div>
+                                ${card.statement_day ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">День выписки:</span>
+                                    <span class="text-white">${card.statement_day}</span>
+                                </div>
+                                ` : ''}
+                                ${card.payment_due_day ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">День платежа:</span>
+                                    <span class="text-white">${card.payment_due_day}</span>
+                                </div>
+                                ` : ''}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Задолженность:</span>
+                                    <span class="text-red-400">${card.unpaid_balance.toLocaleString('ru-RU')} грн</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Статус:</span>
+                                    <span class="${gracePeriodClass}">${gracePeriodStatus}</span>
+                                </div>
+                                ${daysUntilPayment !== null ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">До платежа:</span>
+                                    <span class="${daysUntilPayment > 7 ? 'text-green-400' : daysUntilPayment > 0 ? 'text-yellow-400' : 'text-red-400'}">${daysUntilPayment} дн.</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
             // --- Начальная загрузка ---
             // Устанавливаем текущий год и запускаем начальную загрузку данных
             filterYearInput.value = new Date().getFullYear();
             fetchAndRenderTransactions();
+            fetchAndRenderLoans();
+            fetchAndRenderCreditCards();
         });
     </script>
 
