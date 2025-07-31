@@ -20,7 +20,8 @@
 
 ```
 api/
-└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
+├── visualization-data.js    # Серверный API для Vercel
+└── visualization-unified.js # Клиентские функции для браузера
 
 visualization-demo.html      # Демонстрационная страница
 VISUALIZATION_README.md      # Документация (этот файл)
@@ -73,9 +74,9 @@ const treemapChart = createTreemap('treemapCanvas', treemapData, {
 
 ## 📊 API Reference
 
-### Унифицированный API Endpoint
+### API Endpoint
 
-Все запросы к API выполняются через единую точку входа: `/api/visualization-unified`
+Все запросы к API выполняются через точку входа: `/api/visualization-data`
 
 **Параметры запроса:**
 - `type` (string): тип визуализации - `'heatmap'` или `'treemap'`
@@ -87,16 +88,16 @@ const treemapChart = createTreemap('treemapCanvas', treemapData, {
 **Примеры запросов:**
 ```bash
 # Heatmap по дням
-GET /api/visualization-unified?type=heatmap&month=12&year=2024&groupBy=day
+GET /api/visualization-data?type=heatmap&month=12&year=2024&groupBy=day
 
 # Heatmap по часам
-GET /api/visualization-unified?type=heatmap&month=12&year=2024&groupBy=hour
+GET /api/visualization-data?type=heatmap&month=12&year=2024&groupBy=hour
 
 # Treemap с иерархией по кластерам
-GET /api/visualization-unified?type=treemap&month=12&year=2024&hierarchyType=cluster
+GET /api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=cluster
 
 # Treemap с иерархией по привычкам
-GET /api/visualization-unified?type=treemap&month=12&year=2024&hierarchyType=habit
+GET /api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=habit
 ```
 
 ### getHeatmapData(month, year, groupBy)
