@@ -55,7 +55,7 @@ async function generateHabitName(transactions) {
 
 // API-handler
 export default async function handler(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
+  
   const { month, year } = req.query;
   if (!month || !year) return res.status(400).json({ error: 'Year and month are required' });
 

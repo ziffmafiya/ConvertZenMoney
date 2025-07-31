@@ -2,11 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // Обработчик для получения транзакций
 export default async function handler(req, res) {
-    // Принимаем только GET-запросы
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
-
     // Получаем параметры фильтрации из запроса
     const { month, year } = req.query;
 

@@ -3,10 +3,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Основной обработчик API-запроса для глубокого анализа финансовых транзакций
 export default async function handler(req, res) {
-    // Разрешаем только GET-запросы
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
 
     // Извлекаем параметры (месяц, год, категория для сравнения, выбранная модель ИИ) из запроса
     const { month, year, category, model: selectedModel } = req.query;

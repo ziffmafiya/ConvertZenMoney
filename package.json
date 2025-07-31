@@ -1,15 +1,20 @@
 {
-  "name": "converter-vercel-app",
+  "name": "finance-analyzer",
   "version": "1.0.0",
-  "description": "A Vercel app for financial data conversion and Supabase upload.",
-  "main": "api/upload-transactions.js",
+  "description": "A financial analysis application with AI-powered insights",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "vercel dev"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.14.1",
     "@supabase/supabase-js": "^2.44.2",
-    "aspose-ocr-cloud": "^23.12.0"
+    "aspose-ocr-cloud": "^23.12.0",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

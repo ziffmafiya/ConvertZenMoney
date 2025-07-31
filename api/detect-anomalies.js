@@ -2,10 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // Эта функция является ядром системы обнаружения аномалий в транзакциях.
 export default async function handler(req, res) {
-    // Обработчик принимает только GET-запросы. Это удобно для запуска через Cron Job или вручную.
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
 
     // Получаем ключи доступа к Supabase из переменных окружения.
     const supabaseUrl = process.env.SUPABASE_URL;

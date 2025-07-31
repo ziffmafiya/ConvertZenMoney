@@ -4,9 +4,6 @@ import { createClient } from '@supabase/supabase-js';
  * Основной обработчик для API-маршрута '/api/get-product-stats'
  */
 export default async function handler(req, res) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
     
     try {
         const supabaseUrl = process.env.SUPABASE_URL;

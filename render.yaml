@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: finance-analyzer
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      - key: ASPOSE_OCR_API_KEY
+        sync: false 
