@@ -7,6 +7,11 @@ router.post('/track-loan', async (req, res) => {
   try {
     const { id, principal, interest_rate, term_months, start_date, monthly_payment, remaining_balance, paid_amount } = req.body;
     
+    // Validate required fields for new loans
+    if (!id && (!principal || !interest_rate || !term_months || !start_date)) {
+      return res.status(400).send('Missing required fields for new loan');
+    }
+    
     if (id) {
       const result = await db.query(
         'UPDATE loans SET principal = $1, interest_rate = $2, term_months = $3, start_date = $4, monthly_payment = $5, remaining_balance = $6, paid_amount = $7 WHERE id = $8 RETURNING *',

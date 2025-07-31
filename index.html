@@ -1602,17 +1602,32 @@
                     paid_amount: paidAmount
                 };
 
+                console.log('Sending loan data:', loanData);
+
                 try {
                     const response = await fetch('/api/loan-credit/track-loan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(loanData)
                     });
+
+                    console.log('Response status:', response.status);
+                    
                     if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Network response was not ok');
+                        // Log response text for debugging
+                        const responseText = await response.text();
+                        console.error('Server error response:', responseText);
+                        
+                        try {
+                            const err = JSON.parse(responseText);
+                            throw new Error(err.error || 'Network response was not ok');
+                        } catch (parseError) {
+                            throw new Error(`Server error: ${response.status} - ${responseText.slice(0, 100)}`);
+                        }
                     }
+                    
                     const data = await response.json();
+                    console.log('Loan created:', data);
                     alert(`Кредит добавлен! ID: ${data.id}`);
                     addLoanModal.classList.add('hidden');
                     location.reload();
