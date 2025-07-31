@@ -7,7 +7,7 @@
 ```
 /
 ├── api/
-│   ├── unified.js              # ✅ Универсальный API для всех функций
+│   ├── visualization-data.js    # ✅ Серверный API
 │   └── visualization-unified.js # ✅ Клиентские функции
 ├── index.html                   # ✅ Основное приложение
 ├── package.json                 # ✅ Зависимости
@@ -47,8 +47,8 @@
 
 После развертывания будут доступны следующие API endpoints:
 
-- **GET** `/api/unified?service=visualization&type=heatmap&month=12&year=2024&groupBy=day`
-- **GET** `/api/unified?service=visualization&type=treemap&month=12&year=2024&hierarchyType=cluster`
+- **GET** `/api/visualization-data?type=heatmap&month=12&year=2024&groupBy=day`
+- **GET** `/api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=cluster`
 
 ## 🔍 Проверка развертывания
 
@@ -56,10 +56,10 @@
 
 ```bash
 # Heatmap API
-curl "https://your-project.vercel.app/api/unified?service=visualization&type=heatmap&month=12&year=2024&groupBy=day"
+curl "https://your-project.vercel.app/api/visualization-data?type=heatmap&month=12&year=2024&groupBy=day"
 
 # Treemap API
-curl "https://your-project.vercel.app/api/unified?service=visualization&type=treemap&month=12&year=2024&hierarchyType=cluster"
+curl "https://your-project.vercel.app/api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=cluster"
 ```
 
 ### 2. Проверьте основное приложение
@@ -121,7 +121,7 @@ curl "https://your-project.vercel.app/api/unified?service=visualization&type=tre
 
 1. Откройте **Network** tab
 2. Обновите страницу
-3. Найдите запросы к `/api/unified`
+3. Найдите запросы к `/api/visualization-data`
 4. Проверьте статус ответов и содержимое
 
 ## 🔄 Обновление

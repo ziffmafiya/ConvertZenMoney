@@ -18,7 +18,7 @@
  */
 export async function getHeatmapData(month, year, groupBy = 'day') {
     try {
-        const response = await fetch(`/api/unified?service=visualization&type=heatmap&month=${month}&year=${year}&groupBy=${groupBy}`);
+        const response = await fetch(`/api/unified-api?action=heatmap&month=${month}&year=${year}&groupBy=${groupBy}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -41,7 +41,7 @@ export async function getHeatmapData(month, year, groupBy = 'day') {
  */
 export async function getTreemapData(month, year, hierarchyType = 'cluster') {
     try {
-        const response = await fetch(`/api/unified?service=visualization&type=treemap&month=${month}&year=${year}&hierarchyType=${hierarchyType}`);
+        const response = await fetch(`/api/unified-api?action=treemap&month=${month}&year=${year}&hierarchyType=${hierarchyType}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
