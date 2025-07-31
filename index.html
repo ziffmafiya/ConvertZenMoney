@@ -2296,6 +2296,27 @@
                     const progressPercent = ((loan.paid_amount / loan.principal) * 100).toFixed(1);
                     const remainingMonths = Math.ceil(loan.remaining_balance / loan.monthly_payment);
                     
+                    // Расчет следующего платежа
+                    const startDate = new Date(loan.start_date);
+                    const currentDate = new Date();
+                    const dayOfMonth = startDate.getDate();
+                    
+                    // Находим следующий платеж
+                    let nextPaymentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayOfMonth);
+                    
+                    // Если день платежа в этом месяце уже прошел, берем следующий месяц
+                    if (nextPaymentDate <= currentDate) {
+                        nextPaymentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, dayOfMonth);
+                    }
+                    
+                    // Проверяем, не превышает ли дата срок кредита
+                    const endDate = new Date(startDate);
+                    endDate.setMonth(endDate.getMonth() + loan.term_months);
+                    
+                    if (nextPaymentDate > endDate) {
+                        nextPaymentDate = null; // Кредит уже погашен
+                    }
+                    
                     return `
                         <div class="bg-[#1f2937] rounded-lg p-4 border border-[#374151]">
                             <div class="flex justify-between items-start mb-3">
@@ -2337,6 +2358,10 @@
                                 <div class="flex justify-between">
                                     <span class="text-gray-400">Осталось месяцев:</span>
                                     <span class="text-yellow-400">~${remainingMonths}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Следующий платеж:</span>
+                                    <span class="text-orange-400">${nextPaymentDate ? nextPaymentDate.toLocaleDateString('ru-RU') : 'Кредит погашен'}</span>
                                 </div>
                             </div>
                             <div class="w-full bg-gray-600 rounded-full h-2 mt-3">
@@ -2605,7 +2630,7 @@
                             // Импорт функций визуализации
                 async function loadVisualizationModule() {
                     try {
-                        const module = await import('./api/visualization-client.js');
+                        const module = await import('./api/visualization-unified.js');
                         return module;
                     } catch (error) {
                         console.error('Ошибка загрузки модуля визуализации:', error);

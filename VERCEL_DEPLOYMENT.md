@@ -47,8 +47,8 @@
 
 После развертывания будут доступны следующие API endpoints:
 
-- **GET** `/api/visualization-data?type=heatmap&month=12&year=2024&groupBy=day`
-- **GET** `/api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=cluster`
+- **GET** `/api/visualization-unified?type=heatmap&month=12&year=2024&groupBy=day`
+- **GET** `/api/visualization-unified?type=treemap&month=12&year=2024&hierarchyType=cluster`
 
 ## 🔍 Проверка развертывания
 
@@ -56,10 +56,10 @@
 
 ```bash
 # Heatmap API
-curl "https://your-project.vercel.app/api/visualization-data?type=heatmap&month=12&year=2024&groupBy=day"
+curl "https://your-project.vercel.app/api/visualization-unified?type=heatmap&month=12&year=2024&groupBy=day"
 
 # Treemap API
-curl "https://your-project.vercel.app/api/visualization-data?type=treemap&month=12&year=2024&hierarchyType=cluster"
+curl "https://your-project.vercel.app/api/visualization-unified?type=treemap&month=12&year=2024&hierarchyType=cluster"
 ```
 
 ### 2. Проверьте основное приложение
@@ -76,7 +76,7 @@ curl "https://your-project.vercel.app/api/visualization-data?type=treemap&month=
 **Проблема:** `Error loading visualization module`
 
 **Решение:**
-1. Убедитесь, что файл `api/visualization-client.js` существует
+1. Убедитесь, что файл `api/visualization-unified.js` существует
 2. Проверьте, что путь импорта в `index.html` правильный
 3. Убедитесь, что файл загружается через HTTPS (не file://)
 
@@ -121,7 +121,7 @@ curl "https://your-project.vercel.app/api/visualization-data?type=treemap&month=
 
 1. Откройте **Network** tab
 2. Обновите страницу
-3. Найдите запросы к `/api/visualization-data`
+3. Найдите запросы к `/api/visualization-unified`
 4. Проверьте статус ответов и содержимое
 
 ## 🔄 Обновление
