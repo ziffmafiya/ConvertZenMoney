@@ -54,7 +54,7 @@ curl "http://localhost:3000/api/visualization-data?type=treemap&month=12&year=20
 
 ### Базовый пример
 ```javascript
-import { getHeatmapData, getTreemapData, createHeatmap, createTreemap } from './api/visualization-unified.js';
+import { getHeatmapData, getTreemapData, createHeatmap, createTreemap } from './js/visualization-client.js';
 
 // Получение данных
 const heatmapData = await getHeatmapData(12, 2024, 'day');
@@ -94,7 +94,10 @@ createTreemap('treemapCanvas', treemapData);
 
 ```
 api/
-└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
+└── visualization-data.js    # Серверный API для получения данных визуализаций
+
+js/
+└── visualization-client.js  # Клиентские функции для работы с визуализациями
 
 visualization-demo.html      # Демо-страница
 test-visualizations.js       # Тесты

@@ -2605,7 +2605,7 @@
             // Импорт функций визуализации
             async function loadVisualizationModule() {
                 try {
-                    const module = await import('./api/visualization-unified.js');
+                    const module = await import('./js/visualization-client.js');
                     return module;
                 } catch (error) {
                     console.error('Ошибка загрузки модуля визуализации:', error);

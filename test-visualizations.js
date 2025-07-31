@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { getHeatmapData, getTreemapData } from './js/visualization-client.js';
 
 // Конфигурация (замените на ваши данные)
 const SUPABASE_URL = process.env.SUPABASE_URL || 'your-supabase-url';

@@ -20,7 +20,10 @@
 
 ```
 api/
-└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
+└── visualization-data.js    # Серверный API для получения данных визуализаций
+
+js/
+└── visualization-client.js  # Клиентские функции для работы с визуализациями
 
 visualization-demo.html      # Демонстрационная страница
 VISUALIZATION_README.md      # Документация (этот файл)
@@ -51,7 +54,7 @@ import {
     createTreemap, 
     updateVisualization, 
     destroyVisualization 
-} from './api/visualization-unified.js';
+} from './js/visualization-client.js';
 ```
 
 ### 3. Создание визуализаций
