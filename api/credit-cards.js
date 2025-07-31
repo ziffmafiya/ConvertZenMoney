@@ -1,50 +1,63 @@
+// Импорт Supabase клиента для работы с базой данных
 import { createClient } from '@supabase/supabase-js';
 
-// Обработчик для всех операций с кредитными картами
+/**
+ * Основной обработчик для всех операций с кредитными картами
+ * Поддерживает GET, POST, PUT, DELETE операции для управления кредитными картами
+ * @param {object} req - Объект запроса
+ * @param {object} res - Объект ответа
+ */
 export default async function handler(req, res) {
     // Получаем ключи доступа к Supabase из переменных окружения
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    // Проверяем наличие ключей
+    // Проверяем наличие обязательных ключей конфигурации
     if (!supabaseUrl || !supabaseKey) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
-    // Создаем клиент Supabase
+    // Создаем клиент Supabase для работы с базой данных
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Маршрутизируем запросы по HTTP методам
         switch (req.method) {
             case 'GET':
-                return await handleGetCreditCards(supabase, res);
+                return await handleGetCreditCards(supabase, res); // Получение списка кредитных карт
 
             case 'POST':
-                return await handleAddCreditCard(supabase, req, res);
+                return await handleAddCreditCard(supabase, req, res); // Добавление новой кредитной карты
 
             case 'PUT':
-                return await handleUpdateCreditCard(supabase, req, res);
+                return await handleUpdateCreditCard(supabase, req, res); // Обновление кредитной карты
 
             case 'DELETE':
-                return await handleDeleteCreditCard(supabase, req, res);
+                return await handleDeleteCreditCard(supabase, req, res); // Удаление кредитной карты
 
             default:
                 return res.status(405).json({ error: 'Method Not Allowed' });
         }
     } catch (error) {
+        // Обработка непредвиденных ошибок сервера
         console.error('Unhandled server error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
-// Функция для получения всех кредитных карт
+/**
+ * Функция для получения всех кредитных карт пользователя
+ * Возвращает список кредитных карт, отсортированный по дате создания
+ * @param {object} supabase - Клиент Supabase
+ * @param {object} res - Объект ответа
+ */
 async function handleGetCreditCards(supabase, res) {
     try {
         const { data, error } = await supabase
             .from('credit_cards')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }); // Сортировка по дате создания (новые сначала)
 
         if (error) {
             console.error('Supabase select error:', error);
@@ -58,11 +71,17 @@ async function handleGetCreditCards(supabase, res) {
     }
 }
 
-// Функция для добавления новой кредитной карты
+/**
+ * Функция для добавления новой кредитной карты
+ * Валидирует данные и создает новую запись в базе данных
+ * @param {object} supabase - Клиент Supabase
+ * @param {object} req - Объект запроса
+ * @param {object} res - Объект ответа
+ */
 async function handleAddCreditCard(supabase, req, res) {
     const { card_name, grace_period_days, statement_day, payment_due_day, unpaid_balance, first_transaction_date } = req.body;
     
-    // Отладочная информация
+    // Отладочная информация для логирования входящих данных
     console.log('Received credit card data:', {
         card_name,
         grace_period_days,
@@ -91,7 +110,7 @@ async function handleAddCreditCard(supabase, req, res) {
     }
 
     try {
-        // Подготавливаем данные для вставки
+        // Подготавливаем данные для вставки в базу данных
         const cardData = {
             card_name: card_name,
             grace_period_days: parseInt(grace_period_days),

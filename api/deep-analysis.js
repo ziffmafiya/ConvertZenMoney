@@ -1,7 +1,13 @@
+// Импорт необходимых модулей
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Основной обработчик API-запроса для глубокого анализа финансовых транзакций
+/**
+ * Основной обработчик API-запроса для глубокого анализа финансовых транзакций
+ * Использует ИИ для анализа паттернов трат и предоставления персональных рекомендаций
+ * @param {object} req - Объект запроса
+ * @param {object} res - Объект ответа
+ */
 export default async function handler(req, res) {
 
     // Извлекаем параметры (месяц, год, категория для сравнения, выбранная модель ИИ) из запроса
@@ -20,6 +26,7 @@ export default async function handler(req, res) {
     let previousMonth = currentMonth - 1;
     let previousYear = currentYear;
 
+    // Обрабатываем переход на предыдущий год при переходе с января на декабрь
     if (previousMonth === 0) {
         previousMonth = 12;
         previousYear -= 1;
@@ -51,15 +58,15 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
 
     try {
-        // Fetch user's work schedule
+        // Получаем расписание работы пользователя для контекстного анализа
         const { data: workSchedule, error: scheduleError } = await supabase
             .from('user_work_schedule')
             .select('*');
 
         if (scheduleError) {
             console.error('Error fetching work schedule:', scheduleError);
-            // Continue without work schedule if there's an error, or return an error
-            // For now, we'll just log and proceed without schedule data
+            // Продолжаем без расписания работы, если есть ошибка
+            // Пока просто логируем и продолжаем без данных расписания
         }
 
         // Определяем начальную и конечную даты для выборки транзакций за текущий месяц

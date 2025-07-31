@@ -1,53 +1,66 @@
+// Импорт Supabase клиента для работы с базой данных
 import { createClient } from '@supabase/supabase-js';
 
-// Обработчик для всех операций с кредитами
+/**
+ * Основной обработчик для всех операций с кредитами
+ * Поддерживает GET, POST, PUT, PATCH, DELETE операции для управления кредитами
+ * @param {object} req - Объект запроса
+ * @param {object} res - Объект ответа
+ */
 export default async function handler(req, res) {
     // Получаем ключи доступа к Supabase из переменных окружения
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-    // Проверяем наличие ключей
+    // Проверяем наличие обязательных ключей конфигурации
     if (!supabaseUrl || !supabaseKey) {
         console.error('Configuration error: Supabase URL or Anon Key not configured.');
         return res.status(500).json({ error: 'Supabase URL or Anon Key not configured' });
     }
 
-    // Создаем клиент Supabase
+    // Создаем клиент Supabase для работы с базой данных
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
+        // Маршрутизируем запросы по HTTP методам
         switch (req.method) {
             case 'GET':
-                return await handleGetLoans(supabase, res);
+                return await handleGetLoans(supabase, res); // Получение списка кредитов
             
             case 'POST':
-                return await handleAddLoan(supabase, req, res);
+                return await handleAddLoan(supabase, req, res); // Добавление нового кредита
             
             case 'PUT':
-                return await handleUpdateLoan(supabase, req, res);
+                return await handleUpdateLoan(supabase, req, res); // Обновление кредита
             
             case 'PATCH':
-                return await handleRecordPayment(supabase, req, res);
+                return await handleRecordPayment(supabase, req, res); // Запись платежа
             
             case 'DELETE':
-                return await handleDeleteLoan(supabase, req, res);
+                return await handleDeleteLoan(supabase, req, res); // Удаление кредита
             
             default:
                 return res.status(405).json({ error: 'Method Not Allowed' });
         }
     } catch (error) {
+        // Обработка непредвиденных ошибок сервера
         console.error('Unhandled server error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 
-// Функция для получения всех кредитов
+/**
+ * Функция для получения всех кредитов пользователя
+ * Возвращает список кредитов, отсортированный по дате создания
+ * @param {object} supabase - Клиент Supabase
+ * @param {object} res - Объект ответа
+ */
 async function handleGetLoans(supabase, res) {
     try {
         const { data, error } = await supabase
             .from('loans')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }); // Сортировка по дате создания (новые сначала)
 
         if (error) {
             console.error('Supabase select error:', error);
@@ -61,20 +74,34 @@ async function handleGetLoans(supabase, res) {
     }
 }
 
-// Функция для расчета ежемесячного платежа
+/**
+ * Функция для расчета ежемесячного платежа по кредиту
+ * Использует стандартную формулу аннуитетного платежа
+ * @param {number} principal - Основная сумма кредита
+ * @param {number} interestRate - Годовая процентная ставка
+ * @param {number} termMonths - Срок кредита в месяцах
+ * @returns {number} - Размер ежемесячного платежа
+ */
 function calculateMonthlyPayment(principal, interestRate, termMonths) {
-    const monthlyRate = interestRate / 100 / 12;
+    const monthlyRate = interestRate / 100 / 12; // Конвертируем годовую ставку в месячную
     if (monthlyRate === 0) {
-        return principal / termMonths;
+        return principal / termMonths; // Если ставка 0%, просто делим сумму на срок
     }
+    // Формула аннуитетного платежа
     return principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
 }
 
-// Функция для добавления нового кредита
+/**
+ * Функция для добавления нового кредита
+ * Валидирует данные и создает новую запись в базе данных
+ * @param {object} supabase - Клиент Supabase
+ * @param {object} req - Объект запроса
+ * @param {object} res - Объект ответа
+ */
 async function handleAddLoan(supabase, req, res) {
     const { loan_name, principal, interest_rate, term_months, start_date, paid_amount } = req.body;
     
-    // Отладочная информация
+    // Отладочная информация для логирования входящих данных
     console.log('Received loan data:', {
         loan_name,
         principal,

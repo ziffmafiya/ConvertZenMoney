@@ -1,14 +1,24 @@
 {
+  // Название проекта - конвертер для Vercel приложения
   "name": "converter-vercel-app",
+  // Версия проекта
   "version": "1.0.0",
+  // Описание проекта - приложение для конвертации финансовых данных и загрузки в Supabase
   "description": "A Vercel app for financial data conversion and Supabase upload.",
+  // Главный файл приложения
   "main": "api/upload-transactions.js",
+  // Тип модуля - ES модули
   "type": "module",
+  // Скрипты для запуска
   "scripts": {
+    // Команда для запуска в режиме разработки
     "start": "vercel dev"
   },
+  // Зависимости проекта
   "dependencies": {
+    // Google AI для генеративного ИИ
     "@google/generative-ai": "^0.14.1",
+    // Supabase клиент для работы с базой данных
     "@supabase/supabase-js": "^2.44.2"
   }
 }
