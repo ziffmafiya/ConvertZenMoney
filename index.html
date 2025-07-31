@@ -2602,16 +2602,16 @@
             let heatmapChart = null;
             let treemapChart = null;
 
-            // Импорт функций визуализации
-            async function loadVisualizationModule() {
-                try {
-                    const module = await import('./api/visualization-unified.js');
-                    return module;
-                } catch (error) {
-                    console.error('Ошибка загрузки модуля визуализации:', error);
-                    return null;
+                            // Импорт функций визуализации
+                async function loadVisualizationModule() {
+                    try {
+                        const module = await import('./api/visualization-client.js');
+                        return module;
+                    } catch (error) {
+                        console.error('Ошибка загрузки модуля визуализации:', error);
+                        return null;
+                    }
                 }
-            }
 
             // Загрузка визуализаций
             async function loadVisualizations() {

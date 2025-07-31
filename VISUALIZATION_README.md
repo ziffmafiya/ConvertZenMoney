@@ -20,7 +20,8 @@
 
 ```
 api/
-└── visualization-unified.js # Унифицированный модуль (API + клиентские функции)
+├── visualization-data.js    # Серверный API для Vercel
+└── visualization-client.js  # Клиентские функции для браузера
 
 visualization-demo.html      # Демонстрационная страница
 VISUALIZATION_README.md      # Документация (этот файл)
@@ -51,7 +52,7 @@ import {
     createTreemap, 
     updateVisualization, 
     destroyVisualization 
-} from './api/visualization-unified.js';
+} from './api/visualization-client.js';
 ```
 
 ### 3. Создание визуализаций
