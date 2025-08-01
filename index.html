@@ -343,11 +343,11 @@
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold text-white">Использование карт по категориям</h2>
             <div class="flex gap-2">
-                <button id="showCardUsageMainButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                    Обзор
-                </button>
-                <button id="showCardCategoriesButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                <button id="showCardCategoriesButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                     Категории
+                </button>
+                <button id="showCardUsageMainButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    По транзакциям
                 </button>
                 <button id="toggleCardUsageVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Скрыть/Показать
@@ -2867,6 +2867,14 @@
             const showCardCategoriesButton = document.getElementById('showCardCategoriesButton');
             const cardUsageMainContentDiv = document.getElementById('cardUsageMainContent');
             const cardCategoriesContentDiv = document.getElementById('cardCategoriesContent');
+
+            // Инициализация: по умолчанию активна вкладка "Категории"
+            cardUsageMainContentDiv.classList.add('hidden');
+            cardCategoriesContentDiv.classList.remove('hidden');
+            showCardCategoriesButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            showCardCategoriesButton.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+            showCardUsageMainButton.classList.add('bg-gray-700', 'hover:bg-gray-600');
+            showCardUsageMainButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
 
             showCardUsageMainButton.addEventListener('click', () => {
                 cardUsageMainContentDiv.classList.remove('hidden');
