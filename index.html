@@ -34,9 +34,14 @@
                 <div class="flex items-center gap-2" id="quickFilters">
                 </div>
             </div>
-            <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                Настройки
-            </button>
+            <div class="flex items-center gap-4">
+                <button id="toggleCardUsageVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать Использование Карт
+                </button>
+                <button id="settingsButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Настройки
+                </button>
+            </div>
         </header>
 
         <!-- Секция фильтров -->
@@ -340,7 +345,7 @@
     <section id="cardUsageAnalysisSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold text-white">Использование карт по категориям</h2>
-            <button id="toggleCardUsageVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">Скрыть</button>
+            <!-- Кнопка перемещена в заголовок, чтобы всегда быть видимой -->
         </div>
         <p class="text-gray-400 mb-4">Здесь отображается, какие карты вы чаще всего используете для определенных категорий трат.</p>
         <div id="cardUsageAnalysisResult" class="space-y-4">
@@ -2148,7 +2153,7 @@
             const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
             const cardUsageAnalysisLoadingDiv = document.getElementById('cardUsageAnalysisLoading');
             const cardUsageAnalysisSection = document.getElementById('cardUsageAnalysisSection');
-            const toggleCardUsageVisibilityButton = document.getElementById('toggleCardUsageVisibility');
+            const toggleCardUsageVisibilityButton = document.getElementById('toggleCardUsageVisibility'); // Перемещаем сюда
 
             // Обработчики событий для кредитов
             addLoanButton.addEventListener('click', () => {
