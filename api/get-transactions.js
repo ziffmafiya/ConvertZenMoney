@@ -66,7 +66,40 @@ export default async function handler(req, res) {
                 }
             });
 
-            return res.status(200).json({ cardUsage });
+            const categoriesWithMostUsedCard = {};
+            data.forEach(t => {
+                if (t.outcome_account_name && t.category_name && t.outcome > 0) {
+                    const card = t.outcome_account_name;
+                    const category = t.category_name;
+
+                    if (!categoriesWithMostUsedCard[category]) {
+                        categoriesWithMostUsedCard[category] = {};
+                    }
+                    if (!categoriesWithMostUsedCard[category][card]) {
+                        categoriesWithMostUsedCard[category][card] = 0;
+                    }
+                    categoriesWithMostUsedCard[category][card] += 1; // Увеличиваем счетчик использования карты для данной категории
+                }
+            });
+
+            // Преобразуем агрегированные данные в нужный формат: для каждой категории - самая используемая карта
+            const finalCategoriesWithMostUsedCard = {};
+            for (const category in categoriesWithMostUsedCard) {
+                let mostUsedCardName = '';
+                let maxCount = 0;
+                for (const card in categoriesWithMostUsedCard[category]) {
+                    if (categoriesWithMostUsedCard[category][card] > maxCount) {
+                        maxCount = categoriesWithMostUsedCard[category][card];
+                        mostUsedCardName = card;
+                    }
+                }
+                finalCategoriesWithMostUsedCard[category] = {
+                    cardName: mostUsedCardName,
+                    count: maxCount
+                };
+            }
+
+            return res.status(200).json({ cardUsage, categoriesWithMostUsedCard: finalCategoriesWithMostUsedCard });
 
         } else {
             // Начинаем строить запрос к таблице 'transactions'

@@ -342,17 +342,36 @@
     <section id="cardUsageAnalysisSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold text-white">Использование карт по категориям</h2>
-            <button id="toggleCardUsageVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                Скрыть/Показать
-            </button>
+            <div class="flex gap-2">
+                <button id="showCardUsageMainButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                    Обзор
+                </button>
+                <button id="showCardCategoriesButton" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Категории
+                </button>
+                <button id="toggleCardUsageVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
+            </div>
         </div>
         <div id="cardUsageContent">
-            <p class="text-gray-400 mb-4">Здесь отображается, какие карты вы чаще всего используете для определенных категорий трат.</p>
-            <div id="cardUsageAnalysisResult" class="space-y-4">
-                <!-- Результаты анализа использования карт будут здесь -->
+            <div id="cardUsageMainContent">
+                <p class="text-gray-400 mb-4">Здесь отображается, какие карты вы чаще всего используете для определенных категорий трат.</p>
+                <div id="cardUsageAnalysisResult" class="space-y-4">
+                    <!-- Результаты анализа использования карт будут здесь -->
+                </div>
+                <div id="cardUsageAnalysisLoading" class="hidden mt-4 text-center text-blue-400">
+                    <p>Анализ использования карт, пожалуйста, подождите...</p>
+                </div>
             </div>
-            <div id="cardUsageAnalysisLoading" class="hidden mt-4 text-center text-blue-400">
-                <p>Анализ использования карт, пожалуйста, подождите...</p>
+            <div id="cardCategoriesContent" class="hidden">
+                <p class="text-gray-400 mb-4">Список категорий и наиболее используемых карт для каждой категории.</p>
+                <div id="cardCategoriesList" class="space-y-4">
+                    <!-- Список категорий и карт будет здесь -->
+                </div>
+                <div id="cardCategoriesLoading" class="hidden mt-4 text-center text-blue-400">
+                    <p>Загрузка категорий, пожалуйста, подождите...</p>
+                </div>
             </div>
         </div>
     </section>
@@ -2725,16 +2744,25 @@
             const filterYearInput = document.getElementById('filterYear');
             const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
             const cardUsageAnalysisLoadingDiv = document.getElementById('cardUsageAnalysisLoading');
+            const cardUsageMainContentDiv = document.getElementById('cardUsageMainContent');
+            const cardCategoriesContentDiv = document.getElementById('cardCategoriesContent');
+            const cardCategoriesListDiv = document.getElementById('cardCategoriesList');
+            const cardCategoriesLoadingDiv = document.getElementById('cardCategoriesLoading');
+            const showCardUsageMainButton = document.getElementById('showCardUsageMainButton');
+            const showCardCategoriesButton = document.getElementById('showCardCategoriesButton');
 
             const selectedMonth = filterMonthSelect.value;
             const selectedYear = filterYearInput.value;
 
             if (!selectedYear) {
                 cardUsageAnalysisResultDiv.innerHTML = '<p class="text-gray-400">Пожалуйста, выберите год для анализа использования карт.</p>';
+                cardCategoriesListDiv.innerHTML = '<p class="text-gray-400">Пожалуйста, выберите год для анализа использования карт.</p>';
                 return;
             }
 
             cardUsageAnalysisLoadingDiv.classList.remove('hidden');
+            cardCategoriesLoadingDiv.classList.remove('hidden');
+
             const params = new URLSearchParams({ year: selectedYear, analysisType: 'cardUsage' });
             if (selectedMonth) {
                 params.append('month', selectedMonth);
@@ -2746,17 +2774,20 @@
                     const err = await response.json();
                     throw new Error(err.error || 'Failed to fetch card usage analysis');
                 }
-                const { cardUsage } = await response.json();
+                const { cardUsage, categoriesWithMostUsedCard } = await response.json();
                 renderCardUsageAnalysis(cardUsage);
+                renderCardCategoriesList(categoriesWithMostUsedCard);
             } catch (error) {
                 console.error('Error fetching card usage analysis:', error);
                 cardUsageAnalysisResultDiv.innerHTML = `<p class="text-red-400">Ошибка при загрузке анализа использования карт: ${error.message}</p>`;
+                cardCategoriesListDiv.innerHTML = `<p class="text-red-400">Ошибка при загрузке категорий: ${error.message}</p>`;
             } finally {
                 cardUsageAnalysisLoadingDiv.classList.add('hidden');
+                cardCategoriesLoadingDiv.classList.add('hidden');
             }
         }
 
-        // Функция для отображения результатов анализа использования карт
+        // Функция для отображения результатов анализа использования карт (основной вид)
         function renderCardUsageAnalysis(cardUsage) {
             const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
             cardUsageAnalysisResultDiv.innerHTML = '';
@@ -2804,6 +2835,57 @@
                 cardUsageAnalysisResultDiv.appendChild(cardDiv);
             });
         }
+
+        // Функция для отображения списка категорий с наиболее используемыми картами
+        function renderCardCategoriesList(categoriesWithMostUsedCard) {
+            const cardCategoriesListDiv = document.getElementById('cardCategoriesList');
+            cardCategoriesListDiv.innerHTML = '';
+
+            if (Object.keys(categoriesWithMostUsedCard).length === 0) {
+                cardCategoriesListDiv.innerHTML = '<p class="text-gray-500">Данные по категориям не найдены для выбранного периода.</p>';
+                return;
+            }
+
+            // Сортируем категории по алфавиту
+            const sortedCategories = Object.keys(categoriesWithMostUsedCard).sort();
+
+            sortedCategories.forEach(categoryName => {
+                const mostUsedCard = categoriesWithMostUsedCard[categoryName];
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
+                categoryDiv.innerHTML = `
+                    <h3 class="text-lg font-semibold text-white mb-2">${categoryName}</h3>
+                    <p class="text-gray-400 text-sm">Чаще всего используется карта: <span class="font-semibold text-blue-400">${mostUsedCard.cardName}</span> (${mostUsedCard.count} операций)</p>
+                `;
+                cardCategoriesListDiv.appendChild(categoryDiv);
+            });
+        }
+
+        // Добавляем обработчики для новых кнопок
+        document.addEventListener('DOMContentLoaded', function() {
+            const showCardUsageMainButton = document.getElementById('showCardUsageMainButton');
+            const showCardCategoriesButton = document.getElementById('showCardCategoriesButton');
+            const cardUsageMainContentDiv = document.getElementById('cardUsageMainContent');
+            const cardCategoriesContentDiv = document.getElementById('cardCategoriesContent');
+
+            showCardUsageMainButton.addEventListener('click', () => {
+                cardUsageMainContentDiv.classList.remove('hidden');
+                cardCategoriesContentDiv.classList.add('hidden');
+                showCardUsageMainButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                showCardUsageMainButton.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                showCardCategoriesButton.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                showCardCategoriesButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            });
+
+            showCardCategoriesButton.addEventListener('click', () => {
+                cardUsageMainContentDiv.classList.add('hidden');
+                cardCategoriesContentDiv.classList.remove('hidden');
+                showCardCategoriesButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                showCardCategoriesButton.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                showCardUsageMainButton.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                showCardUsageMainButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            });
+        });
     </script>
 
 </body>
