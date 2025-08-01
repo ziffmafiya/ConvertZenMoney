@@ -2525,8 +2525,10 @@
             };
 
             // --- Начальная загрузка ---
-            // Устанавливаем текущий год и запускаем начальную загрузку данных
-            filterYearInput.value = new Date().getFullYear();
+            // Устанавливаем текущий год и месяц и запускаем начальную загрузку данных
+            const today = new Date();
+            filterYearInput.value = today.getFullYear();
+            filterMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0'); // Устанавливаем текущий месяц
             fetchAndRenderTransactions();
             fetchAndRenderLoans();
             fetchAndRenderCreditCards();
