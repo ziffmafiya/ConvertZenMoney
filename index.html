@@ -1136,6 +1136,9 @@
                     return;
                 }
 
+                // Sort transactions by date in descending order
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
                 const totalPages = Math.ceil(transactions.length / transactionsPerPage);
                 currentTransactionPage = Math.min(Math.max(1, currentTransactionPage), totalPages);
 
@@ -1167,95 +1170,6 @@
                 transactionPageInfoEl.textContent = `Страница ${currentTransactionPage} из ${totalPages}`;
                 prevTransactionPageBtn.disabled = currentTransactionPage === 1;
                 nextTransactionPageBtn.disabled = currentTransactionPage === totalPages;
-            }
-
-                async function updateGoalProgress() {
-                const goal = JSON.parse(localStorage.getItem('userGoal'));
-                const goalDescriptionEl = document.getElementById('goalDescription');
-                const goalProgressBar = document.getElementById('goalProgressBar');
-                const goalProgressText = document.getElementById('goalProgressText');
-                const goalTargetText = document.getElementById('goalTargetText');
-                const comparisonMonthTextEl = document.getElementById('comparisonMonthText');
-
-                if (!goal) {
-                    goalDescriptionEl.textContent = 'Цель не задана';
-                    goalProgressBar.style.width = '0%';
-                    goalProgressText.textContent = '0%';
-                    goalTargetText.textContent = 'Цель: -';
-                    comparisonMonthTextEl.textContent = '';
-                    return;
-                }
-
-                // Update UI with goal details
-                if (goal.type === 'reduce') {
-                    goalDescriptionEl.textContent = `Снизить траты в категории "${goal.category}" на ${goal.value}%`;
-                    goalTargetText.textContent = `Цель: ${goal.value}%`;
-                } else {
-                    goalDescriptionEl.textContent = `Потратить не более ${goal.value} грн в категории "${goal.category}"`;
-                    goalTargetText.textContent = `Цель: ${goal.value} грн`;
-                }
-
-                const selectedMonth = filterMonthSelect.value;
-                const selectedYear = filterYearInput.value;
-
-                if (!selectedYear || !selectedMonth) {
-                    return; // Need month and year to calculate progress
-                }
-
-                try {
-                    const response = await fetch('/api/get-goal-progress', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ year: selectedYear, month: selectedMonth, goal })
-                    });
-
-                    if (!response.ok) {
-                        const err = await response.json();
-                        throw new Error(err.error || 'Failed to get goal progress');
-                    }
-
-                    const { progress1, progress2, comparisonMonth, currentValue, targetValue, status } = await response.json();
-                    
-                    // Ограничиваем progress1 100% для отображения на прогресс-баре
-                    const displayProgress1 = Math.min(100, Math.max(0, progress1));
-                    
-                    goalProgressBar.style.width = `${displayProgress1}%`;
-                    
-                    if (goal.type === 'limit') {
-                        goalProgressText.textContent = `${currentValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                        goalTargetText.textContent = `Цель: ${targetValue.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
-                    } else if (goal.type === 'reduce') {
-                        let progressText = '';
-                        if (progress2 > 0) {
-                            progressText = `Вы сэкономили ${progress2.toFixed(1)}%`;
-                        } else if (progress2 < 0) {
-                            progressText = `Вы потратили на ${Math.abs(progress2).toFixed(1)}% больше`;
-                        } else {
-                            progressText = `Без изменений`;
-                        }
-                        goalProgressText.textContent = progressText;
-                        goalTargetText.textContent = `Цель: ${targetValue}%`;
-                    }
-
-                    if (comparisonMonth) {
-                        comparisonMonthTextEl.textContent = `Сравнение с ${comparisonMonth}`;
-                    } else {
-                        comparisonMonthTextEl.textContent = '';
-                    }
-
-                    if (status === 'Over Limit' || (goal.type === 'reduce' && progress1 < 100)) {
-                        goalProgressBar.classList.remove('bg-blue-500');
-                        goalProgressBar.classList.add('bg-red-500');
-                    } else {
-                        goalProgressBar.classList.remove('bg-red-500');
-                        goalProgressBar.classList.add('bg-blue-500');
-                    }
-
-                } catch (error) {
-                    console.error('Error fetching goal progress:', error);
-                    goalProgressText.textContent = 'Ошибка';
-                    comparisonMonthTextEl.textContent = '';
-                }
             }
 
             function renderSparklines(transactions) {
