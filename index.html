@@ -2846,11 +2846,11 @@
                 return;
             }
 
-            // Сортируем категории по алфавиту
-            const sortedCategories = Object.keys(categoriesWithMostUsedCard).sort();
+            // Преобразуем объект в массив для сортировки, затем сортируем по убыванию числа операций
+            const sortedCategories = Object.entries(categoriesWithMostUsedCard)
+                .sort(([, a], [, b]) => b.count - a.count);
 
-            sortedCategories.forEach(categoryName => {
-                const mostUsedCard = categoriesWithMostUsedCard[categoryName];
+            sortedCategories.forEach(([categoryName, mostUsedCard]) => {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
                 categoryDiv.innerHTML = `
