@@ -1,6 +1,77 @@
 // Импорт необходимых модулей
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateContentWithRetry } from './gemini-utils.js';
+
+/**
+ * Функция для генерации упрощенного анализа без использования ИИ
+ * @param {Array} currentMonthTransactions - Транзакции за текущий месяц
+ * @param {Array} previousMonthTransactions - Транзакции за предыдущий месяц
+ * @param {string} currentMonthPadded - Текущий месяц с ведущим нулем
+ * @param {string} previousMonthPadded - Предыдущий месяц с ведущим нулем
+ * @param {number} currentYear - Текущий год
+ * @param {number} previousYear - Предыдущий год
+ * @param {string} category - Категория для сравнения
+ * @returns {string} Упрощенный анализ
+ */
+function generateSimpleAnalysis(currentMonthTransactions, previousMonthTransactions, currentMonthPadded, previousMonthPadded, currentYear, previousYear, category) {
+    // Группируем транзакции по категориям
+    const currentByCategory = {};
+    const previousByCategory = {};
+    
+    currentMonthTransactions.forEach(t => {
+        currentByCategory[t.category] = (currentByCategory[t.category] || 0) + t.amount;
+    });
+    
+    previousMonthTransactions.forEach(t => {
+        previousByCategory[t.category] = (previousByCategory[t.category] || 0) + t.amount;
+    });
+    
+    // Находим топ категории
+    const topCategories = Object.entries(currentByCategory)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3);
+    
+    // Общая сумма трат
+    const currentTotal = currentMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const previousTotal = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+    
+    // Анализ категории
+    const categoryCurrent = currentByCategory[category] || 0;
+    const categoryPrevious = previousByCategory[category] || 0;
+    const categoryChange = categoryCurrent - categoryPrevious;
+    
+    let analysis = `📊 **Упрощенный анализ финансов (без ИИ)**
+
+**Общие траты:**
+- ${currentMonthPadded}.${currentYear}: ${currentTotal.toFixed(2)} ₽
+- ${previousMonthPadded}.${previousYear}: ${previousTotal.toFixed(2)} ₽
+- Изменение: ${(currentTotal - previousTotal).toFixed(2)} ₽ (${((currentTotal - previousTotal) / previousTotal * 100).toFixed(1)}%)
+
+**Топ-3 категории трат за ${currentMonthPadded}.${currentYear}:**
+`;
+    
+    topCategories.forEach(([cat, amount], index) => {
+        const prevAmount = previousByCategory[cat] || 0;
+        const change = amount - prevAmount;
+        const changePercent = prevAmount > 0 ? (change / prevAmount * 100).toFixed(1) : 'N/A';
+        analysis += `${index + 1}. ${cat}: ${amount.toFixed(2)} ₽ (${change >= 0 ? '+' : ''}${change.toFixed(2)} ₽, ${changePercent}%)\n`;
+    });
+    
+    analysis += `\n**Анализ категории "${category}":**
+- ${currentMonthPadded}.${currentYear}: ${categoryCurrent.toFixed(2)} ₽
+- ${previousMonthPadded}.${previousYear}: ${categoryPrevious.toFixed(2)} ₽
+- Изменение: ${categoryChange >= 0 ? '+' : ''}${categoryChange.toFixed(2)} ₽ (${categoryPrevious > 0 ? (categoryChange / categoryPrevious * 100).toFixed(1) : 'N/A'}%)
+
+**Рекомендации:**
+1. Рассмотрите возможность сокращения трат в категории "${topCategories[0]?.[0] || 'основной категории'}"
+2. Сравните траты с предыдущим месяцем для выявления трендов
+3. Установите лимиты для категорий с наибольшими тратами
+
+*Примечание: Это упрощенный анализ без использования ИИ из-за ограничений API.*`;
+    
+    return analysis;
+}
 
 /**
  * Основной обработчик API-запроса для глубокого анализа финансовых транзакций
@@ -55,7 +126,7 @@ export default async function handler(req, res) {
     // Инициализируем клиенты для взаимодействия с Supabase и Google Generative AI
     const supabase = createClient(supabaseUrl, supabaseKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-pro" }); // Используем выбранную модель или модель по умолчанию
+    const model = genAI.getGenerativeModel({ model: selectedModel || "gemini-2.5-flash" }); // Используем выбранную модель или модель по умолчанию
 
     try {
         // Получаем расписание работы пользователя для контекстного анализа
@@ -137,13 +208,49 @@ ${workScheduleJson}
 Предоставь анализ на русском языке.
 `;
 
-        // Отправляем промпт в выбранную модель Gemini для генерации анализа
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        let analysis;
+        try {
+            // Пытаемся получить анализ с использованием ИИ с повторными попытками
+            analysis = await generateContentWithRetry(model, prompt, 3);
+        } catch (aiError) {
+            console.warn('Ошибка при использовании ИИ, переключаемся на упрощенный анализ:', aiError.message);
+            
+            // Проверяем, является ли ошибка связанной с API ключом или конфигурацией
+            if (aiError.message.includes('API_KEY') || aiError.message.includes('authentication') || aiError.message.includes('invalid')) {
+                analysis = `⚠️ **Ошибка конфигурации ИИ**
+
+Не удалось подключиться к сервису анализа. Возможные причины:
+- Неверный или отсутствующий API ключ Gemini
+- Проблемы с сетевым подключением
+- Превышение лимитов API
+
+Пожалуйста, проверьте настройки и попробуйте позже.
+
+${generateSimpleAnalysis(
+    currentMonthTransactions, 
+    previousMonthTransactions, 
+    currentMonthPadded, 
+    previousMonthPadded, 
+    currentYear, 
+    previousYear, 
+    category || 'Кафе и рестораны'
+)}`;
+            } else {
+                // Если ИИ недоступен, генерируем упрощенный анализ
+                analysis = generateSimpleAnalysis(
+                    currentMonthTransactions, 
+                    previousMonthTransactions, 
+                    currentMonthPadded, 
+                    previousMonthPadded, 
+                    currentYear, 
+                    previousYear, 
+                    category || 'Кафе и рестораны'
+                );
+            }
+        }
 
         // Отправляем сгенерированный текстовый анализ в ответе клиенту
-        res.status(200).json({ analysis: text });
+        res.status(200).json({ analysis: analysis });
 
     } catch (error) {
         // Логируем необработанные ошибки сервера и отправляем сообщение об ошибке клиенту
