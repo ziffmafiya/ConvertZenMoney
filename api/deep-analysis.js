@@ -76,7 +76,7 @@ export default async function handler(req, res) {
         // Выполняем запрос к Supabase для получения всех транзакций за текущий месяц
         const { data: currentMonthTransactions, error: currentMonthFetchError } = await supabase
             .from('transactions')
-            .select('date, category, payee, amount, comment')
+            .select('date, category_name, payee, amount, comment')
             .gte('date', currentMonthStartDate)
             .lte('date', currentMonthEndDate);
 
@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         // Выполняем запрос к Supabase для получения всех транзакций за предыдущий месяц
         const { data: previousMonthTransactions, error: previousMonthFetchError } = await supabase
             .from('transactions')
-            .select('date, category, payee, amount, comment')
+            .select('date, category_name, payee, amount, comment')
             .gte('date', previousMonthStartDate)
             .lte('date', previousMonthEndDate);
 
