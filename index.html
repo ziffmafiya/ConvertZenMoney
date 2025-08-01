@@ -101,6 +101,19 @@
             </div>
         </section>
 
+        <!-- Секция планирования бюджета -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <h3 class="text-xl font-semibold text-gray-300 mb-4">Планирование бюджета на месяц</h3>
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <input type="number" id="plannedIncome" placeholder="Планируемый доход" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
+                <button id="calculateBudgetButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Рассчитать</button>
+                <button id="saveBudgetButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Сохранить на месяц</button>
+            </div>
+            <div id="budgetResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Результаты расчета бюджета будут здесь -->
+            </div>
+        </section>
+
         <!-- Секция графика "Траты vs. Доходы" -->
         <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
@@ -553,6 +566,10 @@
             const expensesChangeEl = document.getElementById('expensesChange');
             const theoreticalSavingsEl = document.getElementById('theoreticalSavings');
             const expensesToIncomeTextEl = document.getElementById('expensesToIncomeText');
+            const plannedIncomeInput = document.getElementById('plannedIncome');
+            const calculateBudgetButton = document.getElementById('calculateBudgetButton');
+            const saveBudgetButton = document.getElementById('saveBudgetButton');
+            const budgetResultDiv = document.getElementById('budgetResult');
             let netBalanceSparklineChart;
             let incomeSparklineChart;
             let expensesSparklineChart;
@@ -1702,6 +1719,99 @@
             });
 
 
+            // --- Логика планирования бюджета ---
+            function calculateAndDisplayBudget() {
+                const income = parseFloat(plannedIncomeInput.value);
+                if (isNaN(income) || income <= 0) {
+                    alert('Пожалуйста, введите корректный планируемый доход.');
+                    return;
+                }
+
+                budgetResultDiv.innerHTML = '';
+                let totalMinBudget = 0;
+                let totalMaxBudget = 0;
+
+                for (const group in STANDARD_EXPENSE_DISTRIBUTION) {
+                    const groupEl = document.createElement('div');
+                    groupEl.className = 'bg-gray-800 rounded-lg p-4';
+                    groupEl.innerHTML = `<h4 class="text-lg font-semibold text-white mb-2">${group}</h4>`;
+                    
+                    const categoryList = document.createElement('div');
+                    categoryList.className = 'space-y-2';
+
+                    for (const category in STANDARD_EXPENSE_DISTRIBUTION[group]) {
+                        const [minPercent, maxPercent] = STANDARD_EXPENSE_DISTRIBUTION[group][category];
+                        const minAmount = income * minPercent;
+                        const maxAmount = income * maxPercent;
+                        totalMinBudget += minAmount;
+                        totalMaxBudget += maxAmount;
+
+                        const categoryItem = document.createElement('div');
+                        categoryItem.className = 'text-sm';
+                        categoryItem.innerHTML = `
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">${category}</span>
+                                <span class="font-semibold text-white">${minAmount.toFixed(2)} - ${maxAmount.toFixed(2)} грн</span>
+                            </div>
+                        `;
+                        categoryList.appendChild(categoryItem);
+                    }
+                    groupEl.appendChild(categoryList);
+                    budgetResultDiv.appendChild(groupEl);
+                }
+            }
+
+            function saveBudget() {
+                const income = parseFloat(plannedIncomeInput.value);
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (isNaN(income) || income <= 0) {
+                    alert('Нечего сохранять. Сначала рассчитайте бюджет.');
+                    return;
+                }
+                if (!selectedMonth || !selectedYear) {
+                    alert('Пожалуйста, выберите месяц и год для сохранения бюджета.');
+                    return;
+                }
+
+                const budgetData = {
+                    plannedIncome: income,
+                    distribution: STANDARD_EXPENSE_DISTRIBUTION
+                };
+
+                const storageKey = `budget-${selectedYear}-${selectedMonth}`;
+                localStorage.setItem(storageKey, JSON.stringify(budgetData));
+                alert(`Бюджет на ${selectedMonth}/${selectedYear} сохранен.`);
+            }
+
+            function loadBudget() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedMonth || !selectedYear) {
+                    budgetResultDiv.innerHTML = '';
+                    plannedIncomeInput.value = '';
+                    return;
+                }
+
+                const storageKey = `budget-${selectedYear}-${selectedMonth}`;
+                const savedData = localStorage.getItem(storageKey);
+
+                if (savedData) {
+                    const budgetData = JSON.parse(savedData);
+                    plannedIncomeInput.value = budgetData.plannedIncome;
+                    calculateAndDisplayBudget();
+                } else {
+                    budgetResultDiv.innerHTML = '';
+                    plannedIncomeInput.value = '';
+                }
+            }
+
+            calculateBudgetButton.addEventListener('click', calculateAndDisplayBudget);
+            saveBudgetButton.addEventListener('click', saveBudget);
+
+
             // --- Обработчики событий и начальный вызов ---
             processDataButton.addEventListener('click', handleFileProcessing);
 
@@ -1801,8 +1911,14 @@
                 i18next.changeLanguage('en', updateContent);
             });
 
-            filterMonthSelect.addEventListener('change', fetchAndRenderTransactions);
-            filterYearInput.addEventListener('change', fetchAndRenderTransactions);
+            filterMonthSelect.addEventListener('change', () => {
+                fetchAndRenderTransactions();
+                loadBudget();
+            });
+            filterYearInput.addEventListener('change', () => {
+                fetchAndRenderTransactions();
+                loadBudget();
+            });
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
             detectAnomaliesButton.addEventListener('click', detectAnomalies);
             
@@ -2533,6 +2649,7 @@
             fetchAndRenderTransactions();
             fetchAndRenderLoans();
             fetchAndRenderCreditCards();
+            loadBudget();
         });
     </script>
 
