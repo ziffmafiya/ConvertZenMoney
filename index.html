@@ -2767,22 +2767,39 @@
                 return;
             }
 
-            cardNames.forEach(card => {
+            cardNames.forEach(cardName => {
+                const cardData = cardUsage[cardName];
+                const sortedCategories = Object.entries(cardData.categories)
+                    .sort(([, catA], [, catB]) => catB.count - catA.count) // Сортировка по убыванию числа операций
+                    .slice(0, 3); // Берем топ-3
+
+                const topCategoriesHtml = sortedCategories.map(([category, data]) => 
+                    `<span class="inline-block bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-full">${category} (${data.count})</span>`
+                ).join(' ');
+
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
-                cardDiv.innerHTML = `<h3 class="text-lg font-semibold text-white mb-2">${card}</h3>`;
+                cardDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold text-white">${cardName}</h3>
+                        <div class="flex gap-2">
+                            ${topCategoriesHtml}
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-2">Всего потрачено: <span class="font-semibold text-blue-400">${cardData.totalSpent.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span></p>
+                `;
 
                 const categoriesList = document.createElement('ul');
                 categoriesList.className = 'list-disc list-inside text-gray-300 space-y-1';
 
-                const sortedCategories = Object.entries(cardUsage[card])
-                    .sort(([, amountA], [, amountB]) => amountB - amountA); // Сортировка по убыванию суммы
-
-                sortedCategories.forEach(([category, amount]) => {
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `${category}: <span class="font-semibold text-blue-400">${amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>`;
-                    categoriesList.appendChild(listItem);
-                });
+                // Отображаем все категории, отсортированные по сумме
+                Object.entries(cardData.categories)
+                    .sort(([, catA], [, catB]) => catB.amount - catA.amount)
+                    .forEach(([category, data]) => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `${category}: <span class="font-semibold text-blue-400">${data.amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span> (${data.count} операций)`;
+                        categoriesList.appendChild(listItem);
+                    });
                 cardDiv.appendChild(categoriesList);
                 cardUsageAnalysisResultDiv.appendChild(cardDiv);
             });

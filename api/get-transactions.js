@@ -49,9 +49,20 @@ export default async function handler(req, res) {
                     const card = t.outcome_account_name;
                     const category = t.category_name;
                     if (!cardUsage[card]) {
-                        cardUsage[card] = {};
+                        cardUsage[card] = {
+                            totalSpent: 0,
+                            categories: {}
+                        };
                     }
-                    cardUsage[card][category] = (cardUsage[card][category] || 0) + t.outcome;
+                    if (!cardUsage[card].categories[category]) {
+                        cardUsage[card].categories[category] = {
+                            amount: 0,
+                            count: 0
+                        };
+                    }
+                    cardUsage[card].totalSpent += t.outcome;
+                    cardUsage[card].categories[category].amount += t.outcome;
+                    cardUsage[card].categories[category].count += 1;
                 }
             });
 
