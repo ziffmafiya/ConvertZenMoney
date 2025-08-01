@@ -1,7 +1,6 @@
 // Импорт необходимых модулей
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { embedContentWithRetry } from './gemini-utils.js';
 
 /**
  * Глобальная инициализация клиента Google Generative AI
@@ -31,8 +30,9 @@ async function getEmbedding(text) {
         throw new Error('Embedding model not initialized.');
     }
     try {
-        // Отправляем текст в модель ИИ для получения эмбеддинга с повторными попытками
-        return await embedContentWithRetry(embeddingModel, text, 3);
+        // Отправляем текст в модель ИИ для получения эмбеддинга
+        const result = await embeddingModel.embedContent(text);
+        return result.embedding.values;
     } catch (error) {
         console.error('Error generating embedding for text:', text, error);
         throw new Error(`Failed to generate embedding: ${error.message}`);
