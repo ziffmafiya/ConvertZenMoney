@@ -1947,10 +1947,12 @@
 
             filterMonthSelect.addEventListener('change', () => {
                 fetchAndRenderTransactions();
+                fetchAndRenderCardUsageAnalysis(); // Добавляем вызов
                 loadBudget();
             });
             filterYearInput.addEventListener('change', () => {
                 fetchAndRenderTransactions();
+                fetchAndRenderCardUsageAnalysis(); // Добавляем вызов
                 loadBudget();
             });
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
