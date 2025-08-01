@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
  */
 export default async function handler(req, res) {
     // Получаем параметры фильтрации из query string запроса
-    const { month, year } = req.query;
+    const { month, year, analysisType } = req.query;
 
     // Получаем ключи доступа к Supabase из переменных окружения
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -23,50 +23,86 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        // Начинаем строить запрос к таблице 'transactions'
-        // Выбираем все поля, включая информацию об аномалиях
-        let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
+        if (analysisType === 'cardUsage') {
+            let query = supabase
+                .from('transactions')
+                .select('outcome_account_name, category_name, outcome');
 
-        // Применяем фильтры по дате, если они указаны в запросе
-        if (year) {
-            // Формируем начальную дату (первый день месяца или года)
-            const startDate = `${year}-${month || '01'}-01`;
-            // Формируем конечную дату (последний день месяца или года)
-            const endDate = month 
-                ? `${year}-${month}-${new Date(year, month, 0).getDate()}`
-                : `${year}-12-31`;
-            
-            // Добавляем условия фильтрации по диапазону дат
-            query = query.gte('date', startDate).lte('date', endDate);
+            if (year) {
+                const startDate = `${year}-${month || '01'}-01`;
+                const endDate = month
+                    ? `${year}-${month}-${new Date(year, month, 0).getDate()}`
+                    : `${year}-12-31`;
+                query = query.gte('date', startDate).lte('date', endDate);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Supabase select error for card usage analysis:', error);
+                return res.status(500).json({ error: error.message });
+            }
+
+            const cardUsage = {};
+            data.forEach(t => {
+                if (t.outcome_account_name && t.category_name && t.outcome > 0) {
+                    const card = t.outcome_account_name;
+                    const category = t.category_name;
+                    if (!cardUsage[card]) {
+                        cardUsage[card] = {};
+                    }
+                    cardUsage[card][category] = (cardUsage[card][category] || 0) + t.outcome;
+                }
+            });
+
+            return res.status(200).json({ cardUsage });
+
+        } else {
+            // Начинаем строить запрос к таблице 'transactions'
+            // Выбираем все поля, включая информацию об аномалиях
+            let query = supabase.from('transactions').select('*, is_anomaly, anomaly_reason');
+
+            // Применяем фильтры по дате, если они указаны в запросе
+            if (year) {
+                // Формируем начальную дату (первый день месяца или года)
+                const startDate = `${year}-${month || '01'}-01`;
+                // Формируем конечную дату (последний день месяца или года)
+                const endDate = month
+                    ? `${year}-${month}-${new Date(year, month, 0).getDate()}`
+                    : `${year}-12-31`;
+
+                // Добавляем условия фильтрации по диапазону дат
+                query = query.gte('date', startDate).lte('date', endDate);
+            }
+
+            // Выполняем запрос к базе данных
+            const { data, error } = await query;
+
+            // Обрабатываем ошибку при выполнении запроса к базе данных
+            if (error) {
+                console.error('Supabase select error:', error);
+                return res.status(500).json({ error: error.message });
+            }
+
+            // Преобразование данных из snake_case (база данных) в camelCase (фронтенд)
+            // Данные из Supabase приходят с именами столбцов в snake_case
+            // Фронтенд ожидает camelCase для совместимости с JavaScript конвенциями
+            const transactions = data.map(t => ({
+                date: t.date,
+                categoryName: t.category_name,           // category_name -> categoryName
+                payee: t.payee,
+                comment: t.comment,
+                outcomeAccountName: t.outcome_account_name, // outcome_account_name -> outcomeAccountName
+                outcome: t.outcome,
+                incomeAccountName: t.income_account_name,   // income_account_name -> incomeAccountName
+                income: t.income,
+                is_anomaly: t.is_anomaly,                // Флаг аномалии
+                anomaly_reason: t.anomaly_reason         // Причина аномалии
+            }));
+
+            // Отправляем успешный ответ с преобразованными данными
+            res.status(200).json({ transactions });
         }
-
-        // Выполняем запрос к базе данных
-        const { data, error } = await query;
-
-        // Обрабатываем ошибку при выполнении запроса к базе данных
-        if (error) {
-            console.error('Supabase select error:', error);
-            return res.status(500).json({ error: error.message });
-        }
-
-        // Преобразование данных из snake_case (база данных) в camelCase (фронтенд)
-        // Данные из Supabase приходят с именами столбцов в snake_case
-        // Фронтенд ожидает camelCase для совместимости с JavaScript конвенциями
-        const transactions = data.map(t => ({
-            date: t.date,
-            categoryName: t.category_name,           // category_name -> categoryName
-            payee: t.payee,
-            comment: t.comment,
-            outcomeAccountName: t.outcome_account_name, // outcome_account_name -> outcomeAccountName
-            outcome: t.outcome,
-            incomeAccountName: t.income_account_name,   // income_account_name -> incomeAccountName
-            income: t.income,
-            is_anomaly: t.is_anomaly,                // Флаг аномалии
-            anomaly_reason: t.anomaly_reason         // Причина аномалии
-        }));
-
-        // Отправляем успешный ответ с преобразованными данными
-        res.status(200).json({ transactions });
     } catch (error) {
         // Обработка непредвиденных ошибок сервера
         console.error('Unhandled server error:', error);

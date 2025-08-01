@@ -336,6 +336,18 @@
         </div>
     </section>
 
+    <!-- Секция анализа использования карт -->
+    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <h2 class="text-2xl font-bold text-white mb-4">Использование карт по категориям</h2>
+        <p class="text-gray-400 mb-4">Здесь отображается, какие карты вы чаще всего используете для определенных категорий трат.</p>
+        <div id="cardUsageAnalysisResult" class="space-y-4">
+            <!-- Результаты анализа использования карт будут здесь -->
+        </div>
+        <div id="cardUsageAnalysisLoading" class="hidden mt-4 text-center text-blue-400">
+            <p>Анализ использования карт, пожалуйста, подождите...</p>
+        </div>
+    </section>
+
     <!-- Модальное окно добавления кредита -->
     <div id="addLoanModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-[#161b22] p-6 rounded-2xl border border-[#30363d] max-w-lg w-full shadow-2xl shadow-black/50">
@@ -2128,6 +2140,8 @@
             const saveCreditCardButton = document.getElementById('saveCreditCardButton');
             const creditCardsList = document.getElementById('creditCardsList');
             const creditCardsLoading = document.getElementById('creditCardsLoading');
+            const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
+            const cardUsageAnalysisLoadingDiv = document.getElementById('cardUsageAnalysisLoading');
 
             // Обработчики событий для кредитов
             addLoanButton.addEventListener('click', () => {
@@ -2671,8 +2685,72 @@
             fetchAndRenderTransactions();
             fetchAndRenderLoans();
             fetchAndRenderCreditCards();
+            fetchAndRenderCardUsageAnalysis(); // Добавляем вызов новой функции
             loadBudget();
         });
+
+        // Асинхронная функция для получения и отображения анализа использования карт
+        async function fetchAndRenderCardUsageAnalysis() {
+            const selectedMonth = filterMonthSelect.value;
+            const selectedYear = filterYearInput.value;
+
+            if (!selectedYear) {
+                cardUsageAnalysisResultDiv.innerHTML = '<p class="text-gray-400">Пожалуйста, выберите год для анализа использования карт.</p>';
+                return;
+            }
+
+            cardUsageAnalysisLoadingDiv.classList.remove('hidden');
+            const params = new URLSearchParams({ year: selectedYear, analysisType: 'cardUsage' });
+            if (selectedMonth) {
+                params.append('month', selectedMonth);
+            }
+
+            try {
+                const response = await fetch(`/api/get-transactions?${params.toString()}`);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to fetch card usage analysis');
+                }
+                const { cardUsage } = await response.json();
+                renderCardUsageAnalysis(cardUsage);
+            } catch (error) {
+                console.error('Error fetching card usage analysis:', error);
+                cardUsageAnalysisResultDiv.innerHTML = `<p class="text-red-400">Ошибка при загрузке анализа использования карт: ${error.message}</p>`;
+            } finally {
+                cardUsageAnalysisLoadingDiv.classList.add('hidden');
+            }
+        }
+
+        // Функция для отображения результатов анализа использования карт
+        function renderCardUsageAnalysis(cardUsage) {
+            cardUsageAnalysisResultDiv.innerHTML = '';
+            const cardNames = Object.keys(cardUsage);
+
+            if (cardNames.length === 0) {
+                cardUsageAnalysisResultDiv.innerHTML = '<p class="text-gray-500">Данные об использовании карт не найдены для выбранного периода.</p>';
+                return;
+            }
+
+            cardNames.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
+                cardDiv.innerHTML = `<h3 class="text-lg font-semibold text-white mb-2">${card}</h3>`;
+
+                const categoriesList = document.createElement('ul');
+                categoriesList.className = 'list-disc list-inside text-gray-300 space-y-1';
+
+                const sortedCategories = Object.entries(cardUsage[card])
+                    .sort(([, amountA], [, amountB]) => amountB - amountA); // Сортировка по убыванию суммы
+
+                sortedCategories.forEach(([category, amount]) => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `${category}: <span class="font-semibold text-blue-400">${amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн</span>`;
+                    categoriesList.appendChild(listItem);
+                });
+                cardDiv.appendChild(categoriesList);
+                cardUsageAnalysisResultDiv.appendChild(cardDiv);
+            });
+        }
     </script>
 
 </body>
