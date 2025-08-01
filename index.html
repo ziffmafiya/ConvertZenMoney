@@ -2693,6 +2693,11 @@
 
         // Асинхронная функция для получения и отображения анализа использования карт
         async function fetchAndRenderCardUsageAnalysis() {
+            const filterMonthSelect = document.getElementById('filterMonth');
+            const filterYearInput = document.getElementById('filterYear');
+            const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
+            const cardUsageAnalysisLoadingDiv = document.getElementById('cardUsageAnalysisLoading');
+
             const selectedMonth = filterMonthSelect.value;
             const selectedYear = filterYearInput.value;
 
@@ -2725,6 +2730,7 @@
 
         // Функция для отображения результатов анализа использования карт
         function renderCardUsageAnalysis(cardUsage) {
+            const cardUsageAnalysisResultDiv = document.getElementById('cardUsageAnalysisResult');
             cardUsageAnalysisResultDiv.innerHTML = '';
             const cardNames = Object.keys(cardUsage);
 
@@ -2754,6 +2760,9 @@
             });
         }
     </script>
+
+</body>
+</html>
 
 </body>
 </html>
