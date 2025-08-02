@@ -63,6 +63,28 @@
             </div>
         </div>
 
+        <!-- Новая карточка: Расходы по категориям и сравнение -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex flex-wrap justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white" id="topExpensesCardTitle">Расходы за 1-31 июля</h2>
+                    <p class="text-gray-400 text-sm" id="topExpensesCardSubtitle">Сравниваем с 1-30 июня</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-4xl font-bold text-white" id="topExpensesTotal">27 371 ₴</p>
+                    <p class="text-sm font-semibold text-green-400" id="topExpensesChange">▼ 8 446 ₴ (24%)</p>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row items-center gap-4">
+                <div class="w-full lg:w-1/2 h-48">
+                    <canvas id="topExpensesTrendChart"></canvas>
+                </div>
+                <div class="w-full lg:w-1/2 space-y-4" id="topExpensesCategoriesList">
+                    <!-- Категории будут здесь -->
+                </div>
+            </div>
+        </section>
+
         <!-- Секция основных метрик -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Карточка актуального баланса -->
@@ -621,7 +643,15 @@
             let expensesChart;
             let storesChart;
             let spendIncomeTrendChart;
+            let topExpensesTrendChartInstance; // Новая переменная для графика расходов
             // let forecastChart; // Removed
+
+            // --- Ссылки на DOM-элементы для новой карточки ---
+            const topExpensesCardTitle = document.getElementById('topExpensesCardTitle');
+            const topExpensesCardSubtitle = document.getElementById('topExpensesCardSubtitle');
+            const topExpensesTotal = document.getElementById('topExpensesTotal');
+            const topExpensesChange = document.getElementById('topExpensesChange');
+            const topExpensesCategoriesList = document.getElementById('topExpensesCategoriesList');
 
             // Переменные для пагинации аномалий
             const anomaliesPerPage = 5;
@@ -1064,6 +1094,288 @@
                 renderSparklines(transactions);
                 theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
+                fetchAndRenderTopExpensesCard(); // Вызываем новую функцию здесь
+            }
+
+            // Асинхронная функция для получения и отображения данных для карточки "Расходы по категориям и сравнение"
+            async function fetchAndRenderTopExpensesCard() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    // Очищаем карточку, если год или месяц не выбраны
+                    topExpensesCardTitle.textContent = 'Расходы';
+                    topExpensesCardSubtitle.textContent = 'Выберите период';
+                    topExpensesTotal.textContent = '0.00 ₴';
+                    topExpensesChange.textContent = '';
+                    topExpensesCategoriesList.innerHTML = '<p class="text-gray-500">Нет данных для отображения.</p>';
+                    if (topExpensesTrendChartInstance) topExpensesTrendChartInstance.destroy();
+                    return;
+                }
+
+                const currentMonthTransactions = allTransactions.filter(t => {
+                    const date = new Date(t.date);
+                    return date.getFullYear() == selectedYear && (date.getMonth() + 1) == parseInt(selectedMonth);
+                });
+
+                const previousMonth = parseInt(selectedMonth) === 1 ? 12 : parseInt(selectedMonth) - 1;
+                const previousYear = parseInt(selectedMonth) === 1 ? parseInt(selectedYear) - 1 : parseInt(selectedYear);
+
+                const previousMonthTransactions = allTransactions.filter(t => {
+                    const date = new Date(t.date);
+                    return date.getFullYear() == previousYear && (date.getMonth() + 1) == previousMonth;
+                });
+
+                // Агрегация расходов по категориям для текущего месяца
+                const currentMonthExpensesByCategory = {};
+                let currentMonthTotalExpenses = 0;
+                currentMonthTransactions.forEach(t => {
+                    if (t.outcome > 0 && t.income === 0) {
+                        currentMonthExpensesByCategory[t.categoryName] = (currentMonthExpensesByCategory[t.categoryName] || 0) + t.outcome;
+                        currentMonthTotalExpenses += t.outcome;
+                    }
+                });
+
+                // Агрегация расходов по категориям для предыдущего месяца
+                const previousMonthExpensesByCategory = {};
+                let previousMonthTotalExpenses = 0;
+                previousMonthTransactions.forEach(t => {
+                    if (t.outcome > 0 && t.income === 0) {
+                        previousMonthExpensesByCategory[t.categoryName] = (previousMonthExpensesByCategory[t.categoryName] || 0) + t.outcome;
+                        previousMonthTotalExpenses += t.outcome;
+                    }
+                });
+
+                // Определяем топ-5 самых затратных категорий за текущий месяц
+                const sortedCurrentMonthCategories = Object.entries(currentMonthExpensesByCategory)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 5);
+
+                // Обновляем заголовок и подзаголовок карточки
+                const currentMonthName = new Date(selectedYear, parseInt(selectedMonth) - 1, 1).toLocaleDateString('ru-RU', { month: 'long' });
+                const previousMonthName = new Date(previousYear, previousMonth - 1, 1).toLocaleDateString('ru-RU', { month: 'long' });
+                
+                topExpensesCardTitle.textContent = `Расходы за 1-${new Date(selectedYear, parseInt(selectedMonth), 0).getDate()} ${currentMonthName}`;
+                topExpensesCardSubtitle.textContent = `Сравниваем с 1-${new Date(previousYear, previousMonth, 0).getDate()} ${previousMonthName}`;
+
+                // Обновляем общую сумму расходов и изменение
+                topExpensesTotal.textContent = `${currentMonthTotalExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴`;
+                
+                const totalChange = currentMonthTotalExpenses - previousMonthTotalExpenses;
+                const totalPercentageChange = previousMonthTotalExpenses === 0 ? (currentMonthTotalExpenses === 0 ? 0 : 100) : (totalChange / previousMonthTotalExpenses) * 100;
+
+                let totalChangeText = '';
+                let totalChangeClass = '';
+                if (totalChange > 0) {
+                    totalChangeText = `▲ ${Math.abs(totalChange).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴ (${totalPercentageChange.toFixed(1)}%)`;
+                    totalChangeClass = 'text-red-400'; // Расходы выросли - плохо
+                } else if (totalChange < 0) {
+                    totalChangeText = `▼ ${Math.abs(totalChange).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴ (${Math.abs(totalPercentageChange).toFixed(1)}%)`;
+                    totalChangeClass = 'text-green-400'; // Расходы уменьшились - хорошо
+                } else {
+                    totalChangeText = `0 ₴ (0%)`;
+                    totalChangeClass = 'text-gray-400';
+                }
+                topExpensesChange.textContent = totalChangeText;
+                topExpensesChange.className = `text-sm font-semibold ${totalChangeClass}`;
+
+                // Рендеринг списка категорий
+                topExpensesCategoriesList.innerHTML = '';
+                if (sortedCurrentMonthCategories.length === 0) {
+                    topExpensesCategoriesList.innerHTML = '<p class="text-gray-500">Нет данных по категориям за выбранный период.</p>';
+                } else {
+                    sortedCurrentMonthCategories.forEach(([categoryName, currentMonthAmount]) => {
+                        const previousMonthAmount = previousMonthExpensesByCategory[categoryName] || 0;
+                        const categoryChange = currentMonthAmount - previousMonthAmount;
+                        const categoryPercentageChange = previousMonthAmount === 0 ? (currentMonthAmount === 0 ? 0 : 100) : (categoryChange / previousMonthAmount) * 100;
+
+                        let categoryChangeText = '';
+                        let categoryChangeClass = '';
+                        if (categoryChange > 0) {
+                            categoryChangeText = `▲ ${Math.abs(categoryChange).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴ (${categoryPercentageChange.toFixed(1)}%)`;
+                            categoryChangeClass = 'text-red-400';
+                        } else if (categoryChange < 0) {
+                            categoryChangeText = `▼ ${Math.abs(categoryChange).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴ (${Math.abs(categoryPercentageChange).toFixed(1)}%)`;
+                            categoryChangeClass = 'text-green-400';
+                        } else {
+                            categoryChangeText = `0 ₴ (0%)`;
+                            categoryChangeClass = 'text-gray-400';
+                        }
+
+                        const categoryItem = document.createElement('div');
+                        categoryItem.className = 'flex items-center gap-2';
+                        categoryItem.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-lg">
+                                ${getCategoryIcon(categoryName)}
+                            </div>
+                            <div class="flex-grow">
+                                <p class="text-gray-300 font-semibold">${categoryName}</p>
+                                <p class="text-white text-lg font-bold">${currentMonthAmount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₴</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm ${categoryChangeClass}">${categoryChangeText}</p>
+                            </div>
+                        `;
+                        topExpensesCategoriesList.appendChild(categoryItem);
+                    });
+                }
+
+                // Подготовка данных для графика кумулятивных расходов
+                const currentMonthDailyExpenses = {};
+                currentMonthTransactions.forEach(t => {
+                    if (t.outcome > 0 && t.income === 0) {
+                        const date = new Date(t.date);
+                        const day = date.getDate();
+                        currentMonthDailyExpenses[day] = (currentMonthDailyExpenses[day] || 0) + t.outcome;
+                    }
+                });
+
+                const previousMonthDailyExpenses = {};
+                previousMonthTransactions.forEach(t => {
+                    if (t.outcome > 0 && t.income === 0) {
+                        const date = new Date(t.date);
+                        const day = date.getDate();
+                        previousMonthDailyExpenses[day] = (previousMonthDailyExpenses[day] || 0) + t.outcome;
+                    }
+                });
+
+                const daysInCurrentMonth = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
+                const labels = Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1);
+
+                let cumulativeCurrentMonthExpenses = 0;
+                const currentMonthCumulativeData = labels.map(day => {
+                    cumulativeCurrentMonthExpenses += (currentMonthDailyExpenses[day] || 0);
+                    return cumulativeCurrentMonthExpenses;
+                });
+
+                let cumulativePreviousMonthExpenses = 0;
+                const previousMonthCumulativeData = labels.map(day => {
+                    cumulativePreviousMonthExpenses += (previousMonthDailyExpenses[day] || 0);
+                    return cumulativePreviousMonthExpenses;
+                });
+
+                const topExpensesTrendData = {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: `${currentMonthName}`,
+                            data: currentMonthCumulativeData,
+                            borderColor: '#8b5cf6', // Фиолетовый
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#8b5cf6',
+                            pointBorderColor: '#fff'
+                        },
+                        {
+                            label: `${previousMonthName}`,
+                            data: previousMonthCumulativeData,
+                            borderColor: '#a78bfa', // Светло-фиолетовый
+                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointBackgroundColor: '#a78bfa',
+                            pointBorderColor: '#fff'
+                        }
+                    ]
+                };
+
+                // Рендеринг графика
+                if (topExpensesTrendChartInstance) topExpensesTrendChartInstance.destroy();
+                topExpensesTrendChartInstance = new Chart(document.getElementById('topExpensesTrendChart').getContext('2d'), {
+                    type: 'line',
+                    data: topExpensesTrendData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: '#374151' },
+                                title: {
+                                    display: true,
+                                    text: 'День месяца',
+                                    color: '#c9d1d9'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#9ca3af',
+                                    callback: function(value) {
+                                        return value.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ₴';
+                                    }
+                                },
+                                grid: { color: '#374151' },
+                                title: {
+                                    display: true,
+                                    text: 'Сумма расходов',
+                                    color: '#c9d1d9'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#d1d5db'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toLocaleString('ru-RU', { style: 'currency', currency: 'UAH' });
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Вспомогательная функция для получения иконки категории
+            function getCategoryIcon(categoryName) {
+                const icons = {
+                    'Платежи, комиссии': '💳',
+                    'Покупки: одежда, техника': '🛍️',
+                    'Продукты': '🛒',
+                    'Перевод на Очки': '👓', // Пример, если это категория
+                    'Кафе и рестораны': '☕',
+                    'Транспорт': '🚕',
+                    'Развлечения': '🎬',
+                    'Здоровье и фитнес': '💪',
+                    'Образование': '📚',
+                    'Подарки': '🎁',
+                    'Хотелки': '✨',
+                    'Связь': '📱',
+                    'Комуналка': '🏠',
+                    'Аренда': '🏡',
+                    'Почтовые услуги': '✉️',
+                    'Забота о себе': '🛀',
+                    'Бар': '🍻',
+                    'Проезд': '🚌',
+                    'Платеж по кредиту': '🏦',
+                    'default': '💰'
+                };
+                // Проверяем точное совпадение или частичное для подкатегорий
+                for (const key in icons) {
+                    if (categoryName.includes(key)) {
+                        return icons[key];
+                    }
+                }
+                return icons['default'];
             }
 
             // Функция для отображения аномалий с пагинацией
