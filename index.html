@@ -63,28 +63,6 @@
             </div>
         </div>
 
-        <!-- Новая карточка: Расходы по категориям и сравнение -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <div class="flex flex-wrap justify-between items-start mb-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-white" id="topExpensesCardTitle">Расходы за 1-31 июля</h2>
-                    <p class="text-gray-400 text-sm" id="topExpensesCardSubtitle">Сравниваем с 1-30 июня</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-4xl font-bold text-white" id="topExpensesTotal">27 371 ₴</p>
-                    <p class="text-sm font-semibold text-green-400" id="topExpensesChange">▼ 8 446 ₴ (24%)</p>
-                </div>
-            </div>
-            <div class="flex flex-col lg:flex-row items-center gap-4">
-                <div class="w-full lg:w-1/2 h-48">
-                    <canvas id="topExpensesTrendChart"></canvas>
-                </div>
-                <div class="w-full lg:w-1/2 space-y-4" id="topExpensesCategoriesList">
-                    <!-- Категории будут здесь -->
-                </div>
-            </div>
-        </section>
-
         <!-- Секция основных метрик -->
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Карточка актуального баланса -->
@@ -122,6 +100,28 @@
                 <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
                 <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
                 <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
+            </div>
+        </section>
+
+        <!-- Новая карточка: Расходы по категориям и сравнение -->
+        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex flex-wrap justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white" id="topExpensesCardTitle">Расходы за 1-31 июля</h2>
+                    <p class="text-gray-400 text-sm" id="topExpensesCardSubtitle">Сравниваем с 1-30 июня</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-4xl font-bold text-white" id="topExpensesTotal">27 371 ₴</p>
+                    <p class="text-sm font-semibold text-green-400" id="topExpensesChange">▼ 8 446 ₴ (24%)</p>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row items-center gap-4">
+                <div class="w-full lg:w-1/2 h-48">
+                    <canvas id="topExpensesTrendChart"></canvas>
+                </div>
+                <div class="w-full lg:w-1/2 space-y-4" id="topExpensesCategoriesList">
+                    <!-- Категории будут здесь -->
+                </div>
             </div>
         </section>
 
