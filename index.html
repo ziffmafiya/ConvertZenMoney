@@ -741,11 +741,14 @@
                 const selectedYear = filterYearInput.value;
 
                 if (!selectedYear) {
+                    allTransactions = []; // Очищаем, если год не выбран
                     analyzeAndRender([]);
                     return;
                 }
 
-                let transactions = [];
+                let currentYearTransactions = [];
+                let prevYearTransactions = [];
+
                 try {
                     // Запрос для текущего года
                     let response = await fetch(`/api/get-transactions?year=${selectedYear}`);
@@ -753,8 +756,7 @@
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to fetch transactions for current year');
                     }
-                    const { transactions: currentYearTransactions } = await response.json();
-                    transactions = transactions.concat(currentYearTransactions);
+                    currentYearTransactions = (await response.json()).transactions;
 
                     // Если текущий месяц - январь, также получаем данные за предыдущий год
                     if (selectedMonth === '01') {
@@ -764,16 +766,18 @@
                             const err = await response.json();
                             throw new Error(err.error || 'Failed to fetch transactions for previous year');
                         }
-                        const { transactions: prevYearTransactions } = await response.json();
-                        transactions = transactions.concat(prevYearTransactions);
+                        prevYearTransactions = (await response.json()).transactions;
                     }
 
-                    // Теперь allTransactions будет содержать данные за текущий год (и предыдущий, если январь)
-                    // analyzeAndRender будет использовать allTransactions, а затем fetchAndRenderTopExpensesCard
-                    // будет фильтровать из allTransactions по месяцам.
-                    analyzeAndRender(transactions);
+                    // Объединяем все полученные транзакции в allTransactions
+                    allTransactions = currentYearTransactions.concat(prevYearTransactions);
+
+                    // Передаем allTransactions в analyzeAndRender, которая будет фильтровать их внутри себя
+                    analyzeAndRender(allTransactions);
                     fetchAndRenderHabits();
                     fetchAndRenderMonthlySummary();
+                    fetchAndRenderCardUsageAnalysis(); // Убедимся, что эта функция тоже вызывается
+                    loadBudget(); // И эта тоже
 
                 } catch (error) {
                     console.error('Error fetching transactions:', error);
@@ -988,14 +992,32 @@
             function analyzeAndRender(transactions) {
                 if (!transactions) return;
 
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                // Filter transactions based on selected month and year
+                const filteredTransactions = transactions.filter(t => {
+                    const date = new Date(t.date);
+                    const transactionYear = date.getFullYear().toString();
+                    const transactionMonth = String(date.getMonth() + 1).padStart(2, '0');
+
+                    if (selectedYear && transactionYear !== selectedYear) {
+                        return false;
+                    }
+                    if (selectedMonth && transactionMonth !== selectedMonth) {
+                        return false;
+                    }
+                    return true;
+                });
+
                 let totalIncome = 0;
                 let totalExpenses = 0;
                 const expensesByCategory = {};
                 const expensesByPayee = {};
                 const incomeSources = {};
-            const dailyData = {}; // Для графика трендов
+                const dailyData = {}; // Для графика трендов
 
-                transactions.forEach(t => {
+                filteredTransactions.forEach(t => { // Use filteredTransactions here
                     const date = t.date.split('T')[0];
                     if (!dailyData[date]) {
                         dailyData[date] = { income: 0, expenses: 0 };
