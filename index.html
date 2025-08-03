@@ -126,15 +126,22 @@
         </section>
 
         <!-- Секция планирования бюджета -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-4">Планирование бюджета на месяц</h3>
-            <div class="flex flex-wrap items-center gap-4 mb-4">
-                <input type="number" id="plannedIncome" placeholder="Планируемый доход" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
-                <button id="calculateBudgetButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Рассчитать</button>
-                <button id="saveBudgetButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Сохранить на месяц</button>
+        <section id="budgetPlanningSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Планирование бюджета на месяц</h3>
+                <button id="toggleBudgetVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
             </div>
-            <div id="budgetResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Результаты расчета бюджета будут здесь -->
+            <div id="budgetContent">
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <input type="number" id="plannedIncome" placeholder="Планируемый доход" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
+                    <button id="calculateBudgetButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Рассчитать</button>
+                    <button id="saveBudgetButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Сохранить на месяц</button>
+                </div>
+                <div id="budgetResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Результаты расчета бюджета будут здесь -->
+                </div>
             </div>
         </section>
 
@@ -2519,6 +2526,9 @@
             const cardUsageAnalysisSection = document.getElementById('cardUsageAnalysisSection');
             const cardUsageContentDiv = document.getElementById('cardUsageContent');
             const toggleCardUsageVisibilityButton = document.getElementById('toggleCardUsageVisibility');
+            const budgetPlanningSection = document.getElementById('budgetPlanningSection');
+            const budgetContentDiv = document.getElementById('budgetContent');
+            const toggleBudgetVisibilityButton = document.getElementById('toggleBudgetVisibility');
 
             // Обработчики событий для кредитов
             addLoanButton.addEventListener('click', () => {
@@ -3079,6 +3089,22 @@
                 const isHidden = cardUsageContentDiv.classList.toggle('hidden');
                 localStorage.setItem('cardUsageHidden', isHidden);
                 toggleCardUsageVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+
+            // Логика скрытия/отображения содержимого карточки "Планирование бюджета на месяц"
+            const isBudgetHidden = localStorage.getItem('budgetHidden') === 'true';
+            if (isBudgetHidden) {
+                budgetContentDiv.classList.add('hidden');
+                toggleBudgetVisibilityButton.textContent = 'Показать';
+            } else {
+                budgetContentDiv.classList.remove('hidden');
+                toggleBudgetVisibilityButton.textContent = 'Скрыть';
+            }
+
+            toggleBudgetVisibilityButton.addEventListener('click', () => {
+                const isHidden = budgetContentDiv.classList.toggle('hidden');
+                localStorage.setItem('budgetHidden', isHidden);
+                toggleBudgetVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
             });
         });
 
