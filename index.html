@@ -146,25 +146,39 @@
         </section>
 
         <!-- Секция графика "Траты vs. Доходы" -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-4">Траты vs. Доходы</h3>
-            <div class="h-96">
-                <canvas id="spendIncomeTrendChart"></canvas>
+        <section id="spendIncomeTrendSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Траты vs. Доходы</h3>
+                <button id="toggleSpendIncomeVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
+            </div>
+            <div id="spendIncomeContent">
+                <div class="h-96">
+                    <canvas id="spendIncomeTrendChart"></canvas>
+                </div>
             </div>
         </section>
 
         <!-- Секция аномалий -->
-        <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <h3 class="text-xl font-semibold text-gray-300 mb-2">Аномалии</h3>
-            <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
-            <div id="anomaliesList" class="space-y-3">
-                <!-- Anomalies will be listed here -->
-                <p class="text-gray-500">Аномалий не найдено.</p>
+        <section id="anomaliesSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Аномалии</h3>
+                <button id="toggleAnomaliesVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
             </div>
-            <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
-                <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
-                <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
-                <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+            <div id="anomaliesContent">
+                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+                <div id="anomaliesList" class="space-y-3">
+                    <!-- Anomalies will be listed here -->
+                    <p class="text-gray-500">Аномалий не найдено.</p>
+                </div>
+                <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
+                    <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                    <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                    <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+                </div>
             </div>
         </section>
 
@@ -231,46 +245,60 @@
         </section>
 
     <!-- Секция таблицы транзакций -->
-    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Последние транзакции</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400 cursor-pointer" id="sortDate" data-sort-key="date" data-sort-direction="desc">Дата <span id="sortDateArrow">↓</span></th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Категория</th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
-                        <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionsTableBody">
-                    <!-- Rows will be generated by JS -->
-                </tbody>
-            </table>
+    <section id="transactionsSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Последние транзакции</h2>
+            <button id="toggleTransactionsVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                Скрыть/Показать
+            </button>
         </div>
-        <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
-            <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
-            <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
-            <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+        <div id="transactionsContent">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400 cursor-pointer" id="sortDate" data-sort-key="date" data-sort-direction="desc">Дата <span id="sortDateArrow">↓</span></th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Категория</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Контрагент</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Сумма</th>
+                            <th class="p-3 md:p-4 border-b border-gray-700 text-left bg-gray-800 font-semibold text-gray-400">Счет</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Rows will be generated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="transactionsPagination" class="flex justify-center items-center mt-4 space-x-2">
+                <button id="prevTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                <span id="transactionPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                <button id="nextTransactionPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
+            </div>
         </div>
     </section>
 
 
     <!-- Секция глубокого анализа -->
-    <section class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
-        <h2 class="text-2xl font-bold text-white mb-4">Глубокий анализ трат</h2>
-        <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
-        <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
-        <div class="flex flex-wrap gap-4 mb-4">
-            <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
-            <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Настроить анализ</button>
+    <section id="deepAnalysisSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Глубокий анализ трат</h2>
+            <button id="toggleDeepAnalysisVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                Скрыть/Показать
+            </button>
         </div>
-        <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
-            <!-- Analysis results will be displayed here -->
-        </div>
-        <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
-            <p>Анализ выполняется, пожалуйста, подождите...</p>
+        <div id="deepAnalysisContent">
+            <p class="text-gray-400 mb-2">Получите подробный анализ ваших трат за выбранный месяц с помощью ИИ.</p>
+            <p class="text-gray-500 text-sm mb-4">Анализ будет проведен для месяца и года, выбранных в разделе "Настройки отображения" выше.</p>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <button id="deepAnalysisButton" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Провести глубокий анализ</button>
+                <button id="deepAnalysisSettingsButton" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg">Настроить анализ</button>
+            </div>
+            <div id="analysisResult" class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 whitespace-pre-wrap">
+                <!-- Analysis results will be displayed here -->
+            </div>
+            <div id="analysisLoading" class="hidden mt-4 text-center text-blue-400">
+                <p>Анализ выполняется, пожалуйста, подождите...</p>
+            </div>
         </div>
     </section>
 
@@ -2529,6 +2557,18 @@
             const budgetPlanningSection = document.getElementById('budgetPlanningSection');
             const budgetContentDiv = document.getElementById('budgetContent');
             const toggleBudgetVisibilityButton = document.getElementById('toggleBudgetVisibility');
+            const spendIncomeTrendSection = document.getElementById('spendIncomeTrendSection');
+            const spendIncomeContentDiv = document.getElementById('spendIncomeContent');
+            const toggleSpendIncomeVisibilityButton = document.getElementById('toggleSpendIncomeVisibility');
+            const anomaliesSection = document.getElementById('anomaliesSection');
+            const anomaliesContentDiv = document.getElementById('anomaliesContent');
+            const toggleAnomaliesVisibilityButton = document.getElementById('toggleAnomaliesVisibility');
+            const transactionsSection = document.getElementById('transactionsSection');
+            const transactionsContentDiv = document.getElementById('transactionsContent');
+            const toggleTransactionsVisibilityButton = document.getElementById('toggleTransactionsVisibility');
+            const deepAnalysisSection = document.getElementById('deepAnalysisSection');
+            const deepAnalysisContentDiv = document.getElementById('deepAnalysisContent');
+            const toggleDeepAnalysisVisibilityButton = document.getElementById('toggleDeepAnalysisVisibility');
 
             // Обработчики событий для кредитов
             addLoanButton.addEventListener('click', () => {
@@ -3105,6 +3145,70 @@
                 const isHidden = budgetContentDiv.classList.toggle('hidden');
                 localStorage.setItem('budgetHidden', isHidden);
                 toggleBudgetVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+
+            // Логика скрытия/отображения содержимого карточки "Траты vs. Доходы"
+            const isSpendIncomeHidden = localStorage.getItem('spendIncomeHidden') === 'true';
+            if (isSpendIncomeHidden) {
+                spendIncomeContentDiv.classList.add('hidden');
+                toggleSpendIncomeVisibilityButton.textContent = 'Показать';
+            } else {
+                spendIncomeContentDiv.classList.remove('hidden');
+                toggleSpendIncomeVisibilityButton.textContent = 'Скрыть';
+            }
+
+            toggleSpendIncomeVisibilityButton.addEventListener('click', () => {
+                const isHidden = spendIncomeContentDiv.classList.toggle('hidden');
+                localStorage.setItem('spendIncomeHidden', isHidden);
+                toggleSpendIncomeVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+
+            // Логика скрытия/отображения содержимого карточки "Аномалии"
+            const isAnomaliesHidden = localStorage.getItem('anomaliesHidden') === 'true';
+            if (isAnomaliesHidden) {
+                anomaliesContentDiv.classList.add('hidden');
+                toggleAnomaliesVisibilityButton.textContent = 'Показать';
+            } else {
+                anomaliesContentDiv.classList.remove('hidden');
+                toggleAnomaliesVisibilityButton.textContent = 'Скрыть';
+            }
+
+            toggleAnomaliesVisibilityButton.addEventListener('click', () => {
+                const isHidden = anomaliesContentDiv.classList.toggle('hidden');
+                localStorage.setItem('anomaliesHidden', isHidden);
+                toggleAnomaliesVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+
+            // Логика скрытия/отображения содержимого карточки "Последние транзакции"
+            const isTransactionsHidden = localStorage.getItem('transactionsHidden') === 'true';
+            if (isTransactionsHidden) {
+                transactionsContentDiv.classList.add('hidden');
+                toggleTransactionsVisibilityButton.textContent = 'Показать';
+            } else {
+                transactionsContentDiv.classList.remove('hidden');
+                toggleTransactionsVisibilityButton.textContent = 'Скрыть';
+            }
+
+            toggleTransactionsVisibilityButton.addEventListener('click', () => {
+                const isHidden = transactionsContentDiv.classList.toggle('hidden');
+                localStorage.setItem('transactionsHidden', isHidden);
+                toggleTransactionsVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+
+            // Логика скрытия/отображения содержимого карточки "Глубокий анализ трат"
+            const isDeepAnalysisHidden = localStorage.getItem('deepAnalysisHidden') === 'true';
+            if (isDeepAnalysisHidden) {
+                deepAnalysisContentDiv.classList.add('hidden');
+                toggleDeepAnalysisVisibilityButton.textContent = 'Показать';
+            } else {
+                deepAnalysisContentDiv.classList.remove('hidden');
+                toggleDeepAnalysisVisibilityButton.textContent = 'Скрыть';
+            }
+
+            toggleDeepAnalysisVisibilityButton.addEventListener('click', () => {
+                const isHidden = deepAnalysisContentDiv.classList.toggle('hidden');
+                localStorage.setItem('deepAnalysisHidden', isHidden);
+                toggleDeepAnalysisVisibilityButton.textContent = isHidden ? 'Показать' : 'Скрыть';
             });
         });
 
