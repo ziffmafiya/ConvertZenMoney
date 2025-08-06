@@ -125,65 +125,6 @@
             </div>
         </section>
 
-        <!-- Секция планирования бюджета -->
-        <section id="budgetPlanningSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Планирование бюджета на месяц</h3>
-                <button id="toggleBudgetVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                    Скрыть/Показать
-                </button>
-            </div>
-            <div id="budgetContent">
-                <div class="flex flex-wrap items-center gap-4 mb-4">
-                    <input type="number" id="plannedIncome" placeholder="Планируемый доход" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
-                    <button id="calculateBudgetButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Рассчитать</button>
-                    <button id="saveBudgetButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Сохранить на месяц</button>
-                </div>
-                <div id="budgetResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Результаты расчета бюджета будут здесь -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Секция графика "Траты vs. Доходы" -->
-        <section id="spendIncomeTrendSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Траты vs. Доходы</h3>
-                <button id="toggleSpendIncomeVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                    Скрыть/Показать
-                </button>
-            </div>
-            <div id="spendIncomeContent">
-                <p class="text-gray-400 text-sm mb-2">Среднедневной доход: <span id="avgDailyIncome" class="font-semibold text-green-400">0.00 грн</span></p>
-                <p class="text-gray-400 text-sm mb-4">Среднедневная трата: <span id="avgDailyExpenses" class="font-semibold text-red-400">0.00 грн</span></p>
-                <div class="h-96">
-                    <canvas id="spendIncomeTrendChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Секция аномалий -->
-        <section id="anomaliesSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Аномалии</h3>
-                <button id="toggleAnomaliesVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                    Скрыть/Показать
-                </button>
-            </div>
-            <div id="anomaliesContent">
-                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
-                <div id="anomaliesList" class="space-y-3">
-                    <!-- Anomalies will be listed here -->
-                    <p class="text-gray-500">Аномалий не найдено.</p>
-                </div>
-                <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
-                    <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
-                    <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
-                    <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
-                </div>
-            </div>
-        </section>
-
         <!-- Секция детализации с вкладками -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
             
@@ -242,6 +183,65 @@
                         <span id="goalTargetText" class="text-gray-400">Цель: -</span>
                     </div>
                     <p id="comparisonMonthText" class="text-sm text-gray-400 mt-1"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция планирования бюджета -->
+        <section id="budgetPlanningSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Планирование бюджета на месяц</h3>
+                <button id="toggleBudgetVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
+            </div>
+            <div id="budgetContent">
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <input type="number" id="plannedIncome" placeholder="Планируемый доход" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full md:w-auto p-2.5">
+                    <button id="calculateBudgetButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Рассчитать</button>
+                    <button id="saveBudgetButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Сохранить на месяц</button>
+                </div>
+                <div id="budgetResult" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Результаты расчета бюджета будут здесь -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция графика "Траты vs. Доходы" -->
+        <section id="spendIncomeTrendSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Траты vs. Доходы</h3>
+                <button id="toggleSpendIncomeVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
+            </div>
+            <div id="spendIncomeContent">
+                <p class="text-gray-400 text-sm mb-2">Среднедневной доход: <span id="avgDailyIncome" class="font-semibold text-green-400">0.00 грн</span></p>
+                <p class="text-gray-400 text-sm mb-4">Среднедневная трата: <span id="avgDailyExpenses" class="font-semibold text-red-400">0.00 грн</span></p>
+                <div class="h-96">
+                    <canvas id="spendIncomeTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция аномалий -->
+        <section id="anomaliesSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-300">Аномалии</h3>
+                <button id="toggleAnomaliesVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Скрыть/Показать
+                </button>
+            </div>
+            <div id="anomaliesContent">
+                <p class="text-gray-400 text-sm mb-4">Нетипичные или крупные траты</p>
+                <div id="anomaliesList" class="space-y-3">
+                    <!-- Anomalies will be listed here -->
+                    <p class="text-gray-500">Аномалий не найдено.</p>
+                </div>
+                <div id="anomaliesPagination" class="flex justify-center items-center mt-4 space-x-2">
+                    <button id="prevAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Предыдущая</button>
+                    <span id="anomalyPageInfo" class="text-gray-400">Страница 1 из 1</span>
+                    <button id="nextAnomalyPage" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Следующая</button>
                 </div>
             </div>
         </section>
