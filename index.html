@@ -1175,10 +1175,10 @@
                 // renderForecastChart(transactions); // Removed
                 renderSparklines(transactions);
                 // Calculate number of days in the selected month
-                const daysInMonth = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
+                const daysInSelectedMonth = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
 
-                const avgDailyIncome = totalIncome / daysInMonth;
-                const avgDailyExpenses = totalExpenses / daysInMonth;
+                const avgDailyIncome = totalIncome / (daysInSelectedMonth || 1); // Avoid division by zero
+                const avgDailyExpenses = totalExpenses / (daysInSelectedMonth || 1); // Avoid division by zero
 
                 avgDailyIncomeEl.textContent = `${avgDailyIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 avgDailyExpensesEl.textContent = `${avgDailyExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
