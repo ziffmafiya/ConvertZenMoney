@@ -24,13 +24,21 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     try {
-        // Шаг 1: Получаем все транзакции с расходами для анализа
+        const { year, month } = req.query;
+
+        if (!year || !month) {
+            return res.status(400).json({ error: 'Year and month are required for anomaly detection.' });
+        }
+
+        // Шаг 1: Получаем транзакции с расходами для анализа за выбранный месяц и год
         // Выбираем только транзакции с положительными суммами расходов
         const { data: transactions, error: fetchError } = await supabase
             .from('transactions')
             .select('*') // Выбираем все поля, чтобы избежать ошибок с ограничениями NOT NULL
             .not('outcome', 'is', null)
-            .gt('outcome', 0);
+            .gt('outcome', 0)
+            .gte('date', `${year}-${month}-01`)
+            .lte('date', `${year}-${month}-${new Date(year, month, 0).getDate()}`); // Учитываем последний день месяца
 
         if (fetchError) {
             console.error('Supabase fetch error:', fetchError);

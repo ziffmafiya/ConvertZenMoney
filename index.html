@@ -154,6 +154,8 @@
                 </button>
             </div>
             <div id="spendIncomeContent">
+                <p class="text-gray-400 text-sm mb-2">Среднедневной доход: <span id="avgDailyIncome" class="font-semibold text-green-400">0.00 грн</span></p>
+                <p class="text-gray-400 text-sm mb-4">Среднедневная трата: <span id="avgDailyExpenses" class="font-semibold text-red-400">0.00 грн</span></p>
                 <div class="h-96">
                     <canvas id="spendIncomeTrendChart"></canvas>
                 </div>
@@ -641,6 +643,9 @@
             const closeHabitDetailModal = document.getElementById('closeHabitDetailModal');
             let habitTrendChart; // Переменная для хранения экземпляра графика тренда привычки
             
+            const avgDailyIncomeEl = document.getElementById('avgDailyIncome');
+            const avgDailyExpensesEl = document.getElementById('avgDailyExpenses');
+
             const headerNetBalanceEl = document.getElementById('headerNetBalance');
             const totalIncomeEl = document.getElementById('totalIncome');
             const totalExpensesEl = document.getElementById('totalExpenses');
@@ -1000,13 +1005,23 @@
 
             // Асинхронная функция для обнаружения аномалий
             async function detectAnomalies() {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+
+                if (!selectedYear || !selectedMonth) {
+                    alert('Пожалуйста, выберите год и месяц для поиска аномалий.');
+                    return;
+                }
+
                 analysisResultDiv.textContent = '';
                 analysisLoadingDiv.classList.remove('hidden');
                 analysisLoadingDiv.querySelector('p').textContent = 'Идет поиск аномалий, это может занять некоторое время...';
 
+                const params = new URLSearchParams({ year: selectedYear, month: selectedMonth });
+
                 try {
                     // Отправляем запрос на сервер для обнаружения аномалий
-                    const response = await fetch('/api/detect-anomalies');
+                    const response = await fetch(`/api/detect-anomalies?${params.toString()}`);
                     if (!response.ok) {
                         const err = await response.json();
                         throw new Error(err.error || 'Failed to detect anomalies');
@@ -1151,14 +1166,23 @@
                     .sort((a, b) => b.amount - a.amount);
 
                 renderCharts(expenseDataByCategoryChart, expenseDataByStoreChart, trendData);
-                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, transactions, actualExpensePercentages);
-                allAnomalies = transactions.filter(t => t.is_anomaly); // Сохраняем все аномалии
+                renderLegendsAndLists(expenseDataByCategoryChart, incomeDataList, totalIncome, filteredTransactions, actualExpensePercentages); // Передаем filteredTransactions
+                allAnomalies = filteredTransactions.filter(t => t.is_anomaly); // Сохраняем только аномалии для текущего месяца/года
                 renderAnomalies(allAnomalies); // Отображаем первую страницу аномалий
-                allTransactions = transactions; // Сохраняем все транзакции
-                renderTransactionsTable(allTransactions); // Отображаем первую страницу транзакций
+                allTransactions = transactions; // Сохраняем все транзакции (нефильтрованные) для таблицы
+                renderTransactionsTable(filteredTransactions); // Отображаем только отфильтрованные транзакции
                 updateGoalProgress(); // Теперь вызывается здесь, когда allTransactions точно определены
                 // renderForecastChart(transactions); // Removed
                 renderSparklines(transactions);
+                // Calculate number of days in the selected month
+                const daysInMonth = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
+
+                const avgDailyIncome = totalIncome / daysInMonth;
+                const avgDailyExpenses = totalExpenses / daysInMonth;
+
+                avgDailyIncomeEl.textContent = `${avgDailyIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+                avgDailyExpensesEl.textContent = `${avgDailyExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
+
                 theoreticalSavingsEl.textContent = `${(totalIncome * 0.20).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 expensesToIncomeTextEl.textContent = `${(totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0).toFixed(1)}% от дохода`;
                 fetchAndRenderTopExpensesCard(); // Вызываем новую функцию здесь
@@ -2363,7 +2387,11 @@
                 loadBudget();
             });
             deepAnalysisButton.addEventListener('click', performDeepAnalysis);
-            detectAnomaliesButton.addEventListener('click', detectAnomalies);
+            detectAnomaliesButton.addEventListener('click', () => {
+                const selectedMonth = filterMonthSelect.value;
+                const selectedYear = filterYearInput.value;
+                detectAnomalies(selectedYear, selectedMonth);
+            });
             
             // Обработчики для модального окна настроек глубокого анализа
             const deepAnalysisSettingsButton = document.getElementById('deepAnalysisSettingsButton');
@@ -2807,7 +2835,7 @@
                             <div class="flex justify-between items-start mb-3">
                                 <h3 class="text-lg font-semibold text-white">${loan.loan_name || `Кредит #${loan.id}`}</h3>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-400">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
+                                    <span class="text-sm text-gray-400">#${loan.id}</span>
                                     <button onclick="deleteLoan(${loan.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Удалить</button>
                                 </div>
                             </div>
