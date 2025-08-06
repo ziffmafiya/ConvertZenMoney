@@ -67,7 +67,7 @@
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
             <!-- Карточка актуального баланса -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Актуальный баланс</h3>
+                <h3 class="text-2xl font-bold text-white mb-2">Актуальный баланс</h3>
                 <p id="headerNetBalance" class="text-4xl font-bold text-white">0.00 грн</p>
                 <div class="flex items-center gap-2 mt-2">
                     <span id="netBalanceChange" class="text-sm font-semibold"></span>
@@ -76,7 +76,7 @@
             </div>
              <!-- Карточка общего дохода -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общий доход</h3>
+                <h3 class="text-2xl font-bold text-white mb-2">Общий доход</h3>
                 <p id="totalIncome" class="text-4xl font-bold text-green-400">0.00 грн</p>
                 <div class="flex items-center gap-2 mt-2">
                     <span id="incomeChange" class="text-sm font-semibold"></span>
@@ -85,7 +85,7 @@
             </div>
             <!-- Карточка общих расходов -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Общие расходы</h3>
+                <h3 class="text-2xl font-bold text-white mb-2">Общие расходы</h3>
                 <div>
                     <p id="totalExpenses" class="text-4xl font-bold text-red-400">0.00 грн</p>
                     <div class="flex items-center gap-2 mt-2">
@@ -97,7 +97,7 @@
             </div>
             <!-- Карточка теоретических сбережений -->
             <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6]">
-                <h3 class="text-lg font-semibold text-gray-400 mb-2">Теоретические сбережения (20%)</h3>
+                <h3 class="text-2xl font-bold text-white mb-2">Теоретические сбережения (20%)</h3>
                 <p id="theoreticalSavings" class="text-4xl font-bold text-blue-400">0.00 грн</p>
                 <p class="text-gray-400 text-sm mt-2">20% от общего дохода</p>
             </div>
@@ -142,7 +142,7 @@
                 </div>
                 <div id="expensesTabContent">
                     <div class="tab-content" id="category-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">Структура расходов</h3>
+                        <h3 class="text-2xl font-bold text-center mb-4 text-white">Структура расходов</h3>
                         <div class="relative h-[35vh] w-full max-w-[450px] mx-auto">
                             <canvas id="expensesChart"></canvas>
                         </div>
@@ -150,7 +150,7 @@
                         <button id="detectAnomaliesButton" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 text-lg mt-4">Найти аномалии в данных</button>
                     </div>
                     <div class="tab-content hidden" id="store-content" role="tabpanel">
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
+                        <h3 class="text-2xl font-bold text-center mb-4 text-white">Топ-10 трат по магазинам и сервисам</h3>
                         <div class="relative h-[45vh] w-full">
                             <canvas id="storesChart"></canvas>
                         </div>
@@ -171,7 +171,7 @@
                 <!-- Прогресс по цели -->
                 <div class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] flex-1">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-white">Прогресс по цели</h3>
+                        <h3 class="text-2xl font-bold text-white">Прогресс по цели</h3>
                         <button id="setupGoalButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 text-sm">Настроить</button>
                     </div>
                     <p id="goalDescription" class="text-gray-400">Цель не задана</p>
@@ -190,7 +190,7 @@
         <!-- Секция планирования бюджета -->
         <section id="budgetPlanningSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mt-8 md:mt-12 mb-8 md:mb-12">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Планирование бюджета на месяц</h3>
+                <h3 class="text-2xl font-bold text-white">Планирование бюджета на месяц</h3>
                 <button id="toggleBudgetVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Скрыть/Показать
                 </button>
@@ -210,7 +210,7 @@
         <!-- Секция графика "Траты vs. Доходы" -->
         <section id="spendIncomeTrendSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Траты vs. Доходы</h3>
+                <h3 class="text-2xl font-bold text-white">Траты vs. Доходы</h3>
                 <button id="toggleSpendIncomeVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Скрыть/Показать
                 </button>
@@ -227,7 +227,7 @@
         <!-- Секция аномалий -->
         <section id="anomaliesSection" class="bg-[#161b22] rounded-2xl p-6 text-left transition-all duration-300 border border-[#30363d] hover:translate-y-[-5px] hover:shadow-lg hover:shadow-black/30 hover:border-[#8b5cf6] mb-8 md:mb-12">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-300">Аномалии</h3>
+                <h3 class="text-2xl font-bold text-white">Аномалии</h3>
                 <button id="toggleAnomaliesVisibility" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                     Скрыть/Показать
                 </button>
