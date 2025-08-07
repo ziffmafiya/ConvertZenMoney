@@ -19,22 +19,22 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Обслуживаем статические файлы из корневой директории (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Импорт всех API роутов
-import getTransactions from './api/get-transactions.js';
-import uploadTransactions from './api/upload-transactions.js';
-import deepAnalysis from './api/deep-analysis.js';
-import detectAnomalies from './api/detect-anomalies.js';
-import analyzeHabits from './api/analyze-habits.js';
-import getGoalProgress from './api/get-goal-progress.js';
-import getMonthlySummary from './api/get-monthly-summary.js';
-import recommendGoal from './api/recommend-goal.js';
-import analyzeReceipt from './api/analyze-receipt.js';
-import getProductStats from './api/get-product-stats.js';
-import updateWorkSchedule from './api/update-work-schedule.js';
-import loans from './api/loans.js';
-import creditCards from './api/credit-cards.js';
+import getTransactions from './get-transactions.js';
+import uploadTransactions from './upload-transactions.js';
+import deepAnalysis from './deep-analysis.js';
+import detectAnomalies from './detect-anomalies.js';
+import analyzeHabits from './analyze-habits.js';
+import getGoalProgress from './get-goal-progress.js';
+import getMonthlySummary from './get-monthly-summary.js';
+import recommendGoal from './recommend-goal.js';
+import analyzeReceipt from './analyze-receipt.js';
+import getProductStats from './get-product-stats.js';
+import updateWorkSchedule from './update-work-schedule.js';
+import loans from './loans.js';
+import creditCards from './credit-cards.js';
 
 // Регистрируем все API роуты
 // GET запросы для получения данных
@@ -58,7 +58,7 @@ app.all('/api/credit-cards', creditCards);
 
 // Обработка всех остальных запросов - возвращаем index.html для SPA
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Middleware для обработки ошибок
