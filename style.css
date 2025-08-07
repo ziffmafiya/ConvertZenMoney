@@ -1,0 +1,9 @@
+.font-tektur {
+    font-family: 'Tektur', sans-serif;
+}
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+h1, h2, h3, h4, h5, h6, button, .tab-button, .font-semibold {
+    font-family: 'Tektur', sans-serif;
+}
