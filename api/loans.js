@@ -67,19 +67,7 @@ async function handleGetLoans(supabase, res) {
             return res.status(500).json({ error: error.message });
         }
 
-        // Для каждого кредита вычисляем дату следующего платежа
-        const loansWithNextPayment = data.map(loan => {
-            const nextPaymentInfo = calculateNextPaymentDate(
-                new Date(loan.start_date),
-                loan.term_months,
-                loan.monthly_payment,
-                loan.paid_amount,
-                loan.principal
-            );
-            return { ...loan, ...nextPaymentInfo };
-        });
-
-        res.status(200).json({ loans: loansWithNextPayment });
+        res.status(200).json({ loans: data });
     } catch (error) {
         console.error('Error in handleGetLoans:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -93,86 +81,6 @@ async function handleGetLoans(supabase, res) {
  * @param {number} interestRate - Годовая процентная ставка
  * @param {number} termMonths - Срок кредита в месяцах
  * @returns {number} - Размер ежемесячного платежа
- */
-function calculateMonthlyPayment(principal, interestRate, termMonths) {
-    const monthlyRate = interestRate / 100 / 12; // Конвертируем годовую ставку в месячную
-    if (monthlyRate === 0) {
-        return principal / termMonths; // Если ставка 0%, просто делим сумму на срок
-    }
-    // Формула аннуитетного платежа
-    return principal * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / (Math.pow(1 + monthlyRate, termMonths) - 1);
-}
-
-/**
- * Функция для расчета даты следующего платежа и его суммы.
- * Учитывает дату начала кредита, срок, ежемесячный платеж и уже выплаченную сумму.
- * @param {Date} startDate - Дата начала кредита.
- * @param {number} termMonths - Общий срок кредита в месяцах.
- * @param {number} monthlyPayment - Ежемесячный платеж.
- * @param {number} paidAmount - Общая сумма уже выплаченных средств.
- * @param {number} principal - Основная сумма кредита.
- * @returns {{next_payment_date: string|null, next_payment_amount: number|null, days_until_next_payment: number|null}}
- */
-function calculateNextPaymentDate(startDate, termMonths, monthlyPayment, paidAmount, principal) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Обнуляем время для корректного сравнения дат
-
-    // Если кредит полностью погашен
-    if (paidAmount >= principal) {
-        return { next_payment_date: null, next_payment_amount: null, days_until_next_payment: null };
-    }
-
-    let nextPaymentDate = null;
-    let nextPaymentAmount = monthlyPayment;
-
-    // Определяем количество уже прошедших платежей
-    // Это упрощенный расчет, который предполагает, что платежи всегда были вовремя
-    const monthsPassed = Math.floor(paidAmount / monthlyPayment);
-
-    // Вычисляем дату следующего ожидаемого платежа
-    // Добавляем monthsPassed + 1 к месяцу начала кредита
-    nextPaymentDate = new Date(startDate);
-    nextPaymentDate.setMonth(startDate.getMonth() + monthsPassed + 1);
-    nextPaymentDate.setDate(startDate.getDate()); // Сохраняем день месяца
-
-    // Если дата следующего платежа в прошлом, переносим ее на следующий месяц
-    while (nextPaymentDate < today) {
-        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-    }
-
-    // Проверяем, не превышает ли следующая дата платежа общий срок кредита
-    const endDate = new Date(startDate);
-    endDate.setMonth(startDate.getMonth() + termMonths);
-
-    if (nextPaymentDate > endDate) {
-        // Если следующая дата платежа выходит за рамки срока, и кредит еще не погашен,
-        // это может быть последний платеж (остаток)
-        const remainingBalance = principal - paidAmount;
-        if (remainingBalance > 0) {
-            nextPaymentDate = endDate; // Последний платеж в конце срока
-            nextPaymentAmount = remainingBalance; // Сумма равна остатку
-        } else {
-            return { next_payment_date: null, next_payment_amount: null, days_until_next_payment: null };
-        }
-    }
-
-    // Вычисляем количество дней до следующего платежа
-    const diffTime = nextPaymentDate.getTime() - today.getTime();
-    const daysUntilNextPayment = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return {
-        next_payment_date: nextPaymentDate.toISOString().split('T')[0], // Формат YYYY-MM-DD
-        next_payment_amount: nextPaymentAmount,
-        days_until_next_payment: daysUntilNextPayment
-    };
-}
-
-/**
- * Функция для добавления нового кредита
- * Валидирует данные и создает новую запись в базе данных
- * @param {object} supabase - Клиент Supabase
- * @param {object} req - Объект запроса
- * @param {object} res - Объект ответа
  */
 function calculateMonthlyPayment(principal, interestRate, termMonths) {
     const monthlyRate = interestRate / 100 / 12; // Конвертируем годовую ставку в месячную
@@ -384,4 +292,4 @@ async function handleDeleteLoan(supabase, req, res) {
         console.error('Error in handleDeleteLoan:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+} 

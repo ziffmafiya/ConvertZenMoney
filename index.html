@@ -374,10 +374,6 @@
             <button id="addLoanButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Добавить кредит</button>
         </div>
         <p class="text-gray-400 mb-4">Отслеживайте ваши кредиты, платежи и остатки задолженности.</p>
-        <div id="nextLoanPaymentInfo" class="bg-gray-800 rounded-lg p-4 mb-4 border border-blue-500/30 hidden">
-            <h3 class="text-lg font-semibold text-white mb-2">Следующий платеж по кредитам</h3>
-            <p id="nextPaymentDetails" class="text-gray-300">Загрузка...</p>
-        </div>
         <div id="loansList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Кредиты будут отображаться здесь -->
         </div>
@@ -2575,8 +2571,6 @@
             const saveLoanButton = document.getElementById('saveLoanButton');
             const loansList = document.getElementById('loansList');
             const loansLoading = document.getElementById('loansLoading');
-            const nextLoanPaymentInfoDiv = document.getElementById('nextLoanPaymentInfo');
-            const nextPaymentDetailsP = document.getElementById('nextPaymentDetails');
             
             // Элементы для кредитных карт
             const addCreditCardButton = document.getElementById('addCreditCardButton');
@@ -2808,24 +2802,20 @@
             async function fetchAndRenderLoans() {
                 loansLoading.classList.remove('hidden');
                 loansList.innerHTML = '';
-                nextLoanPaymentInfoDiv.classList.add('hidden'); // Скрываем по умолчанию
 
-                try {
-                    const response = await fetch('/api/loans');
+                                 try {
+                     const response = await fetch('/api/loans');
                     const result = await response.json();
 
                     if (response.ok) {
                         renderLoans(result.loans);
-                        displayNextLoanPayment(result.loans); // Вызываем новую функцию
                     } else {
                         console.error('Error fetching loans:', result.error);
                         loansList.innerHTML = '<p class="text-red-400">Ошибка при загрузке кредитов</p>';
-                        nextPaymentDetailsP.textContent = 'Ошибка при загрузке информации о платежах.';
                     }
                 } catch (error) {
                     console.error('Network error fetching loans:', error);
                     loansList.innerHTML = '<p class="text-red-400">Ошибка сети при загрузке кредитов</p>';
-                    nextPaymentDetailsP.textContent = 'Ошибка сети при загрузке информации о платежах.';
                 } finally {
                     loansLoading.classList.add('hidden');
                 }
@@ -2884,16 +2874,6 @@
                                     <span class="text-gray-400">Осталось месяцев:</span>
                                     <span class="text-yellow-400">~${remainingMonths}</span>
                                 </div>
-                                ${loan.next_payment_date ? `
-                                <div class="flex justify-between">
-                                    <span class="text-gray-400">След. платеж:</span>
-                                    <span class="text-white">${new Date(loan.next_payment_date).toLocaleDateString('ru-RU')} (${loan.next_payment_amount.toLocaleString('ru-RU')} грн)</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-400">Дней до платежа:</span>
-                                    <span class="${loan.days_until_next_payment <= 7 ? 'text-red-400' : 'text-green-400'}">${loan.days_until_next_payment}</span>
-                                </div>
-                                ` : ''}
                             </div>
                             <div class="w-full bg-gray-600 rounded-full h-2 mt-3">
                                 <div class="bg-blue-500 h-2 rounded-full" style="width: ${progressPercent}%"></div>
@@ -2907,41 +2887,6 @@
                         </div>
                     `;
                 }).join('');
-            }
-
-            // Функция для отображения информации о ближайшем платеже
-            function displayNextLoanPayment(loans) {
-                const upcomingPayments = loans.filter(loan => loan.next_payment_date !== null)
-                    .sort((a, b) => new Date(a.next_payment_date) - new Date(b.next_payment_date));
-
-                if (upcomingPayments.length > 0) {
-                    const nextPayment = upcomingPayments[0];
-                    const nextPaymentDate = new Date(nextPayment.next_payment_date).toLocaleDateString('ru-RU');
-                    const nextPaymentAmount = nextPayment.next_payment_amount.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const daysUntil = nextPayment.days_until_next_payment;
-
-                    let daysText = '';
-                    if (daysUntil === 0) {
-                        daysText = 'сегодня';
-                    } else if (daysUntil === 1) {
-                        daysText = 'завтра';
-                    } else if (daysUntil > 0) {
-                        daysText = `через ${daysUntil} дн.`;
-                    } else {
-                        daysText = 'просрочен';
-                    }
-
-                    nextPaymentDetailsP.innerHTML = `
-                        Ближайший платеж: <span class="font-bold text-blue-400">${nextPayment.loan_name}</span>
-                        на сумму <span class="font-bold text-blue-400">${nextPaymentAmount} грн</span>
-                        <br>
-                        Дата: <span class="font-bold text-blue-400">${nextPaymentDate}</span> (${daysText})
-                    `;
-                    nextLoanPaymentInfoDiv.classList.remove('hidden');
-                } else {
-                    nextPaymentDetailsP.textContent = 'Предстоящих платежей по кредитам нет.';
-                    nextLoanPaymentInfoDiv.classList.remove('hidden'); // Показываем, даже если нет платежей, чтобы сообщить об этом
-                }
             }
 
             // Функция загрузки кредитных карт
