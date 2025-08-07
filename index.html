@@ -1175,10 +1175,12 @@
                 // renderForecastChart(transactions); // Removed
                 renderSparklines(transactions);
                 // Calculate number of days in the selected month
-                const daysInSelectedMonth = new Date(selectedYear, parseInt(selectedMonth), 0).getDate();
+                const today = new Date();
+                const currentDayOfMonth = today.getDate();
+                const daysPassedInMonth = currentDayOfMonth; // Количество дней, прошедших с начала месяца
 
-                const avgDailyIncome = totalIncome / (daysInSelectedMonth || 1); // Avoid division by zero
-                const avgDailyExpenses = totalExpenses / (daysInSelectedMonth || 1); // Avoid division by zero
+                const avgDailyIncome = totalIncome / (daysPassedInMonth || 1); // Изменено: учитываются только прошедшие дни
+                const avgDailyExpenses = totalExpenses / (daysPassedInMonth || 1); // Изменено: учитываются только прошедшие дни
 
                 avgDailyIncomeEl.textContent = `${avgDailyIncome.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
                 avgDailyExpensesEl.textContent = `${avgDailyExpenses.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} грн`;
