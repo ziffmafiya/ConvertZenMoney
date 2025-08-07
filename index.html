@@ -2855,6 +2855,10 @@
                                     <span class="text-white">${loan.term_months} мес.</span>
                                 </div>
                                 <div class="flex justify-between">
+                                    <span class="text-gray-400">Дата открытия:</span>
+                                    <span class="text-white">${new Date(loan.start_date).toLocaleDateString('ru-RU')}</span>
+                                </div>
+                                <div class="flex justify-between">
                                     <span class="text-gray-400">Ежемесячный платеж:</span>
                                     <span class="text-white">${loan.monthly_payment.toLocaleString('ru-RU')} грн</span>
                                 </div>
