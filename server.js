@@ -19,7 +19,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Обслуживаем статические файлы из корневой директории (HTML, CSS, JS)
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Импорт всех API роутов
 import getTransactions from './api/get-transactions.js';
@@ -58,7 +58,7 @@ app.all('/api/credit-cards', creditCards);
 
 // Обработка всех остальных запросов - возвращаем index.html для SPA
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Middleware для обработки ошибок
@@ -70,4 +70,4 @@ app.use((err, req, res, next) => {
 // Запуск сервера на указанном порту
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});
