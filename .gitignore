@@ -63,4 +63,14 @@ Thumbs.db
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Next.js
+.next/
+out/
+
+# Vercel
+.vercel
+
+# Production
+/build 

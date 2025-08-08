@@ -1,14 +1,49 @@
 {
-  "name": "converter-vercel-app",
+  "name": "finance-analyzer",
   "version": "1.0.0",
-  "description": "A Vercel app for financial data conversion and Supabase upload.",
-  "main": "api/upload-transactions.js",
-  "type": "module",
+  "description": "Современный финансовый анализатор с AI-ассистентом",
+  "private": true,
   "scripts": {
-    "start": "vercel dev"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@mui/material": "^5.14.0",
+    "@mui/icons-material": "^5.14.0",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/x-charts": "^6.0.0",
+    "@mui/x-date-pickers": "^6.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query-devtools": "^5.0.0",
+    "@supabase/supabase-js": "^2.44.2",
     "@google/generative-ai": "^0.14.1",
-    "@supabase/supabase-js": "^2.44.2"
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.0",
+    "recharts": "^2.8.0",
+    "react-hook-form": "^7.47.0",
+    "zod": "^3.22.0",
+    "@hookform/resolvers": "^3.3.0",
+    "react-dropzone": "^14.2.0",
+    "react-hot-toast": "^2.4.0",
+    "lucide-react": "^0.292.0",
+    "next-themes": "^0.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.2.0",
+    "eslint": "^8.52.0",
+    "eslint-config-next": "^14.0.0",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31"
   }
 }
